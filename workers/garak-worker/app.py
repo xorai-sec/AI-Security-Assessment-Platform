@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
@@ -170,6 +171,24 @@ class GarakRunner(BaseFrameworkRunner):
     def _report_path(self, report_prefix: Path) -> Path:
         return Path(str(report_prefix) + ".report.jsonl")
 
+    def _discover_report_path(self, request: FrameworkExecutionRequest, report_prefix: Path, cli_result: dict[str, Any]) -> Path:
+        expected = self._report_path(report_prefix)
+        if expected.exists():
+            return expected
+        candidates = sorted(
+            self.artifact_root.glob(f"{request.execution_id}*.report.jsonl"),
+            key=lambda item: item.stat().st_mtime,
+            reverse=True,
+        )
+        if candidates:
+            return candidates[0]
+        text = "\n".join([str(cli_result.get("stdout") or ""), str(cli_result.get("stderr") or "")])
+        for match in re.findall(r"(/[^ \n\r\t]+\.report\.jsonl)", text):
+            path = Path(match)
+            if path.exists():
+                return path
+        return expected
+
     def _load_report_rows(self, report_path: Path) -> list[dict[str, Any]]:
         rows: list[dict[str, Any]] = []
         if not report_path.exists():
@@ -288,9 +307,9 @@ class GarakRunner(BaseFrameworkRunner):
         traffic_path = self.artifact_root / f"{request.execution_id}-garak-target-proxy-traffic.jsonl"
         options_path = self._write_generator_options(request, traffic_path)
         report_prefix = self.artifact_root / request.execution_id
-        report_path = self._report_path(report_prefix)
         cli_result = self._run_garak(request, options_path, report_prefix)
         cli_path = write_json(self.artifact_root / f"{request.execution_id}-garak-cli.json", cli_result)
+        report_path = self._discover_report_path(request, report_prefix, cli_result)
         rows = self._load_report_rows(report_path)
         command_line = " ".join(cli_result["command"])
         evidence, plugin_ids = self._normalise_report(request, rows, report_path, command_line)
@@ -298,7 +317,11 @@ class GarakRunner(BaseFrameworkRunner):
         if cli_result["returncode"] != 0:
             errors.append(f"garak CLI returned {cli_result['returncode']}: {cli_result['stderr'] or cli_result['stdout']}")
         if not report_path.exists():
-            errors.append(f"Native garak report was not created at {report_path}")
+            errors.append(
+                "Native garak report was not created at "
+                f"{report_path}. CLI diagnostics saved at {cli_path}; stdout={cli_result.get('stdout', '')[-1000:]!r}; "
+                f"stderr={cli_result.get('stderr', '')[-1000:]!r}"
+            )
         if not evidence:
             errors.append("Native garak report contained no attempt rows to normalize")
         status = "succeeded" if evidence and not errors else "partially_completed" if evidence else "failed"
