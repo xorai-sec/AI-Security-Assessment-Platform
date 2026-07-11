@@ -1,0 +1,12 @@
+{
+  "name": "ai-security-iso42001-platform",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "web:build": "npm --prefix apps/web run build"
+  }
+}
+

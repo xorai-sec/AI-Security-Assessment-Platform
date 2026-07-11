@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+title: AI Security Assessment and ISO/IEC 42001 Assurance Platform
+message: If you use this platform in research, please cite the repository.
+type: software
+authors:
+  - family-names: Project Contributors
+    given-names: AI Security Assurance
+version: 0.1.0
+date-released: 2026-07-11
+license: MIT
+
