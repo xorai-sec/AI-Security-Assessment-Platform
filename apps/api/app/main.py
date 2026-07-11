@@ -8,7 +8,7 @@ from typing import Any
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, PlainTextResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from packages.security_assurance.enterprise_client import EnterpriseAssistClient
 from packages.security_assurance.framework_manager import FrameworkManager
@@ -481,6 +481,10 @@ def get_assessment(assessment_id: str) -> dict[str, Any]:
         return STORE.load_result(assessment_id).model_dump(mode="json")
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail="Assessment not found") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except ValidationError as exc:
+        raise HTTPException(status_code=422, detail="Stored assessment result is malformed or incomplete") from exc
 
 
 @app.get("/api/reports/{assessment_id}/markdown", response_class=PlainTextResponse)
