@@ -47,3 +47,60 @@ print(json.dumps({
     "symbols": symbols,
 }, indent=2, default=str))
 PY
+
+echo
+echo "===== targeted native adapter APIs ====="
+"$DOCKER_BIN" compose "${COMPOSE_FILES[@]}" exec -T "$SERVICE" python - <<'PY'
+import importlib
+import inspect
+import json
+
+TARGETS = [
+    "deepteam.red_team.red_team",
+    "deepteam.red_teamer.red_teamer.RedTeamer",
+    "deepteam.red_teamer.utils.wrap_model_callback",
+    "deepteam.red_teamer.utils.resolve_model_callback",
+    "deepteam.attacks.attack_engine.attack_engine.AttackEngine",
+    "deepteam.vulnerabilities.prompt_leakage.prompt_leakage.PromptLeakage",
+    "deepteam.vulnerabilities.pii_leakage.pii_leakage.PIILeakage",
+    "deepteam.vulnerabilities.rbac.rbac.RBAC",
+    "deepteam.vulnerabilities.bfla.bfla.BFLA",
+    "deepteam.vulnerabilities.cross_context_retrieval.cross_context_retrieval.CrossContextRetrieval",
+    "deepteam.attacks.single_turn.jailbreaking.linear_jailbreaking.LinearJailbreaking",
+    "deepteam.attacks.multi_turn.roleplay.roleplay.Roleplay",
+]
+
+def describe(path):
+    module_name, name = path.rsplit(".", 1)
+    try:
+        module = importlib.import_module(module_name)
+        obj = getattr(module, name)
+    except Exception as exc:
+        return {"path": path, "import_error": str(exc)}
+    methods = {}
+    for method_name, member in inspect.getmembers(obj):
+        if method_name.startswith("_") and method_name not in {"__init__"}:
+            continue
+        if inspect.isfunction(member) or inspect.ismethod(member) or inspect.iscoroutinefunction(member):
+            try:
+                methods[method_name] = str(inspect.signature(member))
+            except Exception:
+                methods[method_name] = "signature-unavailable"
+    try:
+        signature = str(inspect.signature(obj))
+    except Exception:
+        signature = "signature-unavailable"
+    try:
+        source_file = inspect.getsourcefile(obj)
+    except Exception:
+        source_file = None
+    return {
+        "path": path,
+        "module_file": source_file,
+        "signature": signature,
+        "mro": [item.__module__ + "." + item.__name__ for item in getattr(obj, "__mro__", [])],
+        "methods": methods,
+    }
+
+print(json.dumps([describe(path) for path in TARGETS], indent=2, default=str))
+PY
