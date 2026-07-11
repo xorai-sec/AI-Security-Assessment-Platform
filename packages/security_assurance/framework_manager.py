@@ -137,6 +137,8 @@ class FrameworkManager:
                 data = response.json()
                 result.worker_results.append(data)
                 result.normalized_evidence.extend(data.get("evidence", []))
+                for worker_error in data.get("errors", []):
+                    result.errors.append(f"{framework_id}: {worker_error}")
             except Exception as exc:
                 result.errors.append(f"{framework_id}: {exc}")
 

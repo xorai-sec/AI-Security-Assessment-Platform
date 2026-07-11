@@ -119,6 +119,13 @@ class NormalizedFrameworkEvidence(BaseModel):
     candidate: bool = True
     confirmed: bool = False
     confidence: float = 0.0
+    native_engine_invoked: bool = False
+    native_command_or_api: str | None = None
+    native_framework_version: str | None = None
+    native_artifact_path: str | None = None
+    native_plugin_identifiers: list[str] = Field(default_factory=list)
+    fallback_used: bool = False
+    fallback_reason: str | None = None
     evidence_limitations: list[str] = Field(default_factory=list)
     bias_warning: str | None = None
     request_count: int = 1
@@ -139,3 +146,10 @@ class FrameworkExecutionResult(BaseModel):
     raw_artifacts: list[str] = Field(default_factory=list)
     evidence: list[NormalizedFrameworkEvidence] = Field(default_factory=list)
     errors: list[str] = Field(default_factory=list)
+    native_engine_invoked: bool = False
+    native_command_or_api: str | None = None
+    native_framework_version: str | None = None
+    native_artifact_path: str | None = None
+    native_plugin_identifiers: list[str] = Field(default_factory=list)
+    fallback_used: bool = False
+    fallback_reason: str | None = None

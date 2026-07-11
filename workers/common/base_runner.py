@@ -108,6 +108,12 @@ class BaseFrameworkRunner:
                     prompt=case.prompt,
                     response=response,
                     artifact_path=artifact,
+                    native_engine_invoked=True,
+                    native_command_or_api="BaseFrameworkRunner.execute -> internal target proxy",
+                    native_framework_version=self.detected_version(),
+                    native_artifact_path=str(artifact),
+                    native_plugin_identifiers=[case.probe],
+                    fallback_used=False,
                 )
             )
 
@@ -122,6 +128,12 @@ class BaseFrameworkRunner:
             raw_artifacts=[str(artifact)],
             evidence=evidence_items,
             errors=errors,
+            native_engine_invoked=True,
+            native_command_or_api="BaseFrameworkRunner.execute -> internal target proxy",
+            native_framework_version=self.detected_version(),
+            native_artifact_path=str(artifact),
+            native_plugin_identifiers=[case.probe for case in cases],
+            fallback_used=False,
         )
 
     def prompts_for_request(self, request: FrameworkExecutionRequest) -> list[tuple[str, str, str]]:

@@ -95,6 +95,13 @@ def framework_evidence(
     evaluator_extra: dict[str, Any] | None = None,
     stop_reason: str = "completed",
     request_count: int = 1,
+    native_engine_invoked: bool = False,
+    native_command_or_api: str | None = None,
+    native_framework_version: str | None = None,
+    native_artifact_path: str | None = None,
+    native_plugin_identifiers: list[str] | None = None,
+    fallback_used: bool = False,
+    fallback_reason: str | None = None,
 ) -> NormalizedFrameworkEvidence:
     text = str(response.get("text", ""))
     telemetry = response.get("telemetry", {}) or {}
@@ -145,6 +152,13 @@ def framework_evidence(
         candidate=True,
         confirmed=confirmation["confirmed"],
         confidence=confirmation["confidence"],
+        native_engine_invoked=native_engine_invoked,
+        native_command_or_api=native_command_or_api,
+        native_framework_version=native_framework_version or framework_version,
+        native_artifact_path=native_artifact_path or str(artifact_path),
+        native_plugin_identifiers=native_plugin_identifiers or [],
+        fallback_used=fallback_used,
+        fallback_reason=fallback_reason,
         evidence_limitations=limitations,
         bias_warning=request.model_roles.bias_warning,
         request_count=request_count,

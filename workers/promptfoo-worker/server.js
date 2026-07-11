@@ -153,6 +153,34 @@ app.post("/execute", async (req, res) => {
     }
   );
   fs.writeFileSync(path.join(files.dir, "promptfoo-cli.json"), JSON.stringify(cli, null, 2));
+  const nativeCommand = cli.command.join(" ");
+  const nativePlugins = [
+    "promptfoo.eval",
+    `file://${files.providerPath}`,
+    "promptfoo.assertion.not-contains",
+    "promptfoo.assertion.javascript"
+  ];
+
+  if (cli.code !== 0) {
+    const error = `promptfoo CLI returned ${cli.code}: ${cli.stderr || cli.error || "see promptfoo-cli.json"}`;
+    return res.json({
+      execution_id: request.execution_id,
+      framework,
+      status: "failed",
+      started_at: startedAt,
+      completed_at: new Date().toISOString(),
+      raw_artifacts: [files.yamlPath, files.providerPath, files.jsonPath, path.join(files.dir, "promptfoo-cli.json")],
+      evidence: [],
+      errors: [error],
+      native_engine_invoked: false,
+      native_command_or_api: nativeCommand,
+      native_framework_version: detectedVersion,
+      native_artifact_path: files.jsonPath,
+      native_plugin_identifiers: nativePlugins,
+      fallback_used: false,
+      fallback_reason: null
+    });
+  }
 
   const evidence = [];
   const directRows = [];
@@ -199,13 +227,20 @@ app.post("/execute", async (req, res) => {
       candidate: true,
       confirmed: confirmation.confirmed,
       confidence: confirmation.confirmed ? 0.95 : 0.35,
-      evidence_limitations: [request.model_roles?.bias_warning, cli.code === 0 ? null : `promptfoo CLI returned ${cli.code}; direct proxy evidence preserved`].filter(Boolean),
+      native_engine_invoked: true,
+      native_command_or_api: nativeCommand,
+      native_framework_version: detectedVersion,
+      native_artifact_path: files.jsonPath,
+      native_plugin_identifiers: [assertion, ...nativePlugins],
+      fallback_used: false,
+      fallback_reason: null,
+      evidence_limitations: [request.model_roles?.bias_warning].filter(Boolean),
       bias_warning: request.model_roles?.bias_warning || null,
       request_count: 1,
       latency_ms: response.latency_ms || 0,
       started_at: startedAt,
       completed_at: new Date().toISOString(),
-      stop_reason: cli.code === 0 ? "promptfoo_cli_completed" : "promptfoo_cli_limited_direct_proxy_completed",
+      stop_reason: "promptfoo_cli_completed",
       raw_artifact_reference: files.jsonPath,
       evidence_hash: hash(artifact)
     });
@@ -215,12 +250,19 @@ app.post("/execute", async (req, res) => {
   res.json({
     execution_id: request.execution_id,
     framework,
-    status: evidence.length && cli.code === 0 ? "succeeded" : evidence.length ? "partially_completed" : "failed",
+    status: evidence.length ? "succeeded" : "failed",
     started_at: startedAt,
     completed_at: new Date().toISOString(),
     raw_artifacts: [files.yamlPath, files.providerPath, files.jsonPath, path.join(files.dir, "promptfoo-cli.json"), directPath],
     evidence,
-    errors: cli.code === 0 ? [] : [`promptfoo CLI returned ${cli.code}: ${cli.stderr || cli.error || "see promptfoo-cli.json"}`]
+    errors: [],
+    native_engine_invoked: true,
+    native_command_or_api: nativeCommand,
+    native_framework_version: detectedVersion,
+    native_artifact_path: files.jsonPath,
+    native_plugin_identifiers: nativePlugins,
+    fallback_used: false,
+    fallback_reason: null
   });
 });
 
