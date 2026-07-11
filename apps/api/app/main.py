@@ -116,6 +116,65 @@ def list_framework_assessments() -> dict[str, Any]:
     return {"assessments": FRAMEWORKS.list_results()}
 
 
+@app.get("/api/assessments/frameworks/{assessment_id}")
+def get_framework_assessment(assessment_id: str) -> dict[str, Any]:
+    try:
+        result = FRAMEWORKS.load_result(assessment_id)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Framework assessment not found") from exc
+
+    target_metadata: dict[str, Any] | None = None
+    try:
+        target = TARGETS.get_target(result.target_id)
+        target_metadata = target.model_dump(mode="json")
+        target_metadata.pop("credential", None)
+    except FileNotFoundError:
+        target_metadata = {"id": result.target_id, "target_name": "Target record not found"}
+
+    framework_summaries = []
+    for worker_result in result.worker_results:
+        framework = worker_result.get("framework") or worker_result.get("framework_id") or worker_result.get("name") or "unknown"
+        evidence = worker_result.get("evidence", [])
+        findings = worker_result.get("findings", [])
+        framework_summaries.append(
+            {
+                "framework": framework,
+                "status": worker_result.get("status", "completed"),
+                "version": worker_result.get("version"),
+                "attempts": worker_result.get("attempts", worker_result.get("request_count", len(evidence))),
+                "evidence_count": len(evidence),
+                "finding_count": len(findings),
+                "confirmed_count": sum(1 for item in findings if str(item.get("status", "")).lower() == "confirmed"),
+                "candidate_count": sum(1 for item in findings if str(item.get("status", "")).lower() in {"candidate", "needs_review", "needs-review"}),
+                "duration": worker_result.get("duration") or worker_result.get("duration_seconds"),
+                "error_count": len(worker_result.get("errors", [])) if isinstance(worker_result.get("errors", []), list) else 1,
+                "raw_artifacts": worker_result.get("artifacts", {}),
+            }
+        )
+
+    payload = result.model_dump(mode="json")
+    payload["assessment_type"] = "multi_framework"
+    payload["target"] = target_metadata
+    payload["framework_summaries"] = framework_summaries
+    payload["correlated_findings"] = []
+    payload["iso_mappings"] = [
+        {
+            "id": f"{result.id}-iso-42001-{index + 1}",
+            "evidence_id": evidence.get("id") or evidence.get("evidence_id") or f"evidence-{index + 1}",
+            "clause_or_control_id": evidence.get("iso_42001_control", "ISO/IEC 42001 governance evidence"),
+            "requirement_title": evidence.get("risk_category", evidence.get("category", "AI security control evidence")),
+            "evidence_sufficiency": "candidate",
+            "human_review_status": "requires_human_review",
+        }
+        for index, evidence in enumerate(result.normalized_evidence)
+    ]
+    payload["report_links"] = {}
+    payload["raw_artifact_references"] = [
+        summary["raw_artifacts"] for summary in framework_summaries if summary.get("raw_artifacts")
+    ]
+    return payload
+
+
 @app.post("/api/demo/seed")
 def seed_demo() -> dict[str, Any]:
     org = Organization(

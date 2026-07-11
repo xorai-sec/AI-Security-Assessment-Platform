@@ -1,4 +1,4 @@
-.PHONY: install install-frameworks lint typecheck test test-unit test-integration test-e2e security-check build build-frameworks up up-full up-frameworks up-gpu down migrate seed demo-up demo-seed demo-assess demo-report validate validate-targets validate-adapters validate-frameworks validate-e2e validate-gpu framework-health framework-self-test self-test-garak self-test-pyrit self-test-promptfoo self-test-deepteam target-health register-enterprise-assist register-ollama-target register-vllm-target register-openai-fixture register-custom-rest-fixture assess-target assess-native assess-garak assess-pyrit assess-promptfoo assess-deepteam assess-all assess-target-group assess-model-group hardened-retest retest-finding generate-reports generate-pdf-reports generate-evidence-package clean
+.PHONY: install install-frameworks prepare-runtime validate-artifact-permissions lint typecheck test test-unit test-integration test-e2e security-check build build-frameworks up up-full up-frameworks up-gpu down migrate seed demo-up demo-seed demo-assess demo-report validate validate-targets validate-adapters validate-frameworks validate-e2e validate-gpu framework-health framework-self-test self-test-garak self-test-pyrit self-test-promptfoo self-test-deepteam target-health register-enterprise-assist register-ollama-target register-vllm-target register-openai-fixture register-custom-rest-fixture assess-target assess-native assess-garak assess-pyrit assess-promptfoo assess-deepteam assess-all assess-target-group assess-model-group hardened-retest retest-finding generate-reports generate-pdf-reports generate-evidence-package clean
 
 PYTHON ?= python
 
@@ -7,6 +7,12 @@ install:
 
 install-frameworks:
 	docker compose -f docker-compose.yml -f docker-compose.frameworks.yml build native-worker garak-worker pyrit-worker promptfoo-worker deepteam-worker
+
+prepare-runtime:
+	bash scripts/runtime/prepare_runtime.sh
+
+validate-artifact-permissions:
+	bash scripts/runtime/validate_artifact_permissions.sh
 
 lint:
 	$(PYTHON) -m ruff check apps packages scripts tests
@@ -41,7 +47,7 @@ up:
 up-full:
 	docker compose -f docker-compose.yml -f docker-compose.full.yml up --build
 
-up-frameworks:
+up-frameworks: prepare-runtime
 	docker compose -f docker-compose.yml -f docker-compose.frameworks.yml up --build
 
 up-gpu:

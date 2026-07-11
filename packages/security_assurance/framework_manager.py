@@ -135,6 +135,12 @@ class FrameworkManager:
             )
         return rows
 
+    def load_result(self, assessment_id: str) -> FrameworkAssessmentResult:
+        path = self.result_dir / f"{assessment_id}.json"
+        if not path.exists():
+            raise FileNotFoundError(assessment_id)
+        return FrameworkAssessmentResult.model_validate_json(path.read_text(encoding="utf-8"))
+
     async def proxy_target_message(self, target_id: str, request_data: dict[str, Any]) -> dict[str, Any]:
         target = self.target_manager.get_target(target_id)
         adapter = __import__("packages.security_assurance.adapters.targets", fromlist=["build_target_adapter"]).build_target_adapter(target)
@@ -148,4 +154,3 @@ class FrameworkManager:
         )
         sanitized = await adapter.sanitize_for_storage(response)
         return sanitized.model_dump(mode="json")
-

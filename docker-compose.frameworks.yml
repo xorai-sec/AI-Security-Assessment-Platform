@@ -8,7 +8,7 @@ services:
       TARGET_PROXY_SECRET: ${TARGET_PROXY_SECRET:-development-target-proxy-secret}
       FRAMEWORK_RAW_ARTIFACT_PATH: /artifacts
     volumes:
-      - ./data/framework-artifacts:/artifacts
+      - ./data/framework-artifacts/native:/artifacts/native
     ports:
       - "8091:8091"
     depends_on:
@@ -29,7 +29,7 @@ services:
       TARGET_PROXY_SECRET: ${TARGET_PROXY_SECRET:-development-target-proxy-secret}
       FRAMEWORK_RAW_ARTIFACT_PATH: /artifacts
     volumes:
-      - ./data/framework-artifacts:/artifacts
+      - ./data/framework-artifacts/garak:/artifacts/garak
     ports:
       - "8092:8092"
     depends_on:
@@ -50,7 +50,7 @@ services:
       TARGET_PROXY_SECRET: ${TARGET_PROXY_SECRET:-development-target-proxy-secret}
       FRAMEWORK_RAW_ARTIFACT_PATH: /artifacts
     volumes:
-      - ./data/framework-artifacts:/artifacts
+      - ./data/framework-artifacts/pyrit:/artifacts/pyrit
     ports:
       - "8093:8093"
     depends_on:
@@ -71,7 +71,7 @@ services:
       TARGET_PROXY_SECRET: ${TARGET_PROXY_SECRET:-development-target-proxy-secret}
       FRAMEWORK_RAW_ARTIFACT_PATH: /artifacts
     volumes:
-      - ./data/framework-artifacts:/artifacts
+      - ./data/framework-artifacts/deepteam:/artifacts/deepteam
     ports:
       - "8094:8094"
     depends_on:
@@ -87,12 +87,15 @@ services:
     build:
       context: .
       dockerfile: workers/promptfoo-worker/Dockerfile
+      args:
+        WORKER_UID: ${WORKER_UID:-1000}
+        WORKER_GID: ${WORKER_GID:-1000}
     environment:
       API_BASE_URL: http://api:8080
       TARGET_PROXY_SECRET: ${TARGET_PROXY_SECRET:-development-target-proxy-secret}
       FRAMEWORK_RAW_ARTIFACT_PATH: /artifacts
     volumes:
-      - ./data/framework-artifacts:/artifacts
+      - ./data/framework-artifacts/promptfoo:/artifacts/promptfoo
     ports:
       - "8095:8095"
     depends_on:
