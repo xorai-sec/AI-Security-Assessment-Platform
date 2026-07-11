@@ -152,32 +152,63 @@ class TargetManager:
         adapter = build_target_adapter(target)
         return asyncio.run(adapter.validate_configuration())
 
+    async def validate_target_async(self, target_id: str, target_override: TargetRecord | None = None) -> ConfigurationValidationResult:
+        target = target_override or self.get_target(target_id)
+        adapter = build_target_adapter(target)
+        return await adapter.validate_configuration()
+
     def health_check(self, target_id: str) -> TargetHealth:
         target = self.get_target(target_id)
         adapter = build_target_adapter(target)
         health = asyncio.run(adapter.health_check())
+        self._record_health(target, health)
+        return health
+
+    async def health_check_async(self, target_id: str) -> TargetHealth:
+        target = self.get_target(target_id)
+        adapter = build_target_adapter(target)
+        health = await adapter.health_check()
+        self._record_health(target, health)
+        return health
+
+    def _record_health(self, target: TargetRecord, health: TargetHealth) -> None:
         target.last_health = health
         target.updated_at = utc_now()
         self._save_target(target)
         self._save_health(target.id, health)
-        return health
 
     def discover_capabilities(self, target_id: str) -> TargetCapabilities:
         target = self.get_target(target_id)
         adapter = build_target_adapter(target)
         capabilities = asyncio.run(adapter.discover_capabilities())
+        self._record_capabilities(target, capabilities)
+        return capabilities
+
+    async def discover_capabilities_async(self, target_id: str) -> TargetCapabilities:
+        target = self.get_target(target_id)
+        adapter = build_target_adapter(target)
+        capabilities = await adapter.discover_capabilities()
+        self._record_capabilities(target, capabilities)
+        return capabilities
+
+    def _record_capabilities(self, target: TargetRecord, capabilities: TargetCapabilities) -> None:
         target.discovered_capabilities = capabilities
         target.visibility = self._visibility_from_capabilities(capabilities)
         target.last_validated_at = utc_now()
         target.updated_at = utc_now()
         self._save_target(target)
-        return capabilities
 
     def test_message(self, target_id: str, prompt: str = "Reply with READY only.") -> TargetMessageResponse:
         target = self.get_target(target_id)
         adapter = build_target_adapter(target)
         response = asyncio.run(adapter.send_message(TargetMessageRequest(prompt=prompt)))
         return asyncio.run(adapter.sanitize_for_storage(response))
+
+    async def test_message_async(self, target_id: str, prompt: str = "Reply with READY only.") -> TargetMessageResponse:
+        target = self.get_target(target_id)
+        adapter = build_target_adapter(target)
+        response = await adapter.send_message(TargetMessageRequest(prompt=prompt))
+        return await adapter.sanitize_for_storage(response)
 
     def supported_campaigns(self, target_id: str) -> list[SupportedCampaign]:
         target = self.get_target(target_id)
@@ -230,4 +261,3 @@ class TargetManager:
         if capabilities.grey_box or capabilities.retrieval_telemetry or capabilities.tool_telemetry:
             return TargetVisibility.grey_box
         return TargetVisibility.black_box
-

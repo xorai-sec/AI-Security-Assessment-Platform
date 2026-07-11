@@ -438,10 +438,10 @@ async def run_target_assessment(request: TargetAssessmentRequest) -> dict[str, A
         raise HTTPException(status_code=400, detail="Written authorization must be confirmed before assessment.")
     if not target.kill_switch_acknowledged:
         raise HTTPException(status_code=400, detail="Kill-switch acknowledgement is required before assessment.")
-    target_health = TARGETS.health_check(target.id)
+    target_health = await TARGETS.health_check_async(target.id)
     if not target_health.reachable:
         raise HTTPException(status_code=400, detail=f"Target health check failed: {target_health.message}")
-    capabilities = TARGETS.discover_capabilities(target.id)
+    capabilities = await TARGETS.discover_capabilities_async(target.id)
     target = TARGETS.get_target(target.id)
     scope = AssessmentScope(
         assessment_name=request.assessment_name or f"{target.target_name} native controlled assessment",
