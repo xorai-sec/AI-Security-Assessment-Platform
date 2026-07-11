@@ -7,6 +7,15 @@ services:
       API_BASE_URL: http://api:8080
       TARGET_PROXY_SECRET: ${TARGET_PROXY_SECRET:-development-target-proxy-secret}
       FRAMEWORK_RAW_ARTIFACT_PATH: /artifacts
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      OLLAMA_TARGET_MODEL: ${OLLAMA_TARGET_MODEL:-}
+      OLLAMA_ATTACKER_MODEL: ${OLLAMA_ATTACKER_MODEL:-}
+      OLLAMA_JUDGE_MODEL: ${OLLAMA_JUDGE_MODEL:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      DEEPEVAL_TELEMETRY_OPT_OUT: ${DEEPEVAL_TELEMETRY_OPT_OUT:-YES}
     volumes:
       - ./data/framework-artifacts/native:/artifacts/native
     ports:
@@ -28,6 +37,15 @@ services:
       API_BASE_URL: http://api:8080
       TARGET_PROXY_SECRET: ${TARGET_PROXY_SECRET:-development-target-proxy-secret}
       FRAMEWORK_RAW_ARTIFACT_PATH: /artifacts
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      OLLAMA_TARGET_MODEL: ${OLLAMA_TARGET_MODEL:-}
+      OLLAMA_ATTACKER_MODEL: ${OLLAMA_ATTACKER_MODEL:-}
+      OLLAMA_JUDGE_MODEL: ${OLLAMA_JUDGE_MODEL:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      DEEPEVAL_TELEMETRY_OPT_OUT: ${DEEPEVAL_TELEMETRY_OPT_OUT:-YES}
     volumes:
       - ./data/framework-artifacts/garak:/artifacts/garak
     ports:
@@ -49,6 +67,15 @@ services:
       API_BASE_URL: http://api:8080
       TARGET_PROXY_SECRET: ${TARGET_PROXY_SECRET:-development-target-proxy-secret}
       FRAMEWORK_RAW_ARTIFACT_PATH: /artifacts
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      OLLAMA_TARGET_MODEL: ${OLLAMA_TARGET_MODEL:-}
+      OLLAMA_ATTACKER_MODEL: ${OLLAMA_ATTACKER_MODEL:-}
+      OLLAMA_JUDGE_MODEL: ${OLLAMA_JUDGE_MODEL:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      DEEPEVAL_TELEMETRY_OPT_OUT: ${DEEPEVAL_TELEMETRY_OPT_OUT:-YES}
     volumes:
       - ./data/framework-artifacts/pyrit:/artifacts/pyrit
     ports:
@@ -70,6 +97,15 @@ services:
       API_BASE_URL: http://api:8080
       TARGET_PROXY_SECRET: ${TARGET_PROXY_SECRET:-development-target-proxy-secret}
       FRAMEWORK_RAW_ARTIFACT_PATH: /artifacts
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      OLLAMA_TARGET_MODEL: ${OLLAMA_TARGET_MODEL:-}
+      OLLAMA_ATTACKER_MODEL: ${OLLAMA_ATTACKER_MODEL:-}
+      OLLAMA_JUDGE_MODEL: ${OLLAMA_JUDGE_MODEL:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      DEEPEVAL_TELEMETRY_OPT_OUT: ${DEEPEVAL_TELEMETRY_OPT_OUT:-YES}
     volumes:
       - ./data/framework-artifacts/deepteam:/artifacts/deepteam
     ports:
@@ -94,6 +130,15 @@ services:
       API_BASE_URL: http://api:8080
       TARGET_PROXY_SECRET: ${TARGET_PROXY_SECRET:-development-target-proxy-secret}
       FRAMEWORK_RAW_ARTIFACT_PATH: /artifacts
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      OLLAMA_TARGET_MODEL: ${OLLAMA_TARGET_MODEL:-}
+      OLLAMA_ATTACKER_MODEL: ${OLLAMA_ATTACKER_MODEL:-}
+      OLLAMA_JUDGE_MODEL: ${OLLAMA_JUDGE_MODEL:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      DEEPEVAL_TELEMETRY_OPT_OUT: ${DEEPEVAL_TELEMETRY_OPT_OUT:-YES}
     volumes:
       - ./data/framework-artifacts/promptfoo:/artifacts/promptfoo
     ports:

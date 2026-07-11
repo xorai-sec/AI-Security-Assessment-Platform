@@ -65,6 +65,10 @@ TARGETS = [
     "pyrit.prompt_converter.base64_converter.Base64Converter",
     "pyrit.prompt_converter.rot13_converter.ROT13Converter",
     "pyrit.score.scorer.Scorer",
+    "pyrit.models.message.Message",
+    "pyrit.models.message_piece.MessagePiece",
+    "pyrit.models.attack_result.AttackResult",
+    "pyrit.models.score.Score",
 ]
 
 def describe(path):
@@ -87,12 +91,17 @@ def describe(path):
         source_file = inspect.getsourcefile(obj)
     except Exception:
         source_file = None
+    try:
+        source = inspect.getsource(obj)[:4000]
+    except Exception as exc:
+        source = f"source unavailable: {exc}"
     return {
         "path": path,
         "module_file": source_file,
         "signature": str(inspect.signature(obj)) if callable(obj) else None,
         "mro": [item.__module__ + "." + item.__name__ for item in getattr(obj, "__mro__", [])],
         "methods": methods,
+        "source_excerpt": source,
     }
 
 print(json.dumps([describe(path) for path in TARGETS], indent=2, default=str))

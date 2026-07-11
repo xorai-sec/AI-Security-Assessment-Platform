@@ -66,6 +66,9 @@ TARGETS = [
     "deepteam.vulnerabilities.rbac.rbac.RBAC",
     "deepteam.vulnerabilities.bfla.bfla.BFLA",
     "deepteam.vulnerabilities.cross_context_retrieval.cross_context_retrieval.CrossContextRetrieval",
+    "deepteam.test_case.test_case.RTTurn",
+    "deepteam.test_case.test_case.RTTestCase",
+    "deepteam.attacks.base_attack.BaseAttack",
     "deepteam.attacks.single_turn.jailbreaking.linear_jailbreaking.LinearJailbreaking",
     "deepteam.attacks.multi_turn.roleplay.roleplay.Roleplay",
 ]
@@ -94,12 +97,17 @@ def describe(path):
         source_file = inspect.getsourcefile(obj)
     except Exception:
         source_file = None
+    try:
+        source = inspect.getsource(obj)[:4000]
+    except Exception as exc:
+        source = f"source unavailable: {exc}"
     return {
         "path": path,
         "module_file": source_file,
         "signature": signature,
         "mro": [item.__module__ + "." + item.__name__ for item in getattr(obj, "__mro__", [])],
         "methods": methods,
+        "source_excerpt": source,
     }
 
 print(json.dumps([describe(path) for path in TARGETS], indent=2, default=str))

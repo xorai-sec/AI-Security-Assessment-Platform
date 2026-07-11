@@ -1,12 +1,112 @@
 from __future__ import annotations
 
+import asyncio
+import importlib
+import inspect
+import json
 import pkgutil
 from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
 
-from workers.common.advanced import write_json
+from workers.common.advanced import framework_evidence
+from workers.common.artifacts import run_artifacts
 from workers.common.base_runner import BaseFrameworkRunner
 from workers.common.protocol.schemas import FrameworkExecutionRequest, FrameworkExecutionResult, WorkerCapability
 from workers.common.server import create_worker_app
+
+
+DEEPTEAM_RED_TEAMER = "deepteam.red_teamer.red_teamer.RedTeamer"
+DEEPTEAM_RED_TEAM = "deepteam.red_team.red_team"
+DEEPTEAM_ATTACK_ENGINE = "deepteam.attacks.attack_engine.attack_engine.AttackEngine"
+DEEPTEAM_RTTURN = "deepteam.test_case.test_case.RTTurn"
+DEFAULT_VULNERABILITIES = [
+    "deepteam.vulnerabilities.prompt_leakage.prompt_leakage.PromptLeakage",
+    "deepteam.vulnerabilities.pii_leakage.pii_leakage.PIILeakage",
+    "deepteam.vulnerabilities.rbac.rbac.RBAC",
+    "deepteam.vulnerabilities.bfla.bfla.BFLA",
+    "deepteam.vulnerabilities.cross_context_retrieval.cross_context_retrieval.CrossContextRetrieval",
+]
+UNSUPPORTED_ATTACKS = [
+    "deepteam.attacks.single_turn.jailbreaking.linear_jailbreaking.LinearJailbreaking",
+    "deepteam.attacks.multi_turn.roleplay.roleplay.Roleplay",
+]
+
+
+def _load_symbol(path: str) -> Any:
+    module_name, symbol_name = path.rsplit(".", 1)
+    module = importlib.import_module(module_name)
+    return getattr(module, symbol_name)
+
+
+def _object_to_jsonable(value: Any) -> Any:
+    if value is None or isinstance(value, str | int | float | bool):
+        return value
+    if isinstance(value, list | tuple | set):
+        return [_object_to_jsonable(item) for item in value]
+    if isinstance(value, dict):
+        return {str(key): _object_to_jsonable(item) for key, item in value.items()}
+    if hasattr(value, "model_dump"):
+        try:
+            return value.model_dump(mode="json")
+        except Exception:
+            pass
+    if hasattr(value, "dict"):
+        try:
+            return value.dict()
+        except Exception:
+            pass
+    if hasattr(value, "__dict__"):
+        return {key: _object_to_jsonable(item) for key, item in vars(value).items() if not key.startswith("_")}
+    return repr(value)
+
+
+def _turn_text(turn: Any) -> str:
+    if isinstance(turn, str):
+        return turn
+    if isinstance(turn, dict):
+        for key in ("output", "actual_output", "content", "text", "response"):
+            if turn.get(key):
+                return str(turn[key])
+    for attr in ("output", "actual_output", "content", "text", "response"):
+        if hasattr(turn, attr):
+            value = getattr(turn, attr)
+            if value:
+                return str(value)
+    return str(turn)
+
+
+def _build_rt_turn(prompt: str, response: dict[str, Any]) -> Any:
+    RTTurn = _load_symbol(DEEPTEAM_RTTURN)
+    text = str(response.get("text", ""))
+    errors: list[str] = []
+    for kwargs in (
+        {"input": prompt, "actual_output": text},
+        {"input": prompt, "output": text},
+        {"prompt": prompt, "response": text},
+        {"role": "assistant", "content": text},
+        {"content": text},
+    ):
+        try:
+            return RTTurn(**kwargs)
+        except Exception as exc:
+            errors.append(f"{kwargs}: {exc}")
+    try:
+        return RTTurn(prompt, text)
+    except Exception as exc:
+        errors.append(f"positional: {exc}")
+    raise RuntimeError("Unable to construct DeepTeam RTTurn; " + " | ".join(errors[-8:]))
+
+
+def _model_role(request: FrameworkExecutionRequest, role: str, default: str) -> str:
+    configured = request.configuration.get(role)
+    if configured:
+        return str(configured)
+    if role == "simulator_model" and request.model_roles.attacker_model:
+        return request.model_roles.attacker_model
+    if role == "evaluation_model" and request.model_roles.judge_model:
+        return request.model_roles.judge_model
+    return default
 
 
 class DeepTeamRunner(BaseFrameworkRunner):
@@ -16,43 +116,218 @@ class DeepTeamRunner(BaseFrameworkRunner):
     def _discovery(self) -> dict[str, Any]:
         try:
             import deepteam  # type: ignore
-            modules = sorted(module.name for module in pkgutil.walk_packages(deepteam.__path__, prefix="deepteam.") if any(key in module.name.lower() for key in ["vulner", "attack", "red", "eval"]))[:300]
-            return {"version": self.detected_version(), "status": "available", "modules": modules}
+
+            modules = sorted(
+                module.name
+                for module in pkgutil.walk_packages(deepteam.__path__, prefix="deepteam.")
+                if any(key in module.name.lower() for key in ["vulner", "attack", "red", "eval", "test_case"])
+            )[:300]
+            targets = {}
+            for path in [DEEPTEAM_RED_TEAM, DEEPTEAM_RED_TEAMER, DEEPTEAM_ATTACK_ENGINE, DEEPTEAM_RTTURN, *DEFAULT_VULNERABILITIES, *UNSUPPORTED_ATTACKS]:
+                try:
+                    obj = _load_symbol(path)
+                    targets[path] = {
+                        "signature": str(inspect.signature(obj)) if callable(obj) else None,
+                        "module_file": inspect.getsourcefile(obj),
+                    }
+                except Exception as exc:
+                    targets[path] = {"error": str(exc)}
+            return {"version": self.detected_version(), "status": "available", "modules": modules, "targets": targets}
         except Exception as exc:
-            return {"version": self.detected_version(), "status": "limited", "modules": [], "error": str(exc)}
+            return {"version": self.detected_version(), "status": "limited", "modules": [], "targets": {}, "error": str(exc)}
 
     async def capabilities(self) -> list[WorkerCapability]:
         discovery = self._discovery()
+        native_ready = discovery["status"] == "available" and not discovery["targets"].get(DEEPTEAM_RED_TEAMER, {}).get("error")
+        unsupported = [path for path in UNSUPPORTED_ATTACKS if discovery["targets"].get(path, {}).get("error")]
         return [
-            WorkerCapability(name="vulnerability_discovery", supported=False, detail=f"native DeepTeam scan API not wired; package status: {discovery['status']}"),
-            WorkerCapability(name="attack_enhancements", supported=False, detail="Requires genuine DeepTeam attack enhancement classes"),
-            WorkerCapability(name="target_callback", supported=False, detail="Requires native DeepTeam target callback execution"),
-            WorkerCapability(name="evaluator_outputs", supported=False, detail="Requires native DeepTeam evaluator result objects"),
+            WorkerCapability(name="red_teamer_api", supported=native_ready, detail=DEEPTEAM_RED_TEAMER),
+            WorkerCapability(name="vulnerability_classes", supported=native_ready, detail=", ".join(DEFAULT_VULNERABILITIES)),
+            WorkerCapability(name="attack_engine", supported=not discovery["targets"].get(DEEPTEAM_ATTACK_ENGINE, {}).get("error"), detail=DEEPTEAM_ATTACK_ENGINE),
+            WorkerCapability(name="target_callback", supported=native_ready, detail="DeepTeam model_callback -> target proxy SDK"),
+            WorkerCapability(name="unsupported_attack_modules", supported=not unsupported, detail=", ".join(unsupported) if unsupported else "all targeted attack modules imported"),
             WorkerCapability(name="version_aware_discovery", supported=discovery["status"] == "available"),
         ]
 
+    def _selected_vulnerabilities(self, request: FrameworkExecutionRequest, attack_engine: Any | None) -> list[Any]:
+        configured = request.configuration.get("deepteam_vulnerabilities") or request.configuration.get("vulnerabilities") or []
+        selected_paths = configured if configured else DEFAULT_VULNERABILITIES
+        limit = max(1, min(len(selected_paths), request.limits.maximum_requests, 2 if request.profile == "quick" else 4 if request.profile == "standard" else len(selected_paths)))
+        vulnerabilities = []
+        simulator_model = _model_role(request, "simulator_model", "gpt-4o-mini")
+        evaluation_model = _model_role(request, "evaluation_model", simulator_model)
+        for path in selected_paths[:limit]:
+            cls = _load_symbol(str(path))
+            kwargs = {
+                "async_mode": False,
+                "verbose_mode": False,
+                "simulator_model": simulator_model,
+                "evaluation_model": evaluation_model,
+                "purpose": request.objective,
+            }
+            if attack_engine is not None:
+                kwargs["attack_engine"] = attack_engine
+            try:
+                vulnerabilities.append(cls(**kwargs))
+            except TypeError:
+                kwargs.pop("attack_engine", None)
+                vulnerabilities.append(cls(**kwargs))
+        return vulnerabilities
+
     async def execute(self, request: FrameworkExecutionRequest) -> FrameworkExecutionResult:
         started = datetime.now(timezone.utc)
-        discovery_path = write_json(self.artifact_root / f"{request.execution_id}-deepteam-discovery.json", self._discovery())
-        error = (
-            "Strict native DeepTeam execution is not implemented: this worker did not invoke the installed "
-            "DeepTeam scan/red-team API, vulnerability classes, attack enhancement classes, target callback, "
-            "or native evaluator output objects. Discovery artifacts were saved only."
+        artifacts = run_artifacts(self.artifact_root, request.execution_id)
+        discovery = self._discovery()
+        discovery_path = artifacts.write_json("discovery.json", discovery)
+        traffic_path = artifacts.path("target-proxy-traffic.jsonl")
+        native_result_path = artifacts.path("native-result.json")
+        errors: list[str] = []
+        traffic_rows: list[dict[str, Any]] = []
+        simulator_model = _model_role(request, "simulator_model", "gpt-4o-mini")
+        evaluation_model = _model_role(request, "evaluation_model", simulator_model)
+        plugin_ids = [DEEPTEAM_RED_TEAMER, DEEPTEAM_RED_TEAM, DEEPTEAM_RTTURN]
+        attack_engine = None
+        try:
+            AttackEngine = _load_symbol(DEEPTEAM_ATTACK_ENGINE)
+            attack_engine = AttackEngine(
+                simulator_model=simulator_model,
+                variations=max(1, min(2, request.limits.maximum_requests)),
+                purpose=request.objective,
+            )
+            plugin_ids.append(DEEPTEAM_ATTACK_ENGINE)
+        except Exception as exc:
+            errors.append(f"DeepTeam AttackEngine unavailable; continuing with vulnerability API only: {exc}")
+
+        async def _send_to_target(prompt: str, turns: list[Any] | None = None) -> Any:
+            index = len(traffic_rows) + 1
+            conversation = [_object_to_jsonable(turn) for turn in (turns or [])]
+            response = await self.proxy.send_message(
+                target_id=request.target.target_id,
+                execution_id=request.execution_id,
+                campaign_id=request.campaign_id,
+                prompt=prompt,
+                session_id=f"{request.execution_id}-deepteam-{index}",
+                user_role=request.configuration.get("user_role", "standard_employee"),
+                metadata={
+                    **request.configuration.get("target_metadata", {}),
+                    "source_framework": "deepteam",
+                    "deepteam_turns": conversation,
+                },
+            )
+            row = {
+                "turn": index,
+                "prompt": prompt,
+                "prior_turns": conversation,
+                "response": response,
+            }
+            traffic_rows.append(row)
+            with traffic_path.open("a", encoding="utf-8") as handle:
+                handle.write(json.dumps(row, default=str) + "\n")
+            return _build_rt_turn(prompt, response)
+
+        def model_callback(prompt: str, turns: list[Any] | None = None) -> Any:
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                return asyncio.run(_send_to_target(prompt, turns))
+            raise RuntimeError("DeepTeam sync callback was invoked inside an active asyncio loop; use thread executor path") from None
+
+        def _run_native_sync() -> Any:
+            RedTeamer = _load_symbol(DEEPTEAM_RED_TEAMER)
+            vulnerabilities = self._selected_vulnerabilities(request, attack_engine)
+            plugin_ids.extend(f"{item.__class__.__module__}.{item.__class__.__name__}" for item in vulnerabilities)
+            red_teamer = RedTeamer(
+                simulator_model=simulator_model,
+                evaluation_model=evaluation_model,
+                target_purpose=request.objective,
+                async_mode=False,
+                max_concurrent=max(1, min(request.limits.maximum_concurrency, 4)),
+                attack_engine=attack_engine,
+            )
+            return red_teamer.red_team(
+                model_callback=model_callback,
+                vulnerabilities=vulnerabilities,
+                attacks=None,
+                simulator_model=simulator_model,
+                evaluation_model=evaluation_model,
+                attacks_per_vulnerability_type=1 if request.profile == "quick" else 2,
+                ignore_errors=False,
+                metadata={"execution_id": request.execution_id, "assessment_id": request.assessment_id},
+                attack_engine=attack_engine,
+                _print_assessment=False,
+                _upload_to_confident=False,
+            )
+
+        native_api = (
+            f"{DEEPTEAM_RED_TEAMER}.red_team(vulnerabilities={DEFAULT_VULNERABILITIES}, "
+            f"attack_engine={DEEPTEAM_ATTACK_ENGINE}, model_callback=target_proxy_sdk)"
         )
+        native_result: Any = None
+        try:
+            native_result = await asyncio.wait_for(
+                asyncio.to_thread(_run_native_sync),
+                timeout=request.limits.maximum_duration_seconds,
+            )
+            artifacts.write_json("native-result.json", _object_to_jsonable(native_result))
+        except Exception as exc:
+            errors.append(f"Native DeepTeam execution failed: {exc}")
+            artifacts.write_json("native-error.json", {"error": str(exc), "native_command_or_api": native_api})
+
+        evidence = []
+        cases = self.cases_for_request(request)
+        for index, row in enumerate(traffic_rows, start=1):
+            case = cases[min(index - 1, len(cases) - 1)]
+            response = row.get("response", {})
+            evidence.append(
+                framework_evidence(
+                    request=request,
+                    framework=self.framework_name,
+                    framework_version=self.detected_version(),
+                    case=case,
+                    index=index,
+                    prompt=str(row.get("prompt", "")),
+                    response=response,
+                    artifact_path=native_result_path,
+                    conversation_trace=[
+                        *row.get("prior_turns", []),
+                        {"role": "user", "content": row.get("prompt", "")},
+                        {"role": "assistant", "content": _turn_text(row.get("response", {}))},
+                    ],
+                    evaluator_extra={"deepteam_native_result": _object_to_jsonable(native_result), "native_target_turn": row.get("turn")},
+                    stop_reason="deepteam_official_red_team",
+                    native_engine_invoked=True,
+                    native_command_or_api=native_api,
+                    native_framework_version=self.detected_version(),
+                    native_artifact_path=str(native_result_path),
+                    native_plugin_identifiers=plugin_ids,
+                    fallback_used=False,
+                )
+            )
+
+        unsupported_errors = [
+            f"Unsupported in installed DeepTeam release: {path} ({discovery['targets'].get(path, {}).get('error')})"
+            for path in UNSUPPORTED_ATTACKS
+            if discovery.get("targets", {}).get(path, {}).get("error")
+        ]
+        if unsupported_errors:
+            artifacts.write_json("unsupported-attack-modules.json", unsupported_errors)
+        if not traffic_rows:
+            errors.append("Native DeepTeam did not send any prompt through the target callback")
+        status = "succeeded" if evidence and not errors else "partially_completed" if evidence else "failed"
         return FrameworkExecutionResult(
             execution_id=request.execution_id,
             framework=self.framework_name,
-            status="failed",
+            status=status,
             started_at=started,
             completed_at=datetime.now(timezone.utc),
-            raw_artifacts=[str(discovery_path)],
-            evidence=[],
-            errors=[error],
-            native_engine_invoked=False,
-            native_command_or_api="import deepteam; pkgutil.walk_packages(deepteam.__path__)",
+            raw_artifacts=[str(discovery_path), str(traffic_path), str(native_result_path), str(artifacts.path("unsupported-attack-modules.json"))],
+            evidence=evidence,
+            errors=errors + unsupported_errors,
+            native_engine_invoked=bool(evidence) and not errors,
+            native_command_or_api=native_api,
             native_framework_version=self.detected_version(),
-            native_artifact_path=str(discovery_path),
-            native_plugin_identifiers=[],
+            native_artifact_path=str(native_result_path),
+            native_plugin_identifiers=plugin_ids,
             fallback_used=False,
         )
 
