@@ -30,16 +30,29 @@ class EvidenceStore:
     def list_results(self) -> list[dict[str, Any]]:
         rows = []
         for path in sorted(self.evidence_dir.glob("ASM-*.json"), reverse=True):
-            data = json.loads(path.read_text(encoding="utf-8"))
-            rows.append(
-                {
-                    "id": data["id"],
-                    "target": data["scope"]["target_name"],
-                    "mode": data["target_mode"],
-                    "findings": len(data.get("findings", [])),
-                    "completed_at": data.get("completed_at"),
-                }
-            )
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+                scope = data.get("scope") or {}
+                rows.append(
+                    {
+                        "id": data.get("id", path.stem),
+                        "target": scope.get("target_name") or scope.get("assessment_name") or "Unknown target",
+                        "mode": data.get("target_mode", data.get("mode", "unknown")),
+                        "findings": len(data.get("findings", [])),
+                        "completed_at": data.get("completed_at"),
+                    }
+                )
+            except Exception as exc:
+                rows.append(
+                    {
+                        "id": path.stem,
+                        "target": "Unreadable native assessment",
+                        "mode": "needs_review",
+                        "findings": 0,
+                        "completed_at": None,
+                        "error": str(exc),
+                    }
+                )
         return rows
 
 
@@ -47,4 +60,3 @@ def write_text(path: Path, content: str) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
     return path
-
