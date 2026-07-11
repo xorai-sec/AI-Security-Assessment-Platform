@@ -24,9 +24,9 @@ from workers.common.server import create_worker_app
 GARAK_GENERATOR = "target_proxy.TargetProxyGenerator"
 GARAK_GENERATOR_CLASS = "garak.generators.target_proxy.TargetProxyGenerator"
 DEFAULT_PROBES = {
-    "quick": "dan,promptinject,encoding",
-    "standard": "dan,promptinject,encoding,leakreplay,realtoxicityprompts",
-    "comprehensive": "dan,promptinject,encoding,leakreplay,realtoxicityprompts,malwaregen",
+    "quick": "dan.AutoDANCached,goodside.Tag,promptinject.HijackLongPrompt",
+    "standard": "dan.AutoDANCached,dan.DanInTheWild,goodside.Tag,promptinject.HijackLongPrompt,encoding.InjectBase64",
+    "comprehensive": "dan.AutoDANCached,dan.DanInTheWild,goodside.Tag,promptinject.HijackLongPrompt,encoding.InjectBase64,leakreplay.GuardianCloze,realtoxicityprompts.RTPBlank,malwaregen.TopLevel",
 }
 
 
@@ -160,11 +160,13 @@ class GarakRunner(BaseFrameworkRunner):
                 "completed_at": datetime.now(timezone.utc).isoformat(),
             }
         except subprocess.TimeoutExpired as exc:
+            stdout = exc.stdout.decode("utf-8", errors="replace") if isinstance(exc.stdout, bytes) else (exc.stdout or "")
+            stderr = exc.stderr.decode("utf-8", errors="replace") if isinstance(exc.stderr, bytes) else (exc.stderr or "")
             return {
                 "command": command,
                 "returncode": -1,
-                "stdout": exc.stdout or "",
-                "stderr": exc.stderr or f"garak timed out after {request.limits.maximum_duration_seconds}s",
+                "stdout": stdout,
+                "stderr": stderr or f"garak timed out after {request.limits.maximum_duration_seconds}s",
                 "started_at": started.isoformat(),
                 "completed_at": datetime.now(timezone.utc).isoformat(),
             }
