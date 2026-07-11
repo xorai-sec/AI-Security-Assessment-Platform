@@ -84,10 +84,20 @@ make demo-report
 | Framework | Status |
 |---|---|
 | Native controlled campaigns | Implemented through target adapters |
-| garak | Planned adapter, not yet validated in Phase 3 |
-| PyRIT | Planned adapter, not yet validated in Phase 3 |
-| Promptfoo | Planned adapter, not yet validated in Phase 3 |
-| DeepTeam | Planned adapter, not yet validated in Phase 3 |
+| garak | Isolated worker implemented; Ubuntu Docker validation pending |
+| PyRIT | Isolated worker implemented; Ubuntu Docker validation pending |
+| Promptfoo | Isolated Node worker implemented; Ubuntu Docker validation pending |
+| DeepTeam | Isolated worker implemented; Ubuntu Docker validation pending |
+
+Run framework workers:
+
+```bash
+make install-frameworks
+make up-frameworks
+make framework-health
+make framework-self-test
+make assess-all
+```
 
 ## URL safety
 
@@ -111,8 +121,9 @@ Reports are generated under `data/reports/`; evidence is stored under `data/evid
 ## Known limitations
 
 - Persistence is file-backed; PostgreSQL/Alembic is not wired yet.
+- Initial PostgreSQL/Alembic schema exists, but application repositories are still file-backed.
 - Redis workers, cancellation and live event streaming are not wired yet.
-- External framework adapters are not validated yet.
+- External framework workers require Ubuntu Docker validation before client testing.
 - Development credential protection must be replaced before enterprise deployment.
 - PDF and evidence package export are planned.
 
@@ -132,4 +143,3 @@ Use only against systems you own or have written authorization to assess. Do not
 ## License
 
 MIT.
-

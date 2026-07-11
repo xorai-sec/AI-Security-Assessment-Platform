@@ -1,4 +1,4 @@
-.PHONY: install install-frameworks lint typecheck test test-unit test-integration test-e2e security-check build up up-full up-frameworks up-gpu down migrate seed demo-up demo-seed demo-assess demo-report validate validate-targets validate-adapters validate-gpu framework-health target-health register-enterprise-assist register-ollama-target register-vllm-target register-openai-fixture register-custom-rest-fixture assess-target assess-target-group retest-finding generate-reports generate-evidence-package clean
+.PHONY: install install-frameworks lint typecheck test test-unit test-integration test-e2e security-check build build-frameworks up up-full up-frameworks up-gpu down migrate seed demo-up demo-seed demo-assess demo-report validate validate-targets validate-adapters validate-frameworks validate-e2e validate-gpu framework-health framework-self-test self-test-garak self-test-pyrit self-test-promptfoo self-test-deepteam target-health register-enterprise-assist register-ollama-target register-vllm-target register-openai-fixture register-custom-rest-fixture assess-target assess-native assess-garak assess-pyrit assess-promptfoo assess-deepteam assess-all assess-target-group assess-model-group hardened-retest retest-finding generate-reports generate-pdf-reports generate-evidence-package clean
 
 PYTHON ?= python
 
@@ -6,7 +6,7 @@ install:
 	$(PYTHON) -m pip install -r apps/api/requirements.txt -r apps/enterprise-assist/requirements.txt -r requirements-dev.txt
 
 install-frameworks:
-	@echo "Framework adapters are isolated behind the target abstraction. Install garak/PyRIT/Promptfoo/DeepTeam in dedicated environments before enabling framework workers."
+	docker compose -f docker-compose.yml -f docker-compose.frameworks.yml build native-worker garak-worker pyrit-worker promptfoo-worker deepteam-worker
 
 lint:
 	$(PYTHON) -m ruff check apps packages scripts tests
@@ -32,6 +32,9 @@ security-check:
 build:
 	docker compose build
 
+build-frameworks:
+	docker compose -f docker-compose.yml -f docker-compose.frameworks.yml build
+
 up:
 	docker compose up --build
 
@@ -48,7 +51,7 @@ down:
 	docker compose down
 
 migrate:
-	@echo "Alembic migrations are planned; current Phase 3 build uses file-backed persistence."
+	alembic upgrade head
 
 seed:
 	$(PYTHON) scripts/demo/seed_demo.py
@@ -74,7 +77,22 @@ validate-adapters:
 	$(PYTHON) -m pytest tests/unit/test_target_security.py tests/unit/test_target_adapters.py
 
 framework-health:
-	$(PYTHON) -c "import httpx; print(httpx.get('http://127.0.0.1:8080/api/adapters/health', timeout=10).json())"
+	$(PYTHON) scripts/frameworks/framework_health.py
+
+framework-self-test:
+	$(PYTHON) scripts/frameworks/framework_self_test.py
+
+self-test-garak:
+	$(PYTHON) scripts/frameworks/framework_self_test.py garak
+
+self-test-pyrit:
+	$(PYTHON) scripts/frameworks/framework_self_test.py pyrit
+
+self-test-promptfoo:
+	$(PYTHON) scripts/frameworks/framework_self_test.py promptfoo
+
+self-test-deepteam:
+	$(PYTHON) scripts/frameworks/framework_self_test.py deepteam
 
 target-health:
 	$(PYTHON) scripts/targets/validate_targets.py
@@ -97,8 +115,32 @@ register-vllm-target:
 assess-target:
 	$(PYTHON) scripts/targets/assess_target.py
 
+assess-native:
+	$(PYTHON) scripts/frameworks/assess_frameworks.py native
+
+assess-garak:
+	$(PYTHON) scripts/frameworks/assess_frameworks.py garak
+
+assess-pyrit:
+	$(PYTHON) scripts/frameworks/assess_frameworks.py pyrit
+
+assess-promptfoo:
+	$(PYTHON) scripts/frameworks/assess_frameworks.py promptfoo
+
+assess-deepteam:
+	$(PYTHON) scripts/frameworks/assess_frameworks.py deepteam
+
+assess-all:
+	$(PYTHON) scripts/frameworks/assess_frameworks.py native garak pyrit promptfoo deepteam
+
 assess-target-group:
 	$(PYTHON) scripts/targets/compare_targets.py
+
+assess-model-group:
+	$(PYTHON) scripts/targets/compare_targets.py
+
+hardened-retest:
+	FRAMEWORKS=native,garak,promptfoo $(PYTHON) scripts/frameworks/assess_frameworks.py
 
 retest-finding:
 	@echo "Retest workflow is documented but not fully automated in this build."; exit 1
@@ -106,12 +148,23 @@ retest-finding:
 generate-reports:
 	$(PYTHON) scripts/demo/show_latest_report.py
 
+generate-pdf-reports:
+	$(PYTHON) scripts/reports/generate_pdf_reports.py
+
 generate-evidence-package:
-	@echo "Evidence package export is planned after PostgreSQL/object storage wiring."; exit 1
+	$(PYTHON) scripts/reports/generate_evidence_package.py
 
 validate-gpu:
 	bash scripts/gpu/check_nvidia.sh
 	bash scripts/gpu/check_docker_gpu.sh
+
+validate-frameworks:
+	$(PYTHON) scripts/frameworks/framework_health.py
+	$(PYTHON) scripts/frameworks/framework_self_test.py
+
+validate-e2e:
+	$(PYTHON) scripts/targets/validate_targets.py
+	$(PYTHON) scripts/frameworks/assess_frameworks.py native garak pyrit promptfoo deepteam
 
 clean:
 	rm -rf data/evidence data/reports .pytest_cache .mypy_cache .ruff_cache

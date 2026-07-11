@@ -1,0 +1,14 @@
+{
+  "name": "ai-security-promptfoo-worker",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "4.19.2",
+    "promptfoo": "latest",
+    "yaml": "2.6.1"
+  }
+}

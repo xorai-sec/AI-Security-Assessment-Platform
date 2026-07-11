@@ -14,11 +14,17 @@ data/reports/*
 data/runtime/*
 data/targets/*
 data/target-health/*
+data/framework-results/*
+data/framework-artifacts/*
+data/evidence-packages/*
 !data/evidence/.gitkeep
 !data/reports/.gitkeep
 !data/runtime/.gitkeep
 !data/targets/.gitkeep
 !data/target-health/.gitkeep
+!data/framework-results/.gitkeep
+!data/framework-artifacts/.gitkeep
+!data/evidence-packages/.gitkeep
 *.sqlite
 *.db
 *.log

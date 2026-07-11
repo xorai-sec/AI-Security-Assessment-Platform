@@ -92,6 +92,8 @@ function App() {
   const [health, setHealth] = useState<Health | null>(null);
   const [targets, setTargets] = useState<Target[]>([]);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [frameworks, setFrameworks] = useState<any[]>([]);
+  const [frameworkCapabilities, setFrameworkCapabilities] = useState<Record<string, any>>({});
   const [selectedTargetId, setSelectedTargetId] = useState("");
   const [selectedAssessmentId, setSelectedAssessmentId] = useState("");
   const [detail, setDetail] = useState<AssessmentDetail | null>(null);
@@ -112,14 +114,16 @@ function App() {
   }
 
   async function refresh() {
-    const [healthData, targetData, assessmentData] = await Promise.all([
+    const [healthData, targetData, assessmentData, frameworkData] = await Promise.all([
       api("/health"),
       api("/api/targets"),
       api("/api/assessments"),
+      api("/api/frameworks"),
     ]);
     setHealth(healthData);
     setTargets(targetData.targets || []);
     setAssessments(assessmentData.assessments || []);
+    setFrameworks(frameworkData.frameworks || []);
     const firstTarget = targetData.targets?.[0]?.id || "";
     const firstAssessment = assessmentData.assessments?.[0]?.id || "";
     setSelectedTargetId((current) => current || firstTarget);
@@ -221,6 +225,32 @@ function App() {
     });
   }
 
+  async function checkFrameworks() {
+    await runAction("Framework health check", async () => {
+      await api("/api/frameworks/health", { method: "POST", body: "{}" });
+      const caps = await api("/api/frameworks/capabilities");
+      setFrameworkCapabilities(caps.frameworks || {});
+    });
+  }
+
+  async function runAllFrameworks() {
+    if (!selectedTargetId) return;
+    await runAction("Multi-framework assessment", async () => {
+      await api("/api/assessments/frameworks", {
+        method: "POST",
+        body: JSON.stringify({
+          target_id: selectedTargetId,
+          frameworks: ["native", "garak", "pyrit", "promptfoo", "deepteam"],
+          objective: "Authorized multi-framework AI security assessment",
+          category: "multi_framework",
+          strategy: "baseline",
+          maximum_requests: 20,
+          written_authorization_confirmed: true,
+        }),
+      });
+    });
+  }
+
   useEffect(() => {
     refresh().catch((error) => setNotice(error.message));
   }, []);
@@ -238,7 +268,7 @@ function App() {
     <main>
       <aside>
         <div className="brand">AI<br />AIMS</div>
-        {["dashboard", "targets", "assessments", "evidence", "iso", "reports", "administration"].map((item) => (
+        {["dashboard", "targets", "frameworks", "assessments", "evidence", "iso", "reports", "administration"].map((item) => (
           <button className={view === item ? "nav active" : "nav"} key={item} onClick={() => setView(item)}>
             {item}
           </button>
@@ -315,6 +345,27 @@ function App() {
                 <button className="row clickable" key={assessment.id} onClick={() => setSelectedAssessmentId(assessment.id)}>
                   <span>{assessment.id}</span><span>{assessment.target}</span><span>{assessment.mode}</span><span>{assessment.findings}</span><span>{assessment.completed_at}</span>
                 </button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {view === "frameworks" && (
+          <section className="panel">
+            <PanelTitle icon={<SlidersHorizontal />} title="Framework Manager" subtitle="Isolated worker health, capabilities, and controlled multi-framework execution." />
+            <div className="actions">
+              <button onClick={checkFrameworks} disabled={busy}><RefreshCw size={16} /> Health + Capabilities</button>
+              <button onClick={runAllFrameworks} disabled={busy || !selectedTargetId}><Play size={16} /> Run All Compatible</button>
+            </div>
+            <div className="cards">
+              {frameworks.map((framework: any) => (
+                <article className="card" key={framework.id}>
+                  <strong>{framework.name}</strong>
+                  <StatusBadge status={framework.health || "unknown"} />
+                  <span>{framework.version || "version pending"}</span>
+                  <span>{framework.enabled ? "enabled" : "disabled"}</span>
+                  <p>{(frameworkCapabilities[framework.id]?.capabilities || []).map((item: any) => item.name).join(", ") || "Run capabilities check"}</p>
+                </article>
               ))}
             </div>
           </section>

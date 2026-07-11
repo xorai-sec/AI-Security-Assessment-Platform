@@ -5,12 +5,14 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, PlainTextResponse
 from pydantic import BaseModel
 
 from packages.security_assurance.enterprise_client import EnterpriseAssistClient
+from packages.security_assurance.framework_manager import FrameworkManager
+from packages.security_assurance.framework_models import FrameworkAssessmentRequest
 from packages.security_assurance.models import AISystem, AssessmentScope, EnvironmentType, Organization
 from packages.security_assurance.orchestrator import default_orchestrator
 from packages.security_assurance.storage import EvidenceStore
@@ -22,6 +24,8 @@ ROOT = Path(__file__).resolve().parents[3]
 STORE = EvidenceStore(ROOT)
 ORCHESTRATOR = default_orchestrator(ROOT)
 TARGETS = TargetManager(ROOT)
+FRAMEWORKS = FrameworkManager(ROOT, TARGETS)
+TARGET_PROXY_SECRET = os.getenv("TARGET_PROXY_SECRET", "development-target-proxy-secret")
 
 
 class DemoAssessmentRequest(BaseModel):
@@ -63,11 +67,8 @@ app.add_middleware(
 @app.get("/health")
 def health() -> dict[str, Any]:
     adapters = {
-        "native": {"status": "Available", "version": "0.1.0"},
-        "garak": {"status": "Planned", "version": None},
-        "pyrit": {"status": "Planned", "version": None},
-        "promptfoo": {"status": "Planned", "version": None},
-        "deepteam": {"status": "Planned", "version": None},
+        item.id: {"status": item.health, "version": item.version, "enabled": item.enabled, "worker_url": item.worker_url}
+        for item in FRAMEWORKS.list_frameworks()
     }
     return {"status": "ok", "service": "api", "adapters": adapters}
 
@@ -75,6 +76,44 @@ def health() -> dict[str, Any]:
 @app.get("/api/adapters/health")
 def adapter_health() -> dict[str, Any]:
     return health()["adapters"]
+
+
+@app.get("/api/frameworks")
+def list_frameworks() -> dict[str, Any]:
+    return {"frameworks": [item.model_dump(mode="json") for item in FRAMEWORKS.list_frameworks()]}
+
+
+@app.post("/api/frameworks/health")
+def framework_health() -> dict[str, Any]:
+    return {"frameworks": FRAMEWORKS.health()}
+
+
+@app.get("/api/frameworks/capabilities")
+def framework_capabilities() -> dict[str, Any]:
+    return {"frameworks": FRAMEWORKS.capabilities()}
+
+
+@app.post("/api/frameworks/self-test/{framework_id}")
+def framework_self_test(framework_id: str) -> dict[str, Any]:
+    if framework_id not in {item.id for item in FRAMEWORKS.list_frameworks()}:
+        raise HTTPException(status_code=404, detail="Framework not found")
+    return {"framework": framework_id, "health": FRAMEWORKS.health().get(framework_id), "capabilities": FRAMEWORKS.capabilities().get(framework_id)}
+
+
+@app.post("/api/assessments/frameworks")
+def run_framework_assessment(request: FrameworkAssessmentRequest) -> dict[str, Any]:
+    try:
+        result = FRAMEWORKS.run_assessment(request, os.getenv("API_INTERNAL_BASE_URL", "http://api:8080"))
+        return result.model_dump(mode="json")
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Target not found") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.get("/api/assessments/frameworks")
+def list_framework_assessments() -> dict[str, Any]:
+    return {"assessments": FRAMEWORKS.list_results()}
 
 
 @app.post("/api/demo/seed")
@@ -228,6 +267,62 @@ def supported_campaigns(target_id: str) -> dict[str, Any]:
 @app.get("/api/targets/{target_id}/health-history")
 def target_health_history(target_id: str) -> dict[str, Any]:
     return {"history": TARGETS.health_history(target_id)}
+
+
+def _check_internal_token(x_target_proxy_token: str | None) -> None:
+    if x_target_proxy_token != TARGET_PROXY_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid internal target proxy token")
+
+
+@app.post("/internal/targets/{target_id}/sessions")
+def internal_create_session(target_id: str, x_target_proxy_token: str | None = Header(default=None)) -> dict[str, Any]:
+    _check_internal_token(x_target_proxy_token)
+    TARGETS.get_target(target_id)
+    return {"session_id": f"SES-{target_id}"}
+
+
+@app.post("/internal/targets/{target_id}/message")
+async def internal_target_message(
+    target_id: str,
+    request: dict[str, Any],
+    x_target_proxy_token: str | None = Header(default=None),
+) -> dict[str, Any]:
+    _check_internal_token(x_target_proxy_token)
+    try:
+        return await FRAMEWORKS.proxy_target_message(target_id, request)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Target not found") from exc
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/internal/targets/{target_id}/reset")
+def internal_target_reset(target_id: str, x_target_proxy_token: str | None = Header(default=None)) -> dict[str, Any]:
+    _check_internal_token(x_target_proxy_token)
+    TARGETS.get_target(target_id)
+    return {"target_id": target_id, "status": "reset-not-required"}
+
+
+@app.get("/internal/targets/{target_id}/telemetry/{request_id}")
+def internal_target_telemetry(
+    target_id: str,
+    request_id: str,
+    x_target_proxy_token: str | None = Header(default=None),
+) -> dict[str, Any]:
+    _check_internal_token(x_target_proxy_token)
+    TARGETS.get_target(target_id)
+    return {"target_id": target_id, "request_id": request_id, "telemetry": {}, "unavailable": ["telemetry lookup not exposed by target"]}
+
+
+@app.post("/internal/framework-events")
+def internal_framework_events(event: dict[str, Any], x_target_proxy_token: str | None = Header(default=None)) -> dict[str, Any]:
+    _check_internal_token(x_target_proxy_token)
+    path = ROOT / "data" / "framework-events.jsonl"
+    with path.open("a", encoding="utf-8") as handle:
+        import json
+
+        handle.write(json.dumps(event, default=str) + "\n")
+    return {"stored": True}
 
 
 @app.post("/api/assessments/demo")

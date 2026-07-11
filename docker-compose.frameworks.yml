@@ -1,8 +1,105 @@
 services:
-  framework-worker:
-    image: python:3.12-slim
-    profiles: ["frameworks"]
-    working_dir: /workspace
+  native-worker:
+    build:
+      context: .
+      dockerfile: workers/native-worker/Dockerfile
+    environment:
+      API_BASE_URL: http://api:8080
+      TARGET_PROXY_SECRET: ${TARGET_PROXY_SECRET:-development-target-proxy-secret}
+      FRAMEWORK_RAW_ARTIFACT_PATH: /artifacts
     volumes:
-      - ./:/workspace
-    command: ["python", "-c", "raise SystemExit('Framework workers require garak/PyRIT/Promptfoo/DeepTeam environments before enablement')"]
+      - ./data/framework-artifacts:/artifacts
+    ports:
+      - "8091:8091"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8091/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  garak-worker:
+    build:
+      context: .
+      dockerfile: workers/garak-worker/Dockerfile
+    environment:
+      API_BASE_URL: http://api:8080
+      TARGET_PROXY_SECRET: ${TARGET_PROXY_SECRET:-development-target-proxy-secret}
+      FRAMEWORK_RAW_ARTIFACT_PATH: /artifacts
+    volumes:
+      - ./data/framework-artifacts:/artifacts
+    ports:
+      - "8092:8092"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8092/health')"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+
+  pyrit-worker:
+    build:
+      context: .
+      dockerfile: workers/pyrit-worker/Dockerfile
+    environment:
+      API_BASE_URL: http://api:8080
+      TARGET_PROXY_SECRET: ${TARGET_PROXY_SECRET:-development-target-proxy-secret}
+      FRAMEWORK_RAW_ARTIFACT_PATH: /artifacts
+    volumes:
+      - ./data/framework-artifacts:/artifacts
+    ports:
+      - "8093:8093"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8093/health')"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+
+  deepteam-worker:
+    build:
+      context: .
+      dockerfile: workers/deepteam-worker/Dockerfile
+    environment:
+      API_BASE_URL: http://api:8080
+      TARGET_PROXY_SECRET: ${TARGET_PROXY_SECRET:-development-target-proxy-secret}
+      FRAMEWORK_RAW_ARTIFACT_PATH: /artifacts
+    volumes:
+      - ./data/framework-artifacts:/artifacts
+    ports:
+      - "8094:8094"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8094/health')"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+
+  promptfoo-worker:
+    build:
+      context: .
+      dockerfile: workers/promptfoo-worker/Dockerfile
+    environment:
+      API_BASE_URL: http://api:8080
+      TARGET_PROXY_SECRET: ${TARGET_PROXY_SECRET:-development-target-proxy-secret}
+      FRAMEWORK_RAW_ARTIFACT_PATH: /artifacts
+    volumes:
+      - ./data/framework-artifacts:/artifacts
+    ports:
+      - "8095:8095"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8095/health || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 5

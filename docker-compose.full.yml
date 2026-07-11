@@ -1,17 +1,2 @@
-services:
-  worker:
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile
-    environment:
-      ENTERPRISE_ASSIST_LOCAL_URL: http://enterprise-assist:8090
-      AISEC_ALLOW_LOCAL_TARGETS: "true"
-      REDIS_URL: redis://redis:6379/0
-    volumes:
-      - ./data:/app/data
-    command: ["python", "-c", "print('Worker queue model is planned; synchronous API orchestration is active in this build.')"]
-    depends_on:
-      redis:
-        condition: service_healthy
-      api:
-        condition: service_healthy
+include:
+  - docker-compose.frameworks.yml
