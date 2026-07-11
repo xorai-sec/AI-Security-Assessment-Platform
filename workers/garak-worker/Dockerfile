@@ -14,6 +14,7 @@ shutil.copyfile("/worker/target_proxy_generator.py", target)
 print(f"Installed garak target proxy generator at {target}")
 PY
 COPY workers/common /worker/workers/common
+COPY packages /worker/packages
 COPY workers/garak-worker/app.py /worker/app.py
 ENV PYTHONPATH=/worker
 RUN useradd -m worker && mkdir -p /artifacts/garak && chown -R worker:worker /worker /artifacts

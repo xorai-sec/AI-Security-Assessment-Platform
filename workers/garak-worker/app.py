@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from workers.common.advanced import command_capture, write_json
+from workers.common.artifacts import run_artifacts
 from workers.common.base_runner import BaseFrameworkRunner
 from workers.common.normalization import evidence_hash
 from workers.common.protocol.schemas import (
@@ -103,7 +104,7 @@ class GarakRunner(BaseFrameworkRunner):
             return ",".join(configured)
         return DEFAULT_PROBES.get(request.profile, DEFAULT_PROBES["quick"])
 
-    def _write_generator_options(self, request: FrameworkExecutionRequest, traffic_path: Path) -> Path:
+    def _write_generator_options(self, request: FrameworkExecutionRequest, traffic_path: Path, run_dir: Path) -> Path:
         options = {
             "target_proxy": {
                 "TargetProxyGenerator": {
@@ -118,7 +119,7 @@ class GarakRunner(BaseFrameworkRunner):
                 }
             }
         }
-        return write_json(self.artifact_root / f"{request.execution_id}-garak-generator-options.json", options)
+        return write_json(run_dir / "generator-options.json", options)
 
     def _run_garak(self, request: FrameworkExecutionRequest, options_path: Path, report_prefix: Path) -> dict[str, Any]:
         command = [
@@ -306,14 +307,17 @@ class GarakRunner(BaseFrameworkRunner):
     async def execute(self, request: FrameworkExecutionRequest) -> FrameworkExecutionResult:
         started = datetime.now(timezone.utc)
         discovery = self._garak_discovery()
-        discovery_path = write_json(self.artifact_root / f"{request.execution_id}-garak-discovery.json", discovery)
-        traffic_path = self.artifact_root / f"{request.execution_id}-garak-target-proxy-traffic.jsonl"
-        options_path = self._write_generator_options(request, traffic_path)
-        report_prefix = self.artifact_root / request.execution_id
+        artifacts = run_artifacts(self.artifact_root, request.execution_id)
+        discovery_path = write_json(artifacts.path("discovery.json"), discovery)
+        traffic_path = artifacts.path("target-proxy-traffic.jsonl")
+        options_path = self._write_generator_options(request, traffic_path, artifacts.root)
+        report_prefix = artifacts.path("report")
         cli_result = self._run_garak(request, options_path, report_prefix)
-        cli_path = write_json(self.artifact_root / f"{request.execution_id}-garak-cli.json", cli_result)
+        cli_path = write_json(artifacts.path("command.json"), cli_result)
+        stdout_path = artifacts.write_text("stdout.log", str(cli_result.get("stdout") or ""))
+        stderr_path = artifacts.write_text("stderr.log", str(cli_result.get("stderr") or ""))
         garak_log = Path.home() / ".local" / "share" / "garak" / "garak.log"
-        log_copy_path = self.artifact_root / f"{request.execution_id}-garak.log"
+        log_copy_path = artifacts.path("garak.log")
         if garak_log.exists():
             shutil.copyfile(garak_log, log_copy_path)
         report_path = self._discover_report_path(request, report_prefix, cli_result)
@@ -338,7 +342,16 @@ class GarakRunner(BaseFrameworkRunner):
             status=status,
             started_at=started,
             completed_at=datetime.now(timezone.utc),
-            raw_artifacts=[str(discovery_path), str(options_path), str(cli_path), str(report_path), str(traffic_path), str(log_copy_path)],
+            raw_artifacts=[
+                str(discovery_path),
+                str(options_path),
+                str(cli_path),
+                str(stdout_path),
+                str(stderr_path),
+                str(report_path),
+                str(traffic_path),
+                str(log_copy_path),
+            ],
             evidence=evidence,
             errors=errors,
             native_engine_invoked=bool(evidence) and report_path.exists() and cli_result["returncode"] == 0,

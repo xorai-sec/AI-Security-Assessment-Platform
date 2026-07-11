@@ -4,6 +4,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends git build-essen
 COPY workers/deepteam-worker/requirements.txt /worker/requirements.txt
 RUN pip install --no-cache-dir -r /worker/requirements.txt
 COPY workers/common /worker/workers/common
+COPY packages /worker/packages
 COPY workers/deepteam-worker/app.py /worker/app.py
 ENV PYTHONPATH=/worker
 RUN useradd -m worker && mkdir -p /artifacts/deepteam && chown -R worker:worker /worker /artifacts
