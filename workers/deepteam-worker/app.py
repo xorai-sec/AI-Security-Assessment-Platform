@@ -4,10 +4,13 @@ import asyncio
 import importlib
 import inspect
 import json
+import os
 import pkgutil
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+import httpx
 
 from workers.common.advanced import framework_evidence
 from workers.common.artifacts import run_artifacts
@@ -33,10 +36,90 @@ UNSUPPORTED_ATTACKS = [
 ]
 
 
+class OllamaDeepEvalModel:
+    def __init__(self, model_name: str, base_url: str) -> None:
+        self.model_name = model_name.removeprefix("ollama/")
+        self.base_url = base_url.rstrip("/")
+
+    def load_model(self) -> "OllamaDeepEvalModel":
+        return self
+
+    def get_model_name(self) -> str:
+        return f"ollama/{self.model_name}"
+
+    def _payload(self, prompt: str, schema: Any | None = None) -> dict[str, Any]:
+        final_prompt = prompt
+        payload: dict[str, Any] = {
+            "model": self.model_name,
+            "prompt": final_prompt,
+            "stream": False,
+            "options": {"temperature": 0.0},
+        }
+        if schema is not None:
+            schema_text = ""
+            if hasattr(schema, "model_json_schema"):
+                try:
+                    schema_text = json.dumps(schema.model_json_schema(), default=str)
+                except Exception:
+                    schema_text = ""
+            payload["format"] = "json"
+            payload["prompt"] = (
+                f"{prompt}\n\nReturn only valid JSON. "
+                f"Use this response schema when possible: {schema_text}"
+            )
+        return payload
+
+    def _coerce_schema(self, text: str, schema: Any | None) -> Any:
+        if schema is None:
+            return text
+        for parser in ("model_validate_json", "parse_raw"):
+            if hasattr(schema, parser):
+                try:
+                    return getattr(schema, parser)(text)
+                except Exception:
+                    pass
+        try:
+            data = json.loads(text)
+        except Exception:
+            data = {"reason": text, "score": 0, "verdict": "unknown"}
+        for parser in ("model_validate", "parse_obj"):
+            if hasattr(schema, parser):
+                try:
+                    return getattr(schema, parser)(data)
+                except Exception:
+                    pass
+        return text
+
+    def generate(self, prompt: str, schema: Any | None = None, *args: Any, **kwargs: Any) -> Any:
+        with httpx.Client(timeout=float(os.getenv("OLLAMA_DEEPEVAL_TIMEOUT", "180"))) as client:
+            response = client.post(f"{self.base_url}/api/generate", json=self._payload(str(prompt), schema))
+            response.raise_for_status()
+            text = str(response.json().get("response", ""))
+        return self._coerce_schema(text, schema)
+
+    async def a_generate(self, prompt: str, schema: Any | None = None, *args: Any, **kwargs: Any) -> Any:
+        async with httpx.AsyncClient(timeout=float(os.getenv("OLLAMA_DEEPEVAL_TIMEOUT", "180"))) as client:
+            response = await client.post(f"{self.base_url}/api/generate", json=self._payload(str(prompt), schema))
+            response.raise_for_status()
+            text = str(response.json().get("response", ""))
+        return self._coerce_schema(text, schema)
+
+
 def _load_symbol(path: str) -> Any:
     module_name, symbol_name = path.rsplit(".", 1)
     module = importlib.import_module(module_name)
     return getattr(module, symbol_name)
+
+
+def _ollama_deepeval_model(model_name: str, base_url: str) -> Any:
+    try:
+        BaseLLM = _load_symbol("deepeval.models.base_model.DeepEvalBaseLLM")
+    except Exception:
+        BaseLLM = object
+    if BaseLLM is object or issubclass(OllamaDeepEvalModel, BaseLLM):
+        return OllamaDeepEvalModel(model_name, base_url)
+    runtime_cls = type("OllamaDeepEvalRuntimeModel", (OllamaDeepEvalModel, BaseLLM), {})
+    return runtime_cls(model_name, base_url)
 
 
 def _object_to_jsonable(value: Any) -> Any:
@@ -109,6 +192,32 @@ def _model_role(request: FrameworkExecutionRequest, role: str, default: str) -> 
     return default
 
 
+def _resolve_deepteam_model(model_name: str) -> Any:
+    normalized = (model_name or "").strip()
+    ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434")
+    if normalized.startswith("ollama/"):
+        return _ollama_deepeval_model(normalized.removeprefix("ollama/"), ollama_base_url)
+    if not os.getenv("OPENAI_API_KEY"):
+        fallback = (
+            os.getenv("OLLAMA_ATTACKER_MODEL")
+            or os.getenv("OLLAMA_JUDGE_MODEL")
+            or os.getenv("OLLAMA_TARGET_MODEL")
+            or normalized
+            or "llama3.2:3b"
+        )
+        return _ollama_deepeval_model(fallback.removeprefix("ollama/"), ollama_base_url)
+    return normalized
+
+
+def _model_identifier(model: Any) -> str:
+    if hasattr(model, "get_model_name"):
+        try:
+            return str(model.get_model_name())
+        except Exception:
+            pass
+    return str(model)
+
+
 class DeepTeamRunner(BaseFrameworkRunner):
     framework_name = "deepteam"
     package_name = "deepteam"
@@ -154,8 +263,8 @@ class DeepTeamRunner(BaseFrameworkRunner):
         selected_paths = configured if configured else DEFAULT_VULNERABILITIES
         limit = max(1, min(len(selected_paths), request.limits.maximum_requests, 2 if request.profile == "quick" else 4 if request.profile == "standard" else len(selected_paths)))
         vulnerabilities = []
-        simulator_model = _model_role(request, "simulator_model", "gpt-4o-mini")
-        evaluation_model = _model_role(request, "evaluation_model", simulator_model)
+        simulator_model = _resolve_deepteam_model(_model_role(request, "simulator_model", "gpt-4o-mini"))
+        evaluation_model = _resolve_deepteam_model(_model_role(request, "evaluation_model", _model_identifier(simulator_model)))
         for path in selected_paths[:limit]:
             cls = _load_symbol(str(path))
             kwargs = {
@@ -183,8 +292,8 @@ class DeepTeamRunner(BaseFrameworkRunner):
         native_result_path = artifacts.path("native-result.json")
         errors: list[str] = []
         traffic_rows: list[dict[str, Any]] = []
-        simulator_model = _model_role(request, "simulator_model", "gpt-4o-mini")
-        evaluation_model = _model_role(request, "evaluation_model", simulator_model)
+        simulator_model = _resolve_deepteam_model(_model_role(request, "simulator_model", "gpt-4o-mini"))
+        evaluation_model = _resolve_deepteam_model(_model_role(request, "evaluation_model", _model_identifier(simulator_model)))
         plugin_ids = [DEEPTEAM_RED_TEAMER, DEEPTEAM_RED_TEAM, DEEPTEAM_RTTURN]
         attack_engine = None
         try:
@@ -304,13 +413,13 @@ class DeepTeamRunner(BaseFrameworkRunner):
                 )
             )
 
-        unsupported_errors = [
+        unsupported_limitations = [
             f"Unsupported in installed DeepTeam release: {path} ({discovery['targets'].get(path, {}).get('error')})"
             for path in UNSUPPORTED_ATTACKS
             if discovery.get("targets", {}).get(path, {}).get("error")
         ]
-        if unsupported_errors:
-            artifacts.write_json("unsupported-attack-modules.json", unsupported_errors)
+        if unsupported_limitations:
+            artifacts.write_json("unsupported-attack-modules.json", unsupported_limitations)
         if not traffic_rows:
             errors.append("Native DeepTeam did not send any prompt through the target callback")
         status = "succeeded" if evidence and not errors else "partially_completed" if evidence else "failed"
@@ -322,7 +431,7 @@ class DeepTeamRunner(BaseFrameworkRunner):
             completed_at=datetime.now(timezone.utc),
             raw_artifacts=[str(discovery_path), str(traffic_path), str(native_result_path), str(artifacts.path("unsupported-attack-modules.json"))],
             evidence=evidence,
-            errors=errors + unsupported_errors,
+            errors=errors,
             native_engine_invoked=bool(evidence) and not errors,
             native_command_or_api=native_api,
             native_framework_version=self.detected_version(),
