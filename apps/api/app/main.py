@@ -514,8 +514,8 @@ def list_reports() -> dict[str, Any]:
     }
 
 
-@app.get("/api/reports/{assessment_id}/{kind}")
-def report_file(assessment_id: str, kind: str) -> FileResponse | PlainTextResponse:
+@app.get("/api/reports/{assessment_id}/{kind}", response_model=None)
+def report_file(assessment_id: str, kind: str):
     if kind == "html":
         try:
             result = STORE.load_result(assessment_id)
