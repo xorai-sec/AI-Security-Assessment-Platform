@@ -5,7 +5,7 @@ DOCKER_BIN="${DOCKER_BIN:-docker}"
 COMPOSE_FILES=(-f docker-compose.yml -f docker-compose.frameworks.yml)
 SERVICE="${PYRIT_SERVICE:-pyrit-worker}"
 
-"$DOCKER_BIN" compose "${COMPOSE_FILES[@]}" exec "$SERVICE" python - <<'PY'
+"$DOCKER_BIN" compose "${COMPOSE_FILES[@]}" exec -T "$SERVICE" python - <<'PY'
 import importlib
 import inspect
 import json

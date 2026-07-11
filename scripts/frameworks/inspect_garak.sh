@@ -5,7 +5,7 @@ DOCKER_BIN="${DOCKER_BIN:-docker}"
 COMPOSE_FILES=(-f docker-compose.yml -f docker-compose.frameworks.yml)
 SERVICE="${GARAK_SERVICE:-garak-worker}"
 
-"$DOCKER_BIN" compose "${COMPOSE_FILES[@]}" exec "$SERVICE" python - <<'PY'
+"$DOCKER_BIN" compose "${COMPOSE_FILES[@]}" exec -T "$SERVICE" python - <<'PY'
 import importlib
 import inspect
 import json
@@ -30,7 +30,7 @@ payload = {
 print(json.dumps(payload, indent=2, default=str))
 PY
 
-"$DOCKER_BIN" compose "${COMPOSE_FILES[@]}" exec "$SERVICE" python -m garak --version
-"$DOCKER_BIN" compose "${COMPOSE_FILES[@]}" exec "$SERVICE" python -m garak --plugin_info generators.target_proxy.TargetProxyGenerator
-"$DOCKER_BIN" compose "${COMPOSE_FILES[@]}" exec "$SERVICE" python -m garak --list_probes -p "${GARAK_PROBES:-dan,promptinject,encoding}" --skip_unknown
-"$DOCKER_BIN" compose "${COMPOSE_FILES[@]}" exec "$SERVICE" python -m garak --list_detectors --skip_unknown
+"$DOCKER_BIN" compose "${COMPOSE_FILES[@]}" exec -T "$SERVICE" python -m garak --version
+"$DOCKER_BIN" compose "${COMPOSE_FILES[@]}" exec -T "$SERVICE" python -m garak --plugin_info generators.target_proxy.TargetProxyGenerator
+"$DOCKER_BIN" compose "${COMPOSE_FILES[@]}" exec -T "$SERVICE" python -m garak --list_probes -p "${GARAK_PROBES:-dan,promptinject,encoding}" --skip_unknown
+"$DOCKER_BIN" compose "${COMPOSE_FILES[@]}" exec -T "$SERVICE" python -m garak --list_detectors --skip_unknown
