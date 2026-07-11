@@ -5,6 +5,7 @@ from pathlib import Path
 
 from .campaigns import NATIVE_CAMPAIGNS, NativeCampaign
 from .correlation import correlate_findings
+from .adapters.targets import build_target_adapter
 from .enterprise_client import EnterpriseAssistClient
 from .evaluation import evaluate_campaign
 from .evidence import evidence_hash, redact_text
@@ -21,6 +22,8 @@ from .models import (
 from .reporting import write_reports
 from .risk import calculate_risk
 from .storage import EvidenceStore
+from .target_manager import CAMPAIGN_REQUIREMENTS
+from .target_models import TargetMessageRequest, TargetRecord
 
 
 def _build_finding(campaign: NativeCampaign, execution: AttackExecution, owner: str) -> Finding:
@@ -116,7 +119,84 @@ class AssessmentOrchestrator:
         self.store.save_result(result)
         return result
 
+    async def run_native_assessment_for_target(
+        self,
+        scope: AssessmentScope,
+        target: TargetRecord,
+        target_mode: str = "authorized",
+    ) -> AssessmentResult:
+        scope.validate_authorized()
+        adapter = build_target_adapter(target)
+        capabilities = target.discovered_capabilities or await adapter.discover_capabilities()
+        enabled_capabilities = set(capabilities.enabled())
+        result = AssessmentResult(scope=scope, target_mode=target_mode)
+
+        for index, campaign in enumerate(NATIVE_CAMPAIGNS, start=1):
+            if index > scope.max_requests:
+                break
+            required = CAMPAIGN_REQUIREMENTS.get(campaign.key, {"chat"})
+            if required - enabled_capabilities:
+                continue
+            spec = CampaignSpec(
+                assessment_id=result.id,
+                framework="native",
+                attack_category=campaign.category,
+                objective=campaign.objective,
+                strategy=f"adapter_controlled_{target.target_type.value}",
+            )
+            message = TargetMessageRequest(
+                prompt=campaign.prompt,
+                user_role=campaign.user_role,
+                user_id=f"tester-{campaign.user_role}",
+                session_id=f"{result.id}-{campaign.key}",
+                metadata={"mode": target_mode, "confirm_external_action": False},
+            )
+            response = await adapter.send_message(message)
+            sanitized = await adapter.sanitize_for_storage(response)
+            raw_response = response.raw_response or {
+                "response": sanitized.text,
+                "telemetry": sanitized.telemetry.model_dump(mode="json"),
+            }
+            evaluation = evaluate_campaign(campaign, raw_response)
+            evidence = {
+                "target_id": target.id,
+                "target_type": target.target_type,
+                "target_visibility": target.visibility,
+                "campaign": campaign.key,
+                "prompt": campaign.prompt,
+                "sanitized_response": sanitized.model_dump(mode="json"),
+                "evaluation": evaluation,
+                "capabilities": capabilities.enabled(),
+            }
+            execution = AttackExecution(
+                campaign_id=spec.id,
+                framework="native",
+                framework_version="0.2.0-target-adapters",
+                target=target.id,
+                prompt=campaign.prompt,
+                response=redact_text(sanitized.text),
+                retrieval_trace=sanitized.telemetry.retrieval_trace,
+                tool_trace=sanitized.telemetry.tool_trace,
+                authorization_trace=sanitized.telemetry.authorization_trace,
+                evaluator_results=[evaluation],
+                success=bool(evaluation["success"]),
+                confidence=float(evaluation["confidence"]),
+                latency_ms=sanitized.latency_ms,
+                token_usage=sanitized.token_usage,
+                evidence_hash=evidence_hash(evidence),
+            )
+            result.executions.append(execution)
+            self.store.save_json(f"{result.id}-{execution.id}.evidence.json", evidence)
+            if execution.success:
+                result.findings.append(_build_finding(campaign, execution, scope.system_owner))
+
+        result.findings = correlate_findings(result.findings)
+        result.iso_mappings = [map_finding_to_iso(finding) for finding in result.findings]
+        result.completed_at = datetime.now(timezone.utc)
+        result.reports = write_reports(result, self.store.report_dir)
+        self.store.save_result(result)
+        return result
+
 
 def default_orchestrator(root: Path) -> AssessmentOrchestrator:
     return AssessmentOrchestrator(EvidenceStore(root))
-

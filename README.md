@@ -1,64 +1,45 @@
 # AI Security Assessment and ISO/IEC 42001 Assurance Platform
 
-A professional experimental platform for connecting technical AI red-team evidence to ISO/IEC 42001 AI management system assurance activities.
+A professional authorized AI security assessment platform for collecting technical evidence and mapping findings to ISO/IEC 42001 assurance activities.
 
-The platform runs controlled attacks against a synthetic laboratory target named **EnterpriseAssist**, captures prompts, responses, retrieval traces, tool traces and authorization decisions, evaluates deterministic success conditions, correlates findings, calculates risk, maps findings to ISO/IEC 42001 evidence expectations, and generates reports.
+The platform registers approved AI systems, validates target connectivity, discovers capabilities, runs controlled campaigns through target adapters, stores prompt/response/telemetry evidence, correlates findings, maps ISO/IEC 42001 evidence candidates, and generates Markdown/HTML/JSON/CSV reports.
 
-It does **not** certify ISO/IEC 42001 conformity and does **not** declare confirmed nonconformities. Human review is required.
+It does **not** certify ISO/IEC 42001 conformity and does **not** declare legal compliance or final nonconformity. Human review is required.
 
-## Research Problem
+## What changed in Phase 3
 
-How can technical adversarial testing of AI systems produce reliable, repeatable and explainable evidence that organizations can use when evaluating their ISO/IEC 42001 AI management system?
-
-## Current Working Capabilities
-
-- EnterpriseAssist lab target with vulnerable and hardened modes.
-- Six controlled vulnerabilities:
-  - system-prompt leakage
-  - indirect RAG prompt injection
-  - unauthorized document retrieval
-  - unauthorized tool execution
-  - external-action confirmation bypass
-  - cross-session memory leakage
-- Native deterministic campaign runner.
-- Evidence hashing and sanitized evidence records.
-- Risk scoring with transparent formula.
-- ISO/IEC 42001 mapping candidates using original placeholder language.
-- Markdown, HTML, JSON and CSV reports.
-- Docker Compose startup.
-- CPU-first operation with GPU documentation.
+- General target inventory and target manager.
+- Target adapter abstraction independent from assessment frameworks.
+- EnterpriseAssist, OpenAI-compatible, vLLM, Ollama and Custom REST adapters.
+- Safe URL/network validation with local-lab allowlisting.
+- Credential masking and development encryption.
+- Capability discovery and black/grey/white-box visibility classification.
+- Frontend workflows for target registration, validation, assessment launch, evidence, ISO mapping and reports.
+- Native campaigns now run through the target abstraction.
+- Local OpenAI-compatible and Custom REST fixture endpoints for validation.
 
 ## Architecture
 
 ```mermaid
 flowchart TD
-    Web["React Web UI"]
-    API["FastAPI API"]
-    Orch["Assessment Orchestrator"]
-    Native["Native Campaigns"]
-    EA["EnterpriseAssist Lab Target"]
-    Eval["Evaluation Engine"]
-    Risk["Risk Engine"]
-    ISO["ISO Mapping Engine"]
-    Reports["Report Generator"]
-    Evidence["Evidence Store"]
-
-    Web --> API
-    API --> Orch
-    Orch --> Native
-    Native --> EA
-    EA --> Eval
-    Eval --> Risk
-    Risk --> ISO
-    ISO --> Reports
-    Reports --> Evidence
+    Web["React Target Console"] --> API["FastAPI API"]
+    API --> TM["Target Manager"]
+    TM --> Inventory["Target Inventory"]
+    TM --> Adapter["Target Adapter"]
+    Adapter --> Target["Authorized AI System"]
+    API --> Orch["Assessment Orchestrator"]
+    Orch --> Native["Native Campaigns"]
+    Native --> Adapter
+    Orch --> Evidence["Evidence Store"]
+    Evidence --> Reports["Reports"]
+    Evidence --> ISO["ISO/IEC 42001 Candidate Mapping"]
 ```
 
-## Quick Start With Docker
+## Quick Start
 
 ```bash
-git clone <your-repo-url>
-cd ai-security-iso42001-platform
+git clone https://github.com/xorai-sec/AI-Security-Assessment-Platform.git
+cd AI-Security-Assessment-Platform
 cp .env.example .env
 make demo-up
 ```
@@ -66,108 +47,89 @@ make demo-up
 Open:
 
 ```text
-http://localhost:5173
+Dashboard: http://127.0.0.1:5173
+API docs:  http://127.0.0.1:8080/docs
+Target:    http://127.0.0.1:8090/health
 ```
 
-Run demo seed and assessments:
+Register and assess controlled targets:
 
 ```bash
-make demo-seed
-make demo-assess
+python3 -m venv .venv
+source .venv/bin/activate
+make install
+make register-enterprise-assist
+make register-openai-fixture
+make register-custom-rest-fixture
+make validate-targets
+make assess-target
+make assess-target-group
 make demo-report
 ```
 
-API docs:
+## Target support matrix
 
-```text
-http://localhost:8080/docs
-```
+| Target type | Status | Capabilities |
+|---|---|---|
+| EnterpriseAssist | Implemented and locally tested | RAG, tools, memory, white-box telemetry |
+| OpenAI-compatible | Implemented; local fixture added | Chat, multi-turn, model metadata, token usage where returned |
+| Ollama | Implemented; runtime validation required | Local model chat, model availability |
+| vLLM | Implemented through OpenAI-compatible adapter; runtime validation required | OpenAI-compatible local serving |
+| Custom REST | Implemented; local fixture added | Configurable request/response and optional telemetry |
+| Generic RAG | Implemented with telemetry-dependent features | Chat and optional retrieval evidence |
+| Generic Agent | Implemented with telemetry-dependent features | Chat and optional tool/action evidence |
 
-EnterpriseAssist health:
-
-```text
-http://localhost:8090/health
-```
-
-## CPU / AMD Fallback
-
-The core demo does not require GPU. This matches the current AMD/CPU lab environment and avoids blocking development on CUDA.
-
-GPU scripts are included for NVIDIA systems:
-
-```bash
-make validate-gpu
-bash scripts/gpu/start_ollama.sh
-MODEL=llama3.2:3b bash scripts/gpu/pull_demo_model.sh
-```
-
-Do not commit model files to GitHub.
-
-## Demonstration Commands
-
-```bash
-make demo-up
-make demo-seed
-make demo-assess
-make demo-report
-```
-
-Expected behavior:
-
-- Vulnerable EnterpriseAssist produces controlled findings.
-- Hardened EnterpriseAssist blocks or reduces findings.
-- Reports appear under `data/reports/`.
-- Evidence appears under `data/evidence/`.
-
-## Security and Authorization Notice
-
-Use only against:
-
-- systems you own
-- written-authorized systems
-- local lab targets
-- pre-production targets with explicit scope
-
-Default restrictions: no denial-of-service, no destructive actions, no public target scanning, no real external email delivery, no credential attacks, no persistence, no malware deployment.
-
-## Supported Frameworks
+## Framework support
 
 | Framework | Status |
 |---|---|
-| Native controlled campaigns | Implemented |
-| garak | Planned adapter |
-| PyRIT | Planned adapter |
-| Promptfoo | Planned adapter |
-| DeepTeam | Planned adapter |
+| Native controlled campaigns | Implemented through target adapters |
+| garak | Planned adapter, not yet validated in Phase 3 |
+| PyRIT | Planned adapter, not yet validated in Phase 3 |
+| Promptfoo | Planned adapter, not yet validated in Phase 3 |
+| DeepTeam | Planned adapter, not yet validated in Phase 3 |
 
-Planned adapters are not represented as working integrations until implemented and tested.
+## URL safety
 
-## Limitations
+The platform rejects unsupported schemes, cloud metadata IPs, link-local/multicast/unspecified addresses, unapproved ports and non-allowlisted local/private destinations. Docker local lab mode permits `enterprise-assist`, `localhost`, `ollama` and `vllm` through administrator environment settings.
 
-- First release uses local evidence storage, not production PostgreSQL persistence.
-- PostgreSQL and Redis are included in Docker Compose for deployment shape but not fully wired into the first storage layer.
-- No licensed ISO standard text is included.
-- Frontend is a demo dashboard, not the full enterprise workflow yet.
-- PDF reporting is planned; HTML/Markdown/JSON/CSV are implemented.
+## CPU and GPU
 
-## Validation
+The core assessment platform runs CPU-first and works on the AMD/CPU lab environment. Optional Ollama/vLLM deployment patterns are documented under `docs/deployment/`.
 
-```bash
-make install
-make validate
+## Reports and evidence
+
+Reports are generated under `data/reports/`; evidence is stored under `data/evidence/`. API report links:
+
+```text
+/api/reports/{assessment_id}/markdown
+/api/reports/{assessment_id}/html
+/api/reports/{assessment_id}/json
+/api/reports/{assessment_id}/csv
 ```
 
-Docker build:
+## Known limitations
 
-```bash
-make build
-```
+- Persistence is file-backed; PostgreSQL/Alembic is not wired yet.
+- Redis workers, cancellation and live event streaming are not wired yet.
+- External framework adapters are not validated yet.
+- Development credential protection must be replaced before enterprise deployment.
+- PDF and evidence package export are planned.
+
+## Documentation
+
+- `docs/PHASE3_GENERAL_TARGET_ASSESSMENT_PLAN.md`
+- `docs/PHASE3_FINAL_BUILD_REPORT.md`
+- `docs/PHASE3_TARGET_SUPPORT_MATRIX.md`
+- `docs/PHASE3_RELEASE_BLOCKERS.md`
+- `docs/security/SSRF_PROTECTION.md`
+- `docs/demo/CLIENT_PRESENTATION_SCRIPT.md`
+
+## Safety notice
+
+Use only against systems you own or have written authorization to assess. Do not use for denial-of-service, credential attacks, infrastructure exploitation, malware delivery, persistence or destructive actions.
 
 ## License
 
 MIT.
-
-## Disclaimer
-
-This platform supports technical assurance evidence collection. It does not provide legal advice, audit certification, or a final ISO/IEC 42001 conformity decision.
 

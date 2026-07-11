@@ -1,0 +1,8 @@
+services:
+  framework-worker:
+    image: python:3.12-slim
+    profiles: ["frameworks"]
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    command: ["python", "-c", "raise SystemExit('Framework workers require garak/PyRIT/Promptfoo/DeepTeam environments before enablement')"]

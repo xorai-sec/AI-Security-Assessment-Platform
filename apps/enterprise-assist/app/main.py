@@ -60,6 +60,24 @@ class ChatRequest(BaseModel):
     confirm_external_action: bool = False
 
 
+class CustomChatRequest(BaseModel):
+    input: dict[str, Any] = Field(default_factory=dict)
+    session: dict[str, Any] = Field(default_factory=dict)
+
+
+class OpenAIMessage(BaseModel):
+    role: str
+    content: str
+
+
+class OpenAIChatRequest(BaseModel):
+    model: str
+    messages: list[OpenAIMessage]
+    temperature: float = 0.0
+    max_tokens: int = 512
+    stream: bool = False
+
+
 def now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -207,7 +225,54 @@ def chat(req: ChatRequest) -> dict[str, Any]:
     return {"response": "\n".join(response_parts), "telemetry": telemetry}
 
 
+@app.get("/custom-health")
+def custom_health() -> dict[str, Any]:
+    return {"ok": True, "service": "custom-rest-ai-fixture", "schema": "nested-input-answer"}
+
+
+@app.post("/custom-chat")
+def custom_chat(req: CustomChatRequest) -> dict[str, Any]:
+    request_id = f"CUSTOM-{uuid4().hex[:10]}"
+    prompt = str(req.input.get("prompt", ""))
+    role = str(req.session.get("role", "standard_employee"))
+    response = "Custom REST fixture response generated."
+    if "system prompt" in prompt.lower():
+        response = "Custom REST fixture blocked privileged instruction disclosure."
+    telemetry = {
+        "request_id": request_id,
+        "retrieval_trace": [],
+        "tool_trace": [],
+        "authorization_trace": [{"subject": "custom-rest-user", "role": role, "authorized": True}],
+    }
+    return {"meta": {"request_id": request_id}, "answer": response, "trace": telemetry}
+
+
+@app.get("/v1/models")
+def openai_models() -> dict[str, Any]:
+    return {
+        "object": "list",
+        "data": [
+            {"id": "enterprise-assist-openai-fixture", "object": "model", "owned_by": "local-lab"}
+        ],
+    }
+
+
+@app.post("/v1/chat/completions")
+def openai_chat(req: OpenAIChatRequest) -> dict[str, Any]:
+    request_id = f"chatcmpl-{uuid4().hex[:10]}"
+    prompt = "\n".join(message.content for message in req.messages if message.role == "user")
+    content = "OpenAI-compatible fixture response generated."
+    if "system prompt" in prompt.lower():
+        content = "OpenAI-compatible fixture blocked privileged instruction disclosure."
+    return {
+        "id": request_id,
+        "object": "chat.completion",
+        "model": req.model,
+        "choices": [{"index": 0, "message": {"role": "assistant", "content": content}, "finish_reason": "stop"}],
+        "usage": {"prompt_tokens": len(prompt.split()), "completion_tokens": len(content.split()), "total_tokens": len(prompt.split()) + len(content.split())},
+    }
+
+
 @app.get("/logs")
 def logs() -> dict[str, Any]:
     return {"logs": APP_LOGS[-200:]}
-

@@ -43,6 +43,8 @@ services:
       dockerfile: apps/api/Dockerfile
     environment:
       ENTERPRISE_ASSIST_LOCAL_URL: http://enterprise-assist:8090
+      AISEC_ALLOW_LOCAL_TARGETS: "true"
+      AISEC_ALLOWED_LOCAL_HOSTS: 127.0.0.1,localhost,enterprise-assist,ollama,vllm
       DATABASE_URL: postgresql+psycopg://aisec:aisec@postgres:5432/aisec
       REDIS_URL: redis://redis:6379/0
     ports:
@@ -56,6 +58,11 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   web:
     build:
@@ -65,6 +72,11 @@ services:
       - "5173:80"
     depends_on:
       - api
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres-data:
