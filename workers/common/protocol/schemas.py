@@ -26,11 +26,23 @@ class FrameworkTarget(BaseModel):
     model_name: str = "unknown"
 
 
+AssessmentProfile = Literal["quick", "standard", "comprehensive"]
+
+
+class ModelRoles(BaseModel):
+    target_model: str = "unknown"
+    attacker_model: str | None = None
+    judge_model: str | None = None
+    allow_same_model_eval: bool = False
+    bias_warning: str | None = None
+
+
 class ExecutionLimits(BaseModel):
     maximum_requests: int = 20
     maximum_duration_seconds: int = 900
     maximum_turns: int = 5
     maximum_concurrency: int = 1
+    maximum_tokens: int = 2048
 
 
 class FrameworkExecutionRequest(BaseModel):
@@ -41,6 +53,8 @@ class FrameworkExecutionRequest(BaseModel):
     objective: str
     category: str
     strategy: str = "baseline"
+    profile: AssessmentProfile = "quick"
+    model_roles: ModelRoles = Field(default_factory=ModelRoles)
     limits: ExecutionLimits = Field(default_factory=ExecutionLimits)
     configuration: dict[str, Any] = Field(default_factory=dict)
     callback_url: str | None = None
@@ -80,6 +94,9 @@ class NormalizedFrameworkEvidence(BaseModel):
     target_type: str
     target_version: str = "unknown"
     model_name: str = "unknown"
+    attacker_model: str | None = None
+    judge_model: str | None = None
+    profile: AssessmentProfile = "quick"
     visibility: str = "black_box"
     category: str
     objective: str
@@ -103,6 +120,7 @@ class NormalizedFrameworkEvidence(BaseModel):
     confirmed: bool = False
     confidence: float = 0.0
     evidence_limitations: list[str] = Field(default_factory=list)
+    bias_warning: str | None = None
     request_count: int = 1
     latency_ms: int = 0
     started_at: datetime = Field(default_factory=utc_now)
@@ -121,4 +139,3 @@ class FrameworkExecutionResult(BaseModel):
     raw_artifacts: list[str] = Field(default_factory=list)
     evidence: list[NormalizedFrameworkEvidence] = Field(default_factory=list)
     errors: list[str] = Field(default_factory=list)
-

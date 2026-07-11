@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from workers.common.client.target_proxy import TargetProxyClient
-from workers.common.normalization import deterministic_confirmation, evidence_hash
+from workers.common.advanced import framework_evidence, select_cases, write_jsonl
 from workers.common.protocol.schemas import (
     FrameworkExecutionRequest,
     FrameworkExecutionResult,
@@ -77,18 +77,19 @@ class BaseFrameworkRunner:
 
     async def execute(self, request: FrameworkExecutionRequest) -> FrameworkExecutionResult:
         started = datetime.now(timezone.utc)
-        prompts = self.prompts_for_request(request)
+        cases = self.cases_for_request(request)
         evidence_items: list[NormalizedFrameworkEvidence] = []
         raw_rows: list[dict[str, Any]] = []
         errors: list[str] = []
+        artifact = self.artifact_root / f"{request.execution_id}.jsonl"
 
-        for index, (category, probe, prompt) in enumerate(prompts[: request.limits.maximum_requests], start=1):
+        for index, case in enumerate(cases, start=1):
             try:
                 response = await self.proxy.send_message(
                     target_id=request.target.target_id,
                     execution_id=request.execution_id,
                     campaign_id=request.campaign_id,
-                    prompt=prompt,
+                    prompt=case.prompt,
                     session_id=f"{request.execution_id}-{index}",
                     user_role=request.configuration.get("user_role", "standard_employee"),
                     metadata=request.configuration.get("target_metadata", {}),
@@ -96,52 +97,17 @@ class BaseFrameworkRunner:
             except Exception as exc:
                 errors.append(str(exc))
                 continue
-            raw_rows.append({"prompt": prompt, "response": response, "probe": probe})
-            text = str(response.get("text", ""))
-            telemetry = response.get("telemetry", {})
-            confirmation = deterministic_confirmation(text, telemetry)
-            row = {
-                "request": request.model_dump(mode="json"),
-                "prompt": prompt,
-                "response": response,
-                "confirmation": confirmation,
-                "framework": self.framework_name,
-            }
+            raw_rows.append({"case": case.__dict__, "response": response, "framework": self.framework_name, "profile": request.profile})
             evidence_items.append(
-                NormalizedFrameworkEvidence(
-                    execution_id=f"{request.execution_id}-{index}",
-                    assessment_id=request.assessment_id,
-                    campaign_id=request.campaign_id,
+                framework_evidence(
+                    request=request,
                     framework=self.framework_name,
                     framework_version=self.detected_version(),
-                    target_id=request.target.target_id,
-                    target_type=request.target.target_type,
-                    model_name=request.target.model_name,
-                    visibility=request.target.visibility,
-                    category=category,
-                    objective=request.objective,
-                    strategy=request.strategy,
-                    probe=probe,
-                    prompt=prompt,
-                    response=text,
-                    conversation_trace=[{"role": "user", "content": prompt}, {"role": "assistant", "content": text}],
-                    retrieval_trace=telemetry.get("retrieval_trace"),
-                    tool_trace=telemetry.get("tool_trace"),
-                    authorization_trace=telemetry.get("authorization_trace"),
-                    memory_trace=telemetry.get("memory_trace"),
-                    evaluator_results=[confirmation],
-                    raw_score=1.0 if confirmation["confirmed"] else 0.0,
-                    success=confirmation["confirmed"],
-                    candidate=True,
-                    confirmed=confirmation["confirmed"],
-                    confidence=confirmation["confidence"],
-                    evidence_limitations=telemetry.get("unavailable", []),
-                    request_count=1,
-                    latency_ms=int(response.get("latency_ms", 0) or 0),
-                    started_at=started,
-                    completed_at=datetime.now(timezone.utc),
-                    raw_artifact_reference=str(self.artifact_root / f"{request.execution_id}.jsonl"),
-                    evidence_hash=evidence_hash(row),
+                    case=case,
+                    index=index,
+                    prompt=case.prompt,
+                    response=response,
+                    artifact_path=artifact,
                 )
             )
 
@@ -161,14 +127,9 @@ class BaseFrameworkRunner:
     def prompts_for_request(self, request: FrameworkExecutionRequest) -> list[tuple[str, str, str]]:
         return self.default_prompts
 
+    def cases_for_request(self, request: FrameworkExecutionRequest):
+        return select_cases(request, request.configuration.get("probe_families", []))
+
     def write_artifact(self, execution_id: str, rows: list[dict[str, Any]], errors: list[str]) -> Path:
-        import json
-
         path = self.artifact_root / f"{execution_id}.jsonl"
-        with path.open("w", encoding="utf-8") as handle:
-            for row in rows:
-                handle.write(json.dumps(row, default=str) + "\n")
-            for error in errors:
-                handle.write(json.dumps({"error": error}, default=str) + "\n")
-        return path
-
+        return write_jsonl(path, rows + [{"error": error} for error in errors])

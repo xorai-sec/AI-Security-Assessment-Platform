@@ -26,6 +26,25 @@ class FrameworkManager:
             "promptfoo": FrameworkDefinition(id="promptfoo", name="promptfoo", worker_url=os.getenv("PROMPTFOO_WORKER_URL", "http://promptfoo-worker:8095"), enabled=os.getenv("FRAMEWORK_PROMPTFOO_ENABLED", "true").lower() == "true"),
         }
 
+    def _model_roles(self, request: FrameworkAssessmentRequest, target_model: str) -> dict[str, Any]:
+        attacker = request.attacker_model or os.getenv("OLLAMA_ATTACKER_MODEL") or os.getenv("ATTACKER_MODEL") or target_model
+        judge = request.judge_model or os.getenv("OLLAMA_JUDGE_MODEL") or os.getenv("JUDGE_MODEL") or target_model
+        resolved_target = request.target_model or target_model
+        same_model = len({resolved_target, attacker, judge}) < 3
+        warning = None
+        if same_model and not request.allow_same_model_eval:
+            warning = (
+                "Evaluation bias warning: target, attacker, and/or judge model roles share the same model. "
+                "Use separate Ollama models for stronger assessment confidence."
+            )
+        return {
+            "target_model": resolved_target,
+            "attacker_model": attacker,
+            "judge_model": judge,
+            "allow_same_model_eval": request.allow_same_model_eval,
+            "bias_warning": warning,
+        }
+
     def list_frameworks(self) -> list[FrameworkDefinition]:
         return list(self.frameworks.values())
 
@@ -68,6 +87,9 @@ class FrameworkManager:
             raise ValueError(f"Target is disabled: {target.disabled_reason}")
 
         result = FrameworkAssessmentResult(target_id=target.id, frameworks=request.frameworks)
+        model_roles = self._model_roles(request, target.model_name)
+        if model_roles.get("bias_warning"):
+            result.warnings.append(model_roles["bias_warning"])
         for framework_id in request.frameworks:
             framework = self.frameworks.get(framework_id)
             if not framework:
@@ -86,18 +108,27 @@ class FrameworkManager:
                     "target_type": target.target_type.value,
                     "internal_proxy_url": f"{api_base_url.rstrip('/')}/internal/targets/{target.id}/message",
                     "visibility": target.visibility.value,
-                    "model_name": target.model_name,
+                    "model_name": model_roles["target_model"],
                 },
                 "objective": request.objective,
                 "category": request.category,
                 "strategy": request.strategy,
+                "profile": request.profile,
+                "model_roles": model_roles,
                 "limits": {
                     "maximum_requests": min(request.maximum_requests, target.max_requests),
                     "maximum_duration_seconds": min(request.maximum_duration_seconds, target.max_duration_seconds),
-                    "maximum_turns": 5,
-                    "maximum_concurrency": target.max_concurrency,
+                    "maximum_turns": request.maximum_turns,
+                    "maximum_concurrency": min(request.maximum_concurrency, target.max_concurrency),
+                    "maximum_tokens": request.maximum_tokens,
                 },
-                "configuration": {"target_metadata": {"mode": "vulnerable"}, "user_role": "standard_employee"},
+                "configuration": {
+                    "target_metadata": {"mode": "vulnerable"},
+                    "user_role": "standard_employee",
+                    "probe_families": request.probe_families,
+                    "promptfoo_plugins": request.promptfoo_plugins,
+                    "promptfoo_strategies": request.promptfoo_strategies,
+                },
                 "callback_url": f"{api_base_url.rstrip('/')}/internal/framework-events",
             }
             try:

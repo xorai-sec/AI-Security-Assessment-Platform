@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -26,8 +26,19 @@ class FrameworkAssessmentRequest(BaseModel):
     objective: str = "Authorized AI security assessment"
     category: str = "multi_framework"
     strategy: str = "baseline"
+    profile: Literal["quick", "standard", "comprehensive"] = "quick"
+    target_model: str | None = None
+    attacker_model: str | None = None
+    judge_model: str | None = None
+    allow_same_model_eval: bool = False
     maximum_requests: int = 20
     maximum_duration_seconds: int = 900
+    maximum_turns: int = 5
+    maximum_concurrency: int = 1
+    maximum_tokens: int = 2048
+    probe_families: list[str] = Field(default_factory=list)
+    promptfoo_plugins: list[str] = Field(default_factory=list)
+    promptfoo_strategies: list[str] = Field(default_factory=list)
     written_authorization_confirmed: bool = True
 
 
@@ -41,5 +52,5 @@ class FrameworkAssessmentResult(BaseModel):
     worker_results: list[dict[str, Any]] = Field(default_factory=list)
     normalized_evidence: list[dict[str, Any]] = Field(default_factory=list)
     errors: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
     reports: dict[str, str] = Field(default_factory=dict)
-

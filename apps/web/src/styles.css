@@ -49,6 +49,8 @@ button:disabled { opacity: .55; cursor: wait; }
 input, select { width: 100%; min-height: 40px; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; color: var(--ink); background: white; }
 label { display: grid; gap: 6px; color: #34445a; font-size: 13px; font-weight: 750; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.run-controls { border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: #fbfdff; display: grid; gap: 12px; }
+.run-controls .form-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .toggles { display: flex; gap: 12px; flex-wrap: wrap; }
 .toggles label { display: flex; align-items: center; gap: 6px; font-weight: 700; }
 .toggles input { width: 16px; min-height: 16px; }
@@ -103,6 +105,7 @@ pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; background: #0f
   .metrics, .split, .grid-two, .finding-strip, .cards, .cards.compact, .summary-band, .run-card { grid-template-columns: 1fr; }
   .row, .row.iso-head, .row.iso-row, .row.report-head, .row.report-row { grid-template-columns: 1fr; }
   .form-grid { grid-template-columns: 1fr; }
+  .run-controls .form-grid { grid-template-columns: 1fr; }
   header { display: grid; }
   h1 { font-size: 30px; }
 }

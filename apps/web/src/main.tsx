@@ -109,6 +109,21 @@ const blankForm = {
   memory: false,
 };
 
+const defaultFrameworkRun = {
+  profile: "quick",
+  target_model: "",
+  attacker_model: "",
+  judge_model: "",
+  allow_same_model_eval: false,
+  maximum_requests: 4,
+  maximum_turns: 3,
+  maximum_concurrency: 1,
+  maximum_tokens: 2048,
+  probe_families: "",
+  promptfoo_plugins: "",
+  promptfoo_strategies: "",
+};
+
 function App() {
   const [view, setView] = useState("dashboard");
   const [health, setHealth] = useState<Health | null>(null);
@@ -122,6 +137,7 @@ function App() {
   const [selectedAssessmentId, setSelectedAssessmentId] = useState("");
   const [detail, setDetail] = useState<any | null>(null);
   const [form, setForm] = useState(blankForm);
+  const [frameworkRun, setFrameworkRun] = useState(defaultFrameworkRun);
   const [notice, setNotice] = useState("");
   const [dataErrors, setDataErrors] = useState<Record<string, string>>({});
   const [loadingSections, setLoadingSections] = useState<Record<string, boolean>>({});
@@ -319,7 +335,18 @@ function App() {
           objective: "Authorized multi-framework AI security assessment",
           category: "multi_framework",
           strategy: "baseline",
-          maximum_requests: 20,
+          profile: frameworkRun.profile,
+          target_model: frameworkRun.target_model || selectedTarget?.model_name,
+          attacker_model: frameworkRun.attacker_model || undefined,
+          judge_model: frameworkRun.judge_model || undefined,
+          allow_same_model_eval: frameworkRun.allow_same_model_eval,
+          maximum_requests: Number(frameworkRun.maximum_requests),
+          maximum_turns: Number(frameworkRun.maximum_turns),
+          maximum_concurrency: Number(frameworkRun.maximum_concurrency),
+          maximum_tokens: Number(frameworkRun.maximum_tokens),
+          probe_families: frameworkRun.probe_families.split(",").map((item) => item.trim()).filter(Boolean),
+          promptfoo_plugins: frameworkRun.promptfoo_plugins.split(",").map((item) => item.trim()).filter(Boolean),
+          promptfoo_strategies: frameworkRun.promptfoo_strategies.split(",").map((item) => item.trim()).filter(Boolean),
           written_authorization_confirmed: true,
         }),
       });
@@ -453,6 +480,7 @@ function App() {
               <button onClick={checkFrameworks} disabled={busy}><RefreshCw size={16} /> Health + Capabilities</button>
               <button onClick={runAllFrameworks} disabled={busy || !selectedTargetId}><Play size={16} /> Run All Compatible</button>
             </div>
+            <FrameworkRunControls value={frameworkRun} setValue={setFrameworkRun} selectedTarget={selectedTarget} />
             <div className="cards">
               {loadingSections.frameworks && <div className="empty">Loading framework registry...</div>}
               {!loadingSections.frameworks && frameworks.length === 0 && <div className="empty">No framework workers are registered. Start the framework Docker profile and refresh.</div>}
@@ -721,6 +749,37 @@ function TargetInventory({ targets, selectedTargetId, setSelectedTargetId, onVal
         <button onClick={onValidate} disabled={busy || !selectedTargetId}><SearchCheck size={16} /> Validate + Discover</button>
         <button onClick={onAssess} disabled={busy || !selectedTargetId}><Play size={16} /> Run Assessment</button>
       </div>
+    </section>
+  );
+}
+
+function FrameworkRunControls({ value, setValue, selectedTarget }: any) {
+  const set = (key: string, next: string | boolean | number) => setValue((current: any) => ({ ...current, [key]: next }));
+  const roleModels = [value.target_model || selectedTarget?.model_name, value.attacker_model, value.judge_model].filter(Boolean);
+  const sameModel = new Set(roleModels).size < roleModels.length;
+  return (
+    <section className="run-controls">
+      <div className="form-grid">
+        <label>Assessment profile<select value={value.profile} onChange={(event) => set("profile", event.target.value)}>
+          <option value="quick">Quick</option>
+          <option value="standard">Standard</option>
+          <option value="comprehensive">Comprehensive</option>
+        </select></label>
+        <label>Target model<input value={value.target_model} placeholder={selectedTarget?.model_name || "target model"} onChange={(event) => set("target_model", event.target.value)} /></label>
+        <label>Attacker model<input value={value.attacker_model} placeholder="ollama attacker/generator model" onChange={(event) => set("attacker_model", event.target.value)} /></label>
+        <label>Judge model<input value={value.judge_model} placeholder="ollama judge/scorer model" onChange={(event) => set("judge_model", event.target.value)} /></label>
+        <label>Requests<input type="number" min="1" value={value.maximum_requests} onChange={(event) => set("maximum_requests", Number(event.target.value))} /></label>
+        <label>Turns<input type="number" min="1" value={value.maximum_turns} onChange={(event) => set("maximum_turns", Number(event.target.value))} /></label>
+        <label>Concurrency<input type="number" min="1" value={value.maximum_concurrency} onChange={(event) => set("maximum_concurrency", Number(event.target.value))} /></label>
+        <label>Token limit<input type="number" min="256" value={value.maximum_tokens} onChange={(event) => set("maximum_tokens", Number(event.target.value))} /></label>
+        <label>Probe families<input value={value.probe_families} placeholder="optional comma list" onChange={(event) => set("probe_families", event.target.value)} /></label>
+        <label>Promptfoo plugins<input value={value.promptfoo_plugins} placeholder="optional comma list" onChange={(event) => set("promptfoo_plugins", event.target.value)} /></label>
+        <label>Promptfoo strategies<input value={value.promptfoo_strategies} placeholder="optional comma list" onChange={(event) => set("promptfoo_strategies", event.target.value)} /></label>
+      </div>
+      <div className="toggles">
+        <label><input type="checkbox" checked={value.allow_same_model_eval} onChange={(event) => set("allow_same_model_eval", event.target.checked)} /> allow same model for target/attacker/judge</label>
+      </div>
+      {sameModel && !value.allow_same_model_eval && <div className="notice">Evaluation bias warning: choose separate target, attacker, and judge models when possible.</div>}
     </section>
   );
 }
