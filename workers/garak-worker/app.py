@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import shutil
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
@@ -309,6 +310,10 @@ class GarakRunner(BaseFrameworkRunner):
         report_prefix = self.artifact_root / request.execution_id
         cli_result = self._run_garak(request, options_path, report_prefix)
         cli_path = write_json(self.artifact_root / f"{request.execution_id}-garak-cli.json", cli_result)
+        garak_log = Path.home() / ".local" / "share" / "garak" / "garak.log"
+        log_copy_path = self.artifact_root / f"{request.execution_id}-garak.log"
+        if garak_log.exists():
+            shutil.copyfile(garak_log, log_copy_path)
         report_path = self._discover_report_path(request, report_prefix, cli_result)
         rows = self._load_report_rows(report_path)
         command_line = " ".join(cli_result["command"])
@@ -331,7 +336,7 @@ class GarakRunner(BaseFrameworkRunner):
             status=status,
             started_at=started,
             completed_at=datetime.now(timezone.utc),
-            raw_artifacts=[str(discovery_path), str(options_path), str(cli_path), str(report_path), str(traffic_path)],
+            raw_artifacts=[str(discovery_path), str(options_path), str(cli_path), str(report_path), str(traffic_path), str(log_copy_path)],
             evidence=evidence,
             errors=errors,
             native_engine_invoked=bool(evidence) and report_path.exists() and cli_result["returncode"] == 0,

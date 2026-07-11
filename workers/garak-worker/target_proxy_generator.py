@@ -18,7 +18,7 @@ class TargetProxyGenerator(Generator):
     """AI Security Platform target-proxy generator for authorized garak scans."""
 
     generator_family_name = "AISEC_TARGET_PROXY"
-    ENV_VAR = None
+    ENV_VAR = "TARGET_PROXY_SECRET"
     parallel_capable = False
     supports_multiple_generations = False
     DEFAULT_PARAMS = Generator.DEFAULT_PARAMS | {
