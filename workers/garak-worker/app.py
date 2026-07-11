@@ -1,12 +1,54 @@
 from __future__ import annotations
 
+import json
+import subprocess
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 from workers.common.advanced import command_capture, write_json
 from workers.common.base_runner import BaseFrameworkRunner
-from workers.common.protocol.schemas import FrameworkExecutionRequest, FrameworkExecutionResult, WorkerCapability, WorkerHealth
+from workers.common.normalization import evidence_hash
+from workers.common.protocol.schemas import (
+    FrameworkExecutionRequest,
+    FrameworkExecutionResult,
+    NormalizedFrameworkEvidence,
+    WorkerCapability,
+    WorkerHealth,
+)
 from workers.common.server import create_worker_app
+
+
+GARAK_GENERATOR = "target_proxy.TargetProxyGenerator"
+GARAK_GENERATOR_CLASS = "garak.generators.target_proxy.TargetProxyGenerator"
+DEFAULT_PROBES = {
+    "quick": "dan,promptinject,encoding",
+    "standard": "dan,promptinject,encoding,leakreplay,realtoxicityprompts",
+    "comprehensive": "dan,promptinject,encoding,leakreplay,realtoxicityprompts,malwaregen",
+}
+
+
+def _message_text(message: Any) -> str:
+    if isinstance(message, str):
+        return message
+    if isinstance(message, dict):
+        if "text" in message:
+            return str(message.get("text") or "")
+        content = message.get("content")
+        if isinstance(content, dict):
+            return str(content.get("text") or "")
+        if isinstance(content, str):
+            return content
+    return ""
+
+
+def _conversation_prompt(prompt: Any) -> str:
+    if isinstance(prompt, dict):
+        turns = prompt.get("turns") or []
+        for turn in reversed(turns):
+            if turn.get("role") == "user":
+                return _message_text(turn)
+    return _message_text(prompt)
 
 
 class GarakRunner(BaseFrameworkRunner):
@@ -17,6 +59,7 @@ class GarakRunner(BaseFrameworkRunner):
         return {
             "probes": command_capture(["python", "-m", "garak", "--list_probes"], timeout=45),
             "detectors": command_capture(["python", "-m", "garak", "--list_detectors"], timeout=45),
+            "generators": command_capture(["python", "-m", "garak", "--list_generators"], timeout=45),
             "version": self.detected_version(),
         }
 
@@ -24,46 +67,257 @@ class GarakRunner(BaseFrameworkRunner):
         base = await super().health()
         if base.status != "healthy":
             return base
-        probes = command_capture(["python", "-m", "garak", "--list_probes"], timeout=30)
-        if probes["returncode"] != 0:
-            return WorkerHealth(framework=self.framework_name, status="unhealthy", version=base.version, message=probes["stderr"][-500:])
-        return WorkerHealth(framework=self.framework_name, status="healthy", version=base.version, message="garak CLI probe discovery available")
+        plugin = command_capture(
+            ["python", "-m", "garak", "--plugin_info", f"generators.{GARAK_GENERATOR}"],
+            timeout=30,
+        )
+        if plugin["returncode"] != 0:
+            return WorkerHealth(
+                framework=self.framework_name,
+                status="unhealthy",
+                version=base.version,
+                message=f"target proxy generator unavailable: {plugin['stderr'][-500:] or plugin['stdout'][-500:]}",
+            )
+        return WorkerHealth(
+            framework=self.framework_name,
+            status="healthy",
+            version=base.version,
+            message=f"garak CLI and {GARAK_GENERATOR_CLASS} available",
+        )
 
     async def capabilities(self) -> list[WorkerCapability]:
         discovery = self._garak_discovery()
         return [
             WorkerCapability(name="real_cli_discovery", supported=discovery["probes"]["returncode"] == 0, detail="python -m garak --list_probes"),
-            WorkerCapability(name="probe_family_selection", supported=True, detail="configuration.probe_families"),
-            WorkerCapability(name="native_jsonl_artifacts", supported=False, detail="Strict native generator/probe/detector execution is not wired yet"),
-            WorkerCapability(name="detector_normalization", supported=False, detail="Requires native garak detector execution"),
-            WorkerCapability(name="target_proxy_generator", supported=False, detail="No installed garak Generator subclass is invoked by this worker yet"),
+            WorkerCapability(name="official_generator_loader", supported=True, detail=GARAK_GENERATOR_CLASS),
+            WorkerCapability(name="official_probe_execution", supported=True, detail="python -m garak --probes ..."),
+            WorkerCapability(name="official_detector_execution", supported=True, detail="garak probewise/PxD harness detectors"),
+            WorkerCapability(name="native_jsonl_artifacts", supported=True, detail="unmodified garak .report.jsonl"),
         ]
+
+    def _probe_spec(self, request: FrameworkExecutionRequest) -> str:
+        configured = request.configuration.get("probe_families") or []
+        if configured:
+            return ",".join(configured)
+        return DEFAULT_PROBES.get(request.profile, DEFAULT_PROBES["quick"])
+
+    def _write_generator_options(self, request: FrameworkExecutionRequest, traffic_path: Path) -> Path:
+        options = {
+            "target_proxy": {
+                "TargetProxyGenerator": {
+                    "api_base_url": self.proxy_base_url,
+                    "target_id": request.target.target_id,
+                    "execution_id": request.execution_id,
+                    "campaign_id": request.campaign_id,
+                    "target_proxy_secret": self.proxy.token,
+                    "user_role": request.configuration.get("user_role", "standard_employee"),
+                    "request_timeout": min(120, max(10, request.limits.maximum_duration_seconds)),
+                    "traffic_path": str(traffic_path),
+                }
+            }
+        }
+        return write_json(self.artifact_root / f"{request.execution_id}-garak-generator-options.json", options)
+
+    def _run_garak(self, request: FrameworkExecutionRequest, options_path: Path, report_prefix: Path) -> dict[str, Any]:
+        command = [
+            "python",
+            "-m",
+            "garak",
+            "--target_type",
+            GARAK_GENERATOR,
+            "--target_name",
+            request.target.target_id,
+            "--generator_option_file",
+            str(options_path),
+            "--probes",
+            self._probe_spec(request),
+            "--report_prefix",
+            str(report_prefix),
+            "--parallel_requests",
+            str(max(1, min(2, request.limits.maximum_concurrency))),
+            "--parallel_attempts",
+            "1",
+            "--generations",
+            "1",
+            "--skip_unknown",
+        ]
+        started = datetime.now(timezone.utc)
+        try:
+            proc = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                timeout=request.limits.maximum_duration_seconds,
+            )
+            return {
+                "command": command,
+                "returncode": proc.returncode,
+                "stdout": proc.stdout,
+                "stderr": proc.stderr,
+                "started_at": started.isoformat(),
+                "completed_at": datetime.now(timezone.utc).isoformat(),
+            }
+        except subprocess.TimeoutExpired as exc:
+            return {
+                "command": command,
+                "returncode": -1,
+                "stdout": exc.stdout or "",
+                "stderr": exc.stderr or f"garak timed out after {request.limits.maximum_duration_seconds}s",
+                "started_at": started.isoformat(),
+                "completed_at": datetime.now(timezone.utc).isoformat(),
+            }
+
+    def _report_path(self, report_prefix: Path) -> Path:
+        return Path(str(report_prefix) + ".report.jsonl")
+
+    def _load_report_rows(self, report_path: Path) -> list[dict[str, Any]]:
+        rows: list[dict[str, Any]] = []
+        if not report_path.exists():
+            return rows
+        with report_path.open("r", encoding="utf-8") as handle:
+            for line in handle:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rows.append(json.loads(line))
+                except json.JSONDecodeError:
+                    rows.append({"entry_type": "unparsed", "line": line})
+        return rows
+
+    def _normalise_report(
+        self,
+        request: FrameworkExecutionRequest,
+        rows: list[dict[str, Any]],
+        report_path: Path,
+        command_line: str,
+    ) -> tuple[list[NormalizedFrameworkEvidence], list[str]]:
+        evidence: list[NormalizedFrameworkEvidence] = []
+        plugin_ids: set[str] = {GARAK_GENERATOR_CLASS}
+        eval_rows = [row for row in rows if row.get("entry_type") == "eval"]
+        eval_by_probe_detector = {
+            (row.get("probe"), row.get("detector")): row
+            for row in eval_rows
+        }
+        for index, row in enumerate([item for item in rows if item.get("entry_type") == "attempt"], start=1):
+            probe = row.get("probe_classname") or row.get("probe") or "unknown"
+            prompt = _conversation_prompt(row.get("prompt"))
+            outputs = row.get("outputs") or []
+            response = "\n\n".join(_message_text(output) for output in outputs if output is not None)
+            detector_results = row.get("detector_results") or {}
+            detector = ",".join(sorted(detector_results.keys())) or None
+            plugin_ids.add(f"garak.probes.{probe}" if not str(probe).startswith("garak.") else str(probe))
+            for detector_name in detector_results:
+                plugin_ids.add(f"garak.detectors.{detector_name}" if not str(detector_name).startswith("garak.") else str(detector_name))
+            scores = [
+                float(score)
+                for score_list in detector_results.values()
+                for score in score_list
+                if isinstance(score, int | float)
+            ]
+            confirmed = any(score > 0 for score in scores)
+            confidence = max(scores) if scores else 0.0
+            evaluator_results = [
+                {
+                    "detector": detector_name,
+                    "scores": score_list,
+                    "garak_eval": eval_by_probe_detector.get((probe, detector_name)),
+                }
+                for detector_name, score_list in detector_results.items()
+            ]
+            artifact_row = {
+                "framework": self.framework_name,
+                "native_report_row": row,
+                "native_report_path": str(report_path),
+                "command": command_line,
+            }
+            evidence.append(
+                NormalizedFrameworkEvidence(
+                    execution_id=f"{request.execution_id}-{index}",
+                    assessment_id=request.assessment_id,
+                    campaign_id=request.campaign_id,
+                    framework=self.framework_name,
+                    framework_version=self.detected_version(),
+                    worker_version="0.3.0",
+                    target_id=request.target.target_id,
+                    target_type=request.target.target_type,
+                    model_name=request.model_roles.target_model or request.target.model_name,
+                    attacker_model=request.model_roles.attacker_model,
+                    judge_model=request.model_roles.judge_model,
+                    profile=request.profile,
+                    visibility=request.target.visibility,
+                    category=request.category,
+                    objective=request.objective,
+                    strategy=request.strategy,
+                    probe=f"garak.probes.{probe}" if not str(probe).startswith("garak.") else str(probe),
+                    detector=detector,
+                    vulnerability=probe,
+                    attack_method="garak-native-probe",
+                    prompt=prompt,
+                    response=response,
+                    conversation_trace=[{"role": "user", "content": prompt}, {"role": "assistant", "content": response}],
+                    evaluator_results=evaluator_results,
+                    raw_score=confidence,
+                    success=confirmed,
+                    candidate=True,
+                    confirmed=confirmed,
+                    confidence=confidence,
+                    native_engine_invoked=True,
+                    native_command_or_api=command_line,
+                    native_framework_version=self.detected_version(),
+                    native_artifact_path=str(report_path),
+                    native_plugin_identifiers=sorted(plugin_ids),
+                    fallback_used=False,
+                    fallback_reason=None,
+                    evidence_limitations=[request.model_roles.bias_warning] if request.model_roles.bias_warning else [],
+                    bias_warning=request.model_roles.bias_warning,
+                    request_count=1,
+                    started_at=datetime.now(timezone.utc),
+                    completed_at=datetime.now(timezone.utc),
+                    stop_reason="garak_native_report_attempt",
+                    raw_artifact_reference=str(report_path),
+                    evidence_hash=evidence_hash(artifact_row),
+                )
+            )
+        return evidence, sorted(plugin_ids)
 
     async def execute(self, request: FrameworkExecutionRequest) -> FrameworkExecutionResult:
         started = datetime.now(timezone.utc)
         discovery = self._garak_discovery()
         discovery_path = write_json(self.artifact_root / f"{request.execution_id}-garak-discovery.json", discovery)
-        command_or_api = "python -m garak --list_probes; python -m garak --list_detectors"
-        error = (
-            "Strict native garak execution is not implemented: this worker did not instantiate a real "
-            "garak Generator backed by the target proxy, invoke installed Probe classes, execute Detector "
-            "classes, or preserve an unmodified native garak report. Discovery artifacts were saved only."
-        )
+        traffic_path = self.artifact_root / f"{request.execution_id}-garak-target-proxy-traffic.jsonl"
+        options_path = self._write_generator_options(request, traffic_path)
+        report_prefix = self.artifact_root / request.execution_id
+        report_path = self._report_path(report_prefix)
+        cli_result = self._run_garak(request, options_path, report_prefix)
+        cli_path = write_json(self.artifact_root / f"{request.execution_id}-garak-cli.json", cli_result)
+        rows = self._load_report_rows(report_path)
+        command_line = " ".join(cli_result["command"])
+        evidence, plugin_ids = self._normalise_report(request, rows, report_path, command_line)
+        errors = []
+        if cli_result["returncode"] != 0:
+            errors.append(f"garak CLI returned {cli_result['returncode']}: {cli_result['stderr'] or cli_result['stdout']}")
+        if not report_path.exists():
+            errors.append(f"Native garak report was not created at {report_path}")
+        if not evidence:
+            errors.append("Native garak report contained no attempt rows to normalize")
+        status = "succeeded" if evidence and not errors else "partially_completed" if evidence else "failed"
         return FrameworkExecutionResult(
             execution_id=request.execution_id,
             framework=self.framework_name,
-            status="failed",
+            status=status,
             started_at=started,
             completed_at=datetime.now(timezone.utc),
-            raw_artifacts=[str(discovery_path)],
-            evidence=[],
-            errors=[error],
-            native_engine_invoked=False,
-            native_command_or_api=command_or_api,
+            raw_artifacts=[str(discovery_path), str(options_path), str(cli_path), str(report_path), str(traffic_path)],
+            evidence=evidence,
+            errors=errors,
+            native_engine_invoked=bool(evidence) and report_path.exists() and cli_result["returncode"] == 0,
+            native_command_or_api=command_line,
             native_framework_version=self.detected_version(),
-            native_artifact_path=str(discovery_path),
-            native_plugin_identifiers=[],
+            native_artifact_path=str(report_path),
+            native_plugin_identifiers=plugin_ids,
             fallback_used=False,
+            fallback_reason=None,
         )
 
 
