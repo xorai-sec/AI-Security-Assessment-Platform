@@ -15,6 +15,7 @@ from packages.security_assurance.framework_manager import FrameworkManager
 from packages.security_assurance.framework_models import FrameworkAssessmentRequest
 from packages.security_assurance.models import AISystem, AssessmentScope, EnvironmentType, Organization
 from packages.security_assurance.orchestrator import default_orchestrator
+from packages.security_assurance.reporting import render_html_report
 from packages.security_assurance.storage import EvidenceStore
 from packages.security_assurance.target_manager import TargetCreateRequest, TargetManager
 from packages.security_assurance.target_models import TargetConfiguration, TargetCredential, TargetMessageRequest, TargetType
@@ -495,8 +496,36 @@ def report_markdown(assessment_id: str) -> str:
     return path.read_text(encoding="utf-8")
 
 
+@app.get("/api/reports")
+def list_reports() -> dict[str, Any]:
+    native = STORE.list_results()
+    return {
+        "reports": [
+            {
+                "id": row["id"],
+                "target": row.get("target"),
+                "mode": row.get("mode"),
+                "findings": row.get("findings", 0),
+                "completed_at": row.get("completed_at"),
+                "formats": ["html", "markdown", "json", "csv"],
+            }
+            for row in native
+        ]
+    }
+
+
 @app.get("/api/reports/{assessment_id}/{kind}")
-def report_file(assessment_id: str, kind: str) -> FileResponse:
+def report_file(assessment_id: str, kind: str) -> FileResponse | PlainTextResponse:
+    if kind == "html":
+        try:
+            result = STORE.load_result(assessment_id)
+            return PlainTextResponse(render_html_report(result), media_type="text/html")
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=404, detail="Report not found") from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        except ValidationError as exc:
+            raise HTTPException(status_code=422, detail="Stored assessment result is malformed or incomplete") from exc
     suffix = {"html": ".html", "json": ".json", "csv": "-findings.csv"}.get(kind)
     if suffix is None:
         raise HTTPException(status_code=400, detail="kind must be html, json or csv")

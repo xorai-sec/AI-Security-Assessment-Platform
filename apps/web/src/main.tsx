@@ -115,6 +115,7 @@ function App() {
   const [targets, setTargets] = useState<Target[]>([]);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [frameworkAssessments, setFrameworkAssessments] = useState<any[]>([]);
+  const [reports, setReports] = useState<any[]>([]);
   const [frameworks, setFrameworks] = useState<any[]>([]);
   const [frameworkCapabilities, setFrameworkCapabilities] = useState<Record<string, any>>({});
   const [selectedTargetId, setSelectedTargetId] = useState("");
@@ -155,16 +156,17 @@ function App() {
   }
 
   async function refresh() {
-    setLoadingSections({ health: true, targets: true, assessments: true, frameworkAssessments: true, frameworks: true });
+    setLoadingSections({ health: true, targets: true, assessments: true, frameworkAssessments: true, reports: true, frameworks: true });
     const results = await Promise.allSettled([
       api("/health"),
       api("/api/targets"),
       api("/api/assessments"),
       api("/api/assessments/frameworks"),
+      api("/api/reports"),
       api("/api/frameworks"),
     ]);
     const errors: Record<string, string> = {};
-    const [healthResult, targetResult, assessmentResult, frameworkAssessmentResult, frameworkResult] = results;
+    const [healthResult, targetResult, assessmentResult, frameworkAssessmentResult, reportResult, frameworkResult] = results;
 
     if (healthResult.status === "fulfilled") setHealth(healthResult.value);
     else errors.health = healthResult.reason.message;
@@ -183,6 +185,9 @@ function App() {
 
     if (frameworkAssessmentResult.status === "fulfilled") setFrameworkAssessments(frameworkAssessmentResult.value.assessments || []);
     else errors.frameworkAssessments = frameworkAssessmentResult.reason.message;
+
+    if (reportResult.status === "fulfilled") setReports(reportResult.value.reports || []);
+    else errors.reports = reportResult.reason.message;
 
     if (frameworkResult.status === "fulfilled") setFrameworks(frameworkResult.value.frameworks || []);
     else errors.frameworks = frameworkResult.reason.message;
@@ -319,6 +324,17 @@ function App() {
         }),
       });
     });
+  }
+
+  function openIsoEvidence(mapping: any) {
+    const finding = detail?.findings?.find((item: any) => item.id === mapping.finding_id);
+    const executionId = finding?.related_executions?.[0];
+    setView("evidence");
+    window.setTimeout(() => {
+      const element = document.getElementById(executionId || mapping.finding_id);
+      element?.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (element) window.history.replaceState(null, "", `#${element.id}`);
+    }, 80);
   }
 
   useEffect(() => {
@@ -479,7 +495,7 @@ function App() {
               {!detail?.iso_mappings?.length && <div className="empty">Select or run an assessment to view ISO mappings.</div>}
               {detail?.iso_mappings.map((mapping: any) => (
                 <div className="row iso-row" key={mapping.id}>
-                  <span>{mapping.finding_id}</span>
+                  <span><button className="textlink" onClick={() => openIsoEvidence(mapping)}>{mapping.finding_id}</button></span>
                   <span>{mapping.clause_or_control_id} · {mapping.requirement_title}</span>
                   <span>{mapping.evidence_sufficiency}</span>
                   <span>{mapping.human_review_status}</span>
@@ -497,11 +513,29 @@ function App() {
             {selectedAssessmentId && !selectedAssessmentId.startsWith("MFASM-") && (
               <div className="actions">
                 <a className="buttonlike" href={`${API}/api/reports/${selectedAssessmentId}/markdown`} target="_blank">Markdown</a>
-                <a className="buttonlike" href={`${API}/api/reports/${selectedAssessmentId}/html`} target="_blank">HTML</a>
+                <a className="buttonlike" href={`${API}/api/reports/${selectedAssessmentId}/html`} target="_blank">Professional HTML</a>
                 <a className="buttonlike" href={`${API}/api/reports/${selectedAssessmentId}/json`} target="_blank">JSON</a>
                 <a className="buttonlike" href={`${API}/api/reports/${selectedAssessmentId}/csv`} target="_blank">CSV</a>
               </div>
             )}
+            <div className="table report-table">
+              <div className="row report-head"><span>Report</span><span>Target</span><span>Findings</span><span>Completed</span><span>Open</span></div>
+              {loadingSections.reports && <div className="empty">Loading previous reports...</div>}
+              {!loadingSections.reports && reports.length === 0 && <div className="empty">No report artifacts are available yet.</div>}
+              {reports.map((report) => (
+                <div className="row report-row" key={report.id}>
+                  <span><strong>{report.id}</strong><small>{report.mode}</small></span>
+                  <span>{report.target || "Target"}</span>
+                  <span>{report.findings || 0}</span>
+                  <span>{formatDate(report.completed_at)}</span>
+                  <span className="mini-actions">
+                    <a href={`${API}/api/reports/${report.id}/html`} target="_blank">HTML</a>
+                    <a href={`${API}/api/reports/${report.id}/markdown`} target="_blank">MD</a>
+                    <a href={`${API}/api/reports/${report.id}/csv`} target="_blank">CSV</a>
+                  </span>
+                </div>
+              ))}
+            </div>
           </section>
         )}
 
@@ -723,7 +757,7 @@ function EvidenceView({ detail, executions }: { detail: any | null; executions: 
           )}
           <div className="finding-strip">
             {(detail.findings || []).map((finding: any) => (
-              <article key={finding.id}><strong>{finding.severity}</strong><span>{finding.category}</span><p>{finding.title}</p></article>
+              <article id={finding.id} key={finding.id}><strong>{finding.severity}</strong><span>{finding.category}</span><p>{finding.title}</p></article>
             ))}
             {!(detail.findings || []).length && normalizedEvidence.length > 0 && (
               <article><strong>Evidence captured</strong><span>Human review needed</span><p>No confirmed findings are stored yet. Review framework evidence and map findings manually.</p></article>
@@ -731,7 +765,7 @@ function EvidenceView({ detail, executions }: { detail: any | null; executions: 
           </div>
           <div className="evidence-list">
             {executions.map((execution, index) => (
-              <article className="evidence" key={execution.id}>
+              <article className="evidence" id={execution.id} key={execution.id}>
                 <div className="evidence-head">
                   <strong>Prompt {index + 1}</strong>
                   <StatusBadge status={evidenceStatus(execution)} />
@@ -750,7 +784,7 @@ function EvidenceView({ detail, executions }: { detail: any | null; executions: 
               const prompt = evidenceText(record, ["prompt", "input", "attack_prompt", "payload", "test_case"]);
               const response = evidenceText(record, ["response", "output", "model_response", "actual_output"]);
               return (
-                <article className="evidence" key={record.id || record.evidence_id || index}>
+                <article className="evidence" id={record.id || record.evidence_id || `framework-evidence-${index}`} key={record.id || record.evidence_id || index}>
                   <div className="evidence-head">
                     <strong>{record.framework || record.source || "Framework"} evidence {index + 1}</strong>
                     <StatusBadge status={evidenceStatus(record)} />
