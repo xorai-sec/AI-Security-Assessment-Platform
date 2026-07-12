@@ -3,13 +3,29 @@ set -euo pipefail
 
 DOCKER_BIN="${DOCKER_BIN:-docker}"
 OLLAMA_SERVICE="${OLLAMA_SERVICE:-ollama}"
-TARGET_MODEL="${OLLAMA_TARGET_MODEL:-qwen3:4b}"
-ATTACKER_MODEL="${OLLAMA_ATTACKER_MODEL:-qwen3:14b}"
-JUDGE_MODEL="${OLLAMA_JUDGE_MODEL:-gpt-oss:20b}"
-PLANNER_MODEL="${OLLAMA_PLANNER_MODEL:-qwen3:8b}"
-EMBEDDING_MODEL="${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text}"
+ENV_FILE="${ENV_FILE:-.env}"
 OLLAMA_CONTAINER="${OLLAMA_CONTAINER:-}"
 COMPOSE_FILES=(-f docker-compose.yml -f docker-compose.frameworks.yml)
+
+if [[ -f "$ENV_FILE" && "${SKIP_ENV_FILE:-false}" != "true" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$ENV_FILE"
+  set +a
+fi
+
+normalize_model() {
+  local value="$1"
+  value="${value#ollama/}"
+  value="${value#ollama://}"
+  echo "$value"
+}
+
+TARGET_MODEL="$(normalize_model "${OLLAMA_TARGET_MODEL:-qwen3:4b}")"
+ATTACKER_MODEL="$(normalize_model "${OLLAMA_ATTACKER_MODEL:-qwen3:14b}")"
+JUDGE_MODEL="$(normalize_model "${OLLAMA_JUDGE_MODEL:-gpt-oss:20b}")"
+PLANNER_MODEL="$(normalize_model "${OLLAMA_PLANNER_MODEL:-qwen3:8b}")"
+EMBEDDING_MODEL="$(normalize_model "${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text}")"
 
 if [[ -f docker-compose.gpu.yml ]]; then
   COMPOSE_FILES+=(-f docker-compose.gpu.yml)
