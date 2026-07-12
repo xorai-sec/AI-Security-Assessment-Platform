@@ -279,7 +279,11 @@ class AdaptiveAttackPlanner:
             return self._stop(context, "budget_exhausted", "Remaining request budget is exhausted.")
         if context.remaining_budget.time_seconds <= 0 or context.remaining_budget.turns <= 0:
             return self._stop(context, "budget_exhausted", "Remaining time or turn budget is exhausted.")
-        if context.duplicate_evidence_count >= int(termination.get("duplicate_evidence_threshold", 3)):
+        duplicate_min_stages = int(termination.get("duplicate_evidence_min_completed_stages", 2))
+        if (
+            len(context.completed_framework_stages) >= duplicate_min_stages
+            and context.duplicate_evidence_count >= int(termination.get("duplicate_evidence_threshold", 3))
+        ):
             return self._stop(
                 context,
                 "repeated_duplicate_evidence",

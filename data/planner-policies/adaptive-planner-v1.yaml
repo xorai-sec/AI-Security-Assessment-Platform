@@ -87,6 +87,7 @@ termination:
   minimum_remaining_requests: 1
   maximum_framework_failures: 2
   duplicate_evidence_threshold: 3
+  duplicate_evidence_min_completed_stages: 2
   confirmed_confidence_threshold: 0.88
 rules:
   - id: raw-ollama-initial-recon
