@@ -29,6 +29,7 @@ class PlanningContext(BaseModel):
     target_visibility: str
     target_capabilities: dict[str, bool]
     assessment_objective: str
+    assessment_strategy: str = "adaptive"
     requested_frameworks: list[str]
     completed_framework_stages: list[str]
     evidence_categories: list[str]
@@ -144,6 +145,7 @@ class AdaptiveAttackPlanner:
             target_visibility=str(getattr(target.visibility, "value", target.visibility)),
             target_capabilities=target_capabilities,
             assessment_objective=request.objective,
+            assessment_strategy=request.strategy,
             requested_frameworks=requested_frameworks,
             completed_framework_stages=list(result.frameworks),
             evidence_categories=categories,
@@ -269,6 +271,9 @@ class AdaptiveAttackPlanner:
 
     def _termination_decision(self, context: PlanningContext) -> PlannerDecision | None:
         termination = self.policy.get("termination", {})
+        complete_chain = context.assessment_strategy in {"complete-pentest", "full-chain", "pentest"} or os.getenv(
+            "COMPLETE_PENTEST_CHAIN", "false"
+        ).lower() == "true"
         if context.kill_switch_active:
             return self._stop(context, "kill_switch_active", "Adaptive planner kill switch is enabled.")
         if not context.authorization_confirmed:
@@ -281,7 +286,8 @@ class AdaptiveAttackPlanner:
             return self._stop(context, "budget_exhausted", "Remaining time or turn budget is exhausted.")
         duplicate_min_stages = int(termination.get("duplicate_evidence_min_completed_stages", 2))
         if (
-            len(context.completed_framework_stages) >= duplicate_min_stages
+            not complete_chain
+            and len(context.completed_framework_stages) >= duplicate_min_stages
             and context.duplicate_evidence_count >= int(termination.get("duplicate_evidence_threshold", 3))
         ):
             return self._stop(
@@ -303,7 +309,12 @@ class AdaptiveAttackPlanner:
             for finding in context.correlated_finding_candidates
             if finding.get("status") == "confirmed" and float(finding.get("confidence", 0) or 0) >= confirmed_threshold
         ]
-        if confirmed and "comprehensive" != os.getenv("PROFILE", "").lower() and context.completed_framework_stages:
+        if (
+            confirmed
+            and not complete_chain
+            and "comprehensive" != os.getenv("PROFILE", "").lower()
+            and context.completed_framework_stages
+        ):
             return self._stop(
                 context,
                 "objective_confirmed",

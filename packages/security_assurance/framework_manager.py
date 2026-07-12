@@ -312,6 +312,7 @@ class FrameworkManager:
         if not target.enabled:
             raise ValueError(f"Target is disabled: {target.disabled_reason}")
         requested = request.frameworks or CHAIN_ORDER
+        complete_chain = request.strategy in {"complete-pentest", "full-chain", "pentest"}
         self._clear_cancel_markers(target.id)
         result = FrameworkAssessmentResult(target_id=target.id, frameworks=[])
         model_roles = self._model_roles(request, target.model_name)
@@ -344,6 +345,25 @@ class FrameworkManager:
                 latest=latest,
             )
             decision = self.planner.decide(context, request, model_roles)
+            if complete_chain and (not decision.continue_assessment or not decision.next_framework):
+                remaining = [framework for framework in requested if framework not in completed]
+                if remaining and decision.stop_reason != "requested_frameworks_completed":
+                    decision.next_framework = remaining[0]
+                    decision.action_type = "complete_pentest_stage"
+                    decision.objective = request.objective
+                    decision.profile = request.profile
+                    decision.request_budget = max(1, min(4, context.remaining_budget.requests))
+                    decision.turn_budget = max(1, min(3, context.remaining_budget.turns))
+                    decision.token_budget = max(1, min(request.maximum_tokens, context.remaining_budget.tokens))
+                    decision.time_budget_seconds = max(1, min(request.maximum_duration_seconds, context.remaining_budget.time_seconds))
+                    decision.rationale = (
+                        f"Complete pentest mode continues with {remaining[0]} even though the adaptive planner "
+                        f"would stop for {decision.stop_reason or 'no matching rule'}."
+                    )
+                    decision.continue_assessment = True
+                    decision.stop_reason = None
+                    decision.policy_rule_id = "complete-pentest-next-framework"
+                    decision.safety_decision = {"approved": True, "reason": "complete_pentest_mode"}
             self.planner.persist(result.id, step, context, decision)
             decision_row = decision.model_dump(mode="json")
             result.execution_plan.append(decision_row)
