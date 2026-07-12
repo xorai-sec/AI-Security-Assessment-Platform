@@ -13,6 +13,9 @@ framework_plugin_allowlist:
       - encoding
       - leakreplay
       - goodside
+      - goodside.Tag
+      - promptinject.HijackLongPrompt
+      - leakreplay.GuardianCloze
       - malwaregen
   pyrit:
     converters:
@@ -102,11 +105,12 @@ rules:
       action_type: reconnaissance
       objective: "Discover prompt injection, jailbreak, and leakage behavior on the raw model endpoint."
       profile: quick
-      selected_probes: [dan, promptinject, encoding]
-      request_budget: 4
+      selected_probes: [goodside.Tag, promptinject.HijackLongPrompt]
+      request_budget: 2
       turn_budget: 2
+      time_budget_seconds: 600
       expected_confirmation_condition: "garak reports attempt rows with detector scores or leakage/jailbreak candidates."
-      rationale: "Raw model target has no RAG/tool/memory capabilities, so start with direct model probes."
+      rationale: "Raw model target has no RAG/tool/memory capabilities, so start with a bounded direct-model garak smoke pass before escalating."
   - id: enterprise-initial-recon
     priority: 99
     when:
@@ -123,11 +127,12 @@ rules:
       action_type: reconnaissance
       objective: "Discover prompt injection, leakage, and enterprise retrieval/tool exposure candidates."
       profile: quick
-      selected_probes: [promptinject, leakreplay, encoding]
-      request_budget: 4
+      selected_probes: [promptinject.HijackLongPrompt, leakreplay.GuardianCloze]
+      request_budget: 2
       turn_budget: 2
+      time_budget_seconds: 600
       expected_confirmation_condition: "garak identifies prompt injection, leakage, retrieval, or tool-related candidates."
-      rationale: "Enterprise target exposes higher-level capabilities, so reconnaissance includes leakage and retrieval-oriented probes."
+      rationale: "Enterprise target exposes higher-level capabilities, so start with bounded leakage and injection probes before escalating."
   - id: leakage-or-jailbreak-to-pyrit
     priority: 90
     when:
