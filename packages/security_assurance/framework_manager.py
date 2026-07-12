@@ -7,6 +7,7 @@ from typing import Any
 
 import httpx
 
+from .adaptive_planner import AdaptiveAttackPlanner
 from .framework_models import FrameworkAssessmentRequest, FrameworkAssessmentResult, FrameworkDefinition
 from .target_manager import TargetManager
 from .target_models import TargetMessageRequest
@@ -29,6 +30,7 @@ class FrameworkManager:
             "deepteam": FrameworkDefinition(id="deepteam", name="deepteam", worker_url=os.getenv("DEEPTEAM_WORKER_URL", "http://deepteam-worker:8094"), enabled=os.getenv("FRAMEWORK_DEEPTEAM_ENABLED", "true").lower() == "true"),
             "promptfoo": FrameworkDefinition(id="promptfoo", name="promptfoo", worker_url=os.getenv("PROMPTFOO_WORKER_URL", "http://promptfoo-worker:8095"), enabled=os.getenv("FRAMEWORK_PROMPTFOO_ENABLED", "true").lower() == "true"),
         }
+        self.planner = AdaptiveAttackPlanner(root, self.frameworks)
 
     def _model_roles(self, request: FrameworkAssessmentRequest, target_model: str) -> dict[str, Any]:
         attacker = request.attacker_model or os.getenv("OLLAMA_ATTACKER_MODEL") or os.getenv("ATTACKER_MODEL") or target_model
@@ -94,17 +96,30 @@ class FrameworkManager:
         model_roles: dict[str, Any],
         inherited_context: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
+        planner_decision = (inherited_context or {}).get("planner_decision", {})
+        selected_probe_families = planner_decision.get("selected_probes") or request.probe_families
+        selected_promptfoo_plugins = planner_decision.get("selected_plugins") or request.promptfoo_plugins
+        selected_promptfoo_strategies = planner_decision.get("selected_strategies") or request.promptfoo_strategies
+        selected_profile = planner_decision.get("profile") or request.profile
+        selected_objective = planner_decision.get("objective") or request.objective
+        request_budget = int(planner_decision.get("request_budget") or request.maximum_requests)
+        turn_budget = int(planner_decision.get("turn_budget") or request.maximum_turns)
+        token_budget = int(planner_decision.get("token_budget") or request.maximum_tokens)
+        time_budget = int(planner_decision.get("time_budget_seconds") or request.maximum_duration_seconds)
         configuration = {
             "target_metadata": {"mode": "vulnerable"},
             "user_role": "standard_employee",
-            "probe_families": request.probe_families,
-            "promptfoo_plugins": request.promptfoo_plugins,
-            "promptfoo_strategies": request.promptfoo_strategies,
+            "probe_families": selected_probe_families,
+            "promptfoo_plugins": selected_promptfoo_plugins,
+            "promptfoo_strategies": selected_promptfoo_strategies,
+            "pyrit_converters": planner_decision.get("selected_converters", []),
+            "deepteam_vulnerabilities": planner_decision.get("selected_vulnerabilities", []),
+            "deepteam_attacks": planner_decision.get("selected_attacks", []),
+            "planner_action_type": planner_decision.get("action_type"),
+            "planner_expected_confirmation_condition": planner_decision.get("expected_confirmation_condition"),
         }
         if inherited_context:
             configuration["chain_context"] = inherited_context
-            if inherited_context.get("probe_families") and framework_id == "garak":
-                configuration["probe_families"] = inherited_context["probe_families"]
         return {
             "execution_id": f"{result.id}-{framework_id}",
             "assessment_id": result.id,
@@ -116,17 +131,17 @@ class FrameworkManager:
                 "visibility": target.visibility.value,
                 "model_name": model_roles["target_model"],
             },
-            "objective": request.objective,
+            "objective": selected_objective,
             "category": request.category,
             "strategy": request.strategy,
-            "profile": request.profile,
+            "profile": selected_profile,
             "model_roles": model_roles,
             "limits": {
-                "maximum_requests": min(request.maximum_requests, target.max_requests),
-                "maximum_duration_seconds": min(request.maximum_duration_seconds, target.max_duration_seconds),
-                "maximum_turns": request.maximum_turns,
+                "maximum_requests": min(request.maximum_requests, target.max_requests, request_budget),
+                "maximum_duration_seconds": min(request.maximum_duration_seconds, target.max_duration_seconds, time_budget),
+                "maximum_turns": min(request.maximum_turns, turn_budget),
                 "maximum_concurrency": min(request.maximum_concurrency, target.max_concurrency),
-                "maximum_tokens": request.maximum_tokens,
+                "maximum_tokens": min(request.maximum_tokens, token_budget),
             },
             "configuration": configuration,
             "callback_url": f"{api_base_url.rstrip('/')}/internal/framework-events",
@@ -277,14 +292,51 @@ class FrameworkManager:
         completed: list[str] = []
         latest: dict[str, Any] | None = None
         inherited_context: dict[str, Any] = {}
+        step = 0
         while len(completed) < len(requested):
-            next_items = self._next_frameworks(completed, latest, requested)
-            if not next_items:
+            step += 1
+            correlated_findings = self.correlate_evidence(result.normalized_evidence)
+            context = self.planner.build_context(
+                request=request,
+                result=result,
+                target=target,
+                requested_frameworks=requested,
+                correlated_findings=correlated_findings,
+                latest=latest,
+            )
+            decision = self.planner.decide(context, request, model_roles)
+            self.planner.persist(result.id, step, context, decision)
+            decision_row = decision.model_dump(mode="json")
+            result.execution_plan.append(decision_row)
+            if not decision.continue_assessment or not decision.next_framework:
+                result.chain_events.append(
+                    {
+                        "event": "planner_stopped",
+                        "reason": decision.stop_reason,
+                        "rationale": decision.rationale,
+                        "at": datetime.now(timezone.utc).isoformat(),
+                    }
+                )
                 break
-            item = next_items[0]
-            framework_id = item["framework"]
-            result.execution_plan.append(item)
-            result.chain_events.append({"event": "framework_selected", "framework": framework_id, "reason": item["reason"], "at": datetime.now(timezone.utc).isoformat()})
+            framework_id = decision.next_framework
+            result.chain_events.append(
+                {
+                    "event": "framework_selected",
+                    "framework": framework_id,
+                    "reason": decision.rationale,
+                    "policy_rule_id": decision.policy_rule_id,
+                    "evidence_references": decision.evidence_references,
+                    "expected_confirmation_condition": decision.expected_confirmation_condition,
+                    "at": datetime.now(timezone.utc).isoformat(),
+                }
+            )
+            inherited_context = {
+                "completed_frameworks": completed,
+                "correlated_findings": correlated_findings,
+                "planner_context_artifact": f"data/planner-artifacts/{result.id}/step-{step:02d}-context.json",
+                "planner_decision_artifact": f"data/planner-artifacts/{result.id}/step-{step:02d}-decision.json",
+                "planner_decision": decision_row,
+            }
             latest = self._execute_framework(
                 request=request,
                 result=result,
@@ -300,6 +352,7 @@ class FrameworkManager:
                 "completed_frameworks": completed,
                 "correlated_findings": self.correlate_evidence(result.normalized_evidence),
                 "latest_signal": self._evidence_signal(list((latest or {}).get("evidence", []))),
+                "planner_decision": decision_row,
             }
         result.correlated_findings = self.correlate_evidence(result.normalized_evidence)
         result.completed_at = datetime.now(timezone.utc)

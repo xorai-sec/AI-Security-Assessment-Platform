@@ -16,6 +16,7 @@ data/targets/*
 data/target-health/*
 data/framework-results/*
 data/framework-artifacts/*
+data/planner-artifacts/**
 data/evidence-packages/*
 !data/evidence/.gitkeep
 !data/reports/.gitkeep
@@ -24,6 +25,8 @@ data/evidence-packages/*
 !data/target-health/.gitkeep
 !data/framework-results/.gitkeep
 !data/framework-artifacts/.gitkeep
+!data/planner-artifacts/
+!data/planner-artifacts/.gitkeep
 !data/evidence-packages/.gitkeep
 *.sqlite
 *.db
