@@ -32,7 +32,13 @@ if [[ -f docker-compose.gpu.yml ]]; then
 fi
 
 compose() {
-  "$DOCKER_BIN" compose "${COMPOSE_FILES[@]}" "$@"
+  docker_cmd compose "${COMPOSE_FILES[@]}" "$@"
+}
+
+docker_cmd() {
+  local docker_parts=()
+  read -r -a docker_parts <<< "$DOCKER_BIN"
+  "${docker_parts[@]}" "$@"
 }
 
 detect_ollama_container() {
@@ -46,13 +52,13 @@ detect_ollama_container() {
     echo "$compose_container"
     return 0
   fi
-  "$DOCKER_BIN" ps --format '{{.Names}}' | grep -E '(^|-)ollama(-|$)' | head -1
+  docker_cmd ps --format '{{.Names}}' | grep -E '(^|-)ollama(-|$)' | head -1
 }
 
 ollama_exec() {
   local container="$1"
   shift
-  "$DOCKER_BIN" exec "$container" "$@"
+  docker_cmd exec "$container" "$@"
 }
 
 pull_model() {
