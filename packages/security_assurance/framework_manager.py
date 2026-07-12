@@ -404,6 +404,9 @@ class FrameworkManager:
                     "frameworks": data.frameworks,
                     "status": data.status,
                     "evidence": len(data.normalized_evidence),
+                    "findings": len(data.correlated_findings),
+                    "confirmed": sum(1 for item in data.correlated_findings if item.get("status") == "confirmed"),
+                    "candidates": sum(1 for item in data.correlated_findings if item.get("status") != "confirmed"),
                     "errors": len(data.errors),
                     "completed_at": data.completed_at,
                 }

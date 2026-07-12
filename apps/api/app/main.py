@@ -149,7 +149,7 @@ def get_framework_assessment(assessment_id: str) -> dict[str, Any]:
                 "candidate_count": sum(1 for item in findings if str(item.get("status", "")).lower() in {"candidate", "needs_review", "needs-review"}),
                 "duration": worker_result.get("duration") or worker_result.get("duration_seconds"),
                 "error_count": len(worker_result.get("errors", [])) if isinstance(worker_result.get("errors", []), list) else 1,
-                "raw_artifacts": worker_result.get("artifacts", {}),
+                "raw_artifacts": worker_result.get("raw_artifacts") or worker_result.get("artifacts", {}),
             }
         )
 

@@ -80,6 +80,20 @@ label { display: grid; gap: 6px; color: #34445a; font-size: 13px; font-weight: 7
 .framework-runs { display: grid; gap: 10px; margin-top: 12px; }
 .framework-runs h3 { margin: 0; font-size: 18px; }
 .run-card { width: 100%; min-height: 58px; display: grid; grid-template-columns: 1.2fr .6fr 1.4fr .7fr .5fr; gap: 10px; align-items: center; text-align: left; background: #fbfdff; color: var(--ink); border-color: var(--line); }
+.run-monitor { border-color: #b9d8d4; background: linear-gradient(180deg, #ffffff, #f8fcfb); }
+.monitor-head { display: flex; align-items: start; justify-content: space-between; gap: 16px; }
+.monitor-head p { margin: 6px 0 0; }
+.timer { min-width: 150px; border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: #f8fafc; display: grid; gap: 4px; text-align: right; }
+.timer strong { font-size: 24px; color: var(--accent); }
+.timer span { color: var(--muted); overflow-wrap: anywhere; }
+.stage-track { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.stage { border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: grid; gap: 7px; background: white; min-height: 118px; }
+.stage.running { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(15, 118, 110, .12); }
+.stage.completed { background: #effaf8; border-color: #a7ddd6; }
+.stage small, .stage span { color: var(--muted); overflow-wrap: anywhere; }
+.decision-log { display: grid; gap: 8px; }
+.decision-log article { border-left: 3px solid var(--accent); background: #f8fafc; padding: 10px 12px; border-radius: 6px; display: grid; gap: 4px; }
+.decision-log span { color: var(--muted); }
 .summary-band { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .summary-band article { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: #fbfdff; display: grid; gap: 4px; }
 .summary-band strong { font-size: 20px; overflow-wrap: anywhere; }
@@ -102,7 +116,9 @@ pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; background: #0f
   aside { display: flex; overflow-x: auto; }
   .brand { flex: 0 0 auto; margin-bottom: 0; }
   .nav { width: auto; }
-  .metrics, .split, .grid-two, .finding-strip, .cards, .cards.compact, .summary-band, .run-card { grid-template-columns: 1fr; }
+  .metrics, .split, .grid-two, .finding-strip, .cards, .cards.compact, .summary-band, .run-card, .stage-track { grid-template-columns: 1fr; }
+  .monitor-head { display: grid; }
+  .timer { text-align: left; }
   .row, .row.iso-head, .row.iso-row, .row.report-head, .row.report-row { grid-template-columns: 1fr; }
   .form-grid { grid-template-columns: 1fr; }
   .run-controls .form-grid { grid-template-columns: 1fr; }

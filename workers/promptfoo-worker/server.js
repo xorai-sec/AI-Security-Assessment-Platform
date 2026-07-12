@@ -70,8 +70,15 @@ function writePromptfooFiles(request, prompts) {
   fs.mkdirSync(dir, { recursive: true });
   const providerPath = path.join(dir, "target-proxy-provider.js");
   fs.writeFileSync(providerPath, `
-module.exports = {
-  id: 'target-proxy-provider',
+module.exports = class TargetProxyProvider {
+  constructor(options = {}) {
+    this.options = options;
+  }
+
+  id() {
+    return 'target-proxy-provider';
+  }
+
   async callApi(prompt) {
     const response = await fetch(process.env.PROMPTFOO_PROXY_URL, {
       method: 'POST',
@@ -79,7 +86,7 @@ module.exports = {
       body: JSON.stringify({
         execution_id: process.env.PROMPTFOO_EXECUTION_ID,
         campaign_id: process.env.PROMPTFOO_CAMPAIGN_ID,
-        prompt,
+        prompt: typeof prompt === 'string' ? prompt : String(prompt?.raw || prompt?.label || prompt),
         session_id: process.env.PROMPTFOO_EXECUTION_ID + '-promptfoo-cli',
         user_role: 'standard_employee',
         metadata: {framework:'promptfoo', source:'promptfoo-cli'}

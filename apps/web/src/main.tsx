@@ -88,6 +88,18 @@ type AssessmentDetail = {
 
 type Health = { status: string; adapters: Record<string, { status: string; version: string | null }> };
 
+type ActiveRun = {
+  targetId: string;
+  targetName: string;
+  frameworks: string[];
+  startedAt: number;
+  status: "running" | "completed" | "completed_with_errors" | "failed";
+  message: string;
+  resultId?: string;
+  evidence?: number;
+  errors?: number;
+};
+
 const blankForm = {
   target_name: "Local AI chat endpoint",
   target_type: "custom_rest",
@@ -142,6 +154,8 @@ function App() {
   const [dataErrors, setDataErrors] = useState<Record<string, string>>({});
   const [loadingSections, setLoadingSections] = useState<Record<string, boolean>>({});
   const [busy, setBusy] = useState(false);
+  const [activeRun, setActiveRun] = useState<ActiveRun | null>(null);
+  const [clock, setClock] = useState(Date.now());
 
   async function api(path: string, options?: RequestInit) {
     try {
@@ -179,10 +193,21 @@ function App() {
       api("/api/assessments"),
       api("/api/assessments/frameworks"),
       api("/api/reports"),
+      api("/api/frameworks/health", { method: "POST", body: "{}" }),
+      api("/api/frameworks/capabilities"),
       api("/api/frameworks"),
     ]);
     const errors: Record<string, string> = {};
-    const [healthResult, targetResult, assessmentResult, frameworkAssessmentResult, reportResult, frameworkResult] = results;
+    const [
+      healthResult,
+      targetResult,
+      assessmentResult,
+      frameworkAssessmentResult,
+      reportResult,
+      frameworkHealthResult,
+      frameworkCapabilityResult,
+      frameworkResult,
+    ] = results;
 
     if (healthResult.status === "fulfilled") setHealth(healthResult.value);
     else errors.health = healthResult.reason.message;
@@ -204,6 +229,11 @@ function App() {
 
     if (reportResult.status === "fulfilled") setReports(reportResult.value.reports || []);
     else errors.reports = reportResult.reason.message;
+
+    if (frameworkHealthResult.status === "rejected") errors.frameworkHealth = frameworkHealthResult.reason.message;
+
+    if (frameworkCapabilityResult.status === "fulfilled") setFrameworkCapabilities(frameworkCapabilityResult.value.frameworks || {});
+    else errors.frameworkCapabilities = frameworkCapabilityResult.reason.message;
 
     if (frameworkResult.status === "fulfilled") setFrameworks(frameworkResult.value.frameworks || []);
     else errors.frameworks = frameworkResult.reason.message;
@@ -326,15 +356,28 @@ function App() {
 
   async function runAllFrameworks() {
     if (!selectedTargetId) return;
-    await runAction("Multi-framework assessment", async () => {
-      await api("/api/assessments/frameworks", {
+    const plannedFrameworks = ["garak", "pyrit", "promptfoo", "deepteam", "native"];
+    const targetName = selectedTarget?.target_name || selectedTargetId;
+    setBusy(true);
+    setNotice("Adaptive framework assessment started.");
+    setActiveRun({
+      targetId: selectedTargetId,
+      targetName,
+      frameworks: plannedFrameworks,
+      startedAt: Date.now(),
+      status: "running",
+      message: "Planner is validating authorization, target capability, and budget before selecting the first framework.",
+    });
+    try {
+      const data = await api("/api/assessments/frameworks", {
         method: "POST",
         body: JSON.stringify({
           target_id: selectedTargetId,
-          frameworks: ["native", "garak", "pyrit", "promptfoo", "deepteam"],
-          objective: "Authorized multi-framework AI security assessment",
+          frameworks: plannedFrameworks,
+          objective: "Authorized adaptive multi-framework AI security assessment",
           category: "multi_framework",
-          strategy: "baseline",
+          execution_mode: "chained",
+          strategy: "adaptive",
           profile: frameworkRun.profile,
           target_model: frameworkRun.target_model || selectedTarget?.model_name,
           attacker_model: frameworkRun.attacker_model || undefined,
@@ -350,7 +393,30 @@ function App() {
           written_authorization_confirmed: true,
         }),
       });
-    });
+      const errors = Array.isArray(data.errors) ? data.errors.length : 0;
+      setSelectedAssessmentId(data.id);
+      setDetail(data);
+      setActiveRun((current) => ({
+        ...(current || {
+          targetId: selectedTargetId,
+          targetName,
+          frameworks: plannedFrameworks,
+          startedAt: Date.now(),
+        }),
+        status: errors ? "completed_with_errors" : "completed",
+        resultId: data.id,
+        evidence: data.normalized_evidence?.length || 0,
+        errors,
+        message: `${data.status} with ${data.normalized_evidence?.length || 0} evidence records and ${errors} errors.`,
+      }));
+      setNotice("Adaptive framework assessment completed.");
+      await refresh();
+    } catch (error: any) {
+      setActiveRun((current) => current ? { ...current, status: "failed", message: error.message } : null);
+      setNotice(`Adaptive framework assessment failed: ${error.message}`);
+    } finally {
+      setBusy(false);
+    }
   }
 
   function openIsoEvidence(mapping: any) {
@@ -371,6 +437,12 @@ function App() {
   useEffect(() => {
     loadAssessment(selectedAssessmentId).catch((error) => setDataErrors((current) => ({ ...current, detail: error.message })));
   }, [selectedAssessmentId]);
+
+  useEffect(() => {
+    if (!activeRun || activeRun.status !== "running") return;
+    const timer = window.setInterval(() => setClock(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [activeRun]);
 
   const selectedTarget = useMemo(() => targets.find((target) => target.id === selectedTargetId), [targets, selectedTargetId]);
   const assessmentRows = useMemo(() => normalizeAssessments(assessments, frameworkAssessments, targets), [assessments, frameworkAssessments, targets]);
@@ -410,6 +482,7 @@ function App() {
               <Metric icon={<SearchCheck />} label="Enabled targets" value={enabledTargets} />
               <Metric icon={<TriangleAlert />} label="Total findings" value={totalFindings} />
             </div>
+            <RunMonitor activeRun={activeRun} detail={detail} frameworks={frameworks} clock={clock} />
             <section className="panel split">
               <div>
                 <p className="eyebrow">Readiness</p>
@@ -478,8 +551,9 @@ function App() {
             <PanelTitle icon={<SlidersHorizontal />} title="Framework Manager" subtitle="Isolated worker health, capabilities, and controlled multi-framework execution." />
             <div className="actions">
               <button onClick={checkFrameworks} disabled={busy}><RefreshCw size={16} /> Health + Capabilities</button>
-              <button onClick={runAllFrameworks} disabled={busy || !selectedTargetId}><Play size={16} /> Run All Compatible</button>
+              <button onClick={runAllFrameworks} disabled={busy || !selectedTargetId}><Play size={16} /> Run Adaptive Chain</button>
             </div>
+            <RunMonitor activeRun={activeRun} detail={detail} frameworks={frameworks} clock={clock} />
             <FrameworkRunControls value={frameworkRun} setValue={setFrameworkRun} selectedTarget={selectedTarget} />
             <div className="cards">
               {loadingSections.frameworks && <div className="empty">Loading framework registry...</div>}
@@ -614,6 +688,56 @@ function ErrorSummary({ errors }: { errors: Record<string, string> }) {
   );
 }
 
+function RunMonitor({ activeRun, detail, frameworks, clock }: { activeRun: ActiveRun | null; detail: any | null; frameworks: any[]; clock: number }) {
+  if (!activeRun && !detail?.assessment_type) return null;
+  const run = activeRun;
+  const isRunning = run?.status === "running";
+  const elapsed = run ? Math.max(0, Math.floor((clock - run.startedAt) / 1000)) : 0;
+  const stages = run?.frameworks?.length ? run.frameworks : detail?.frameworks || detail?.framework_summaries?.map((item: any) => item.framework) || [];
+  const completed = new Set((detail?.frameworks || detail?.framework_summaries?.map((item: any) => item.framework) || []).map((item: string) => item.toLowerCase()));
+  const activeIndex = isRunning && stages.length ? Math.min(stages.length - 1, Math.floor(elapsed / 12)) : -1;
+  return (
+    <section className="panel run-monitor">
+      <div className="monitor-head">
+        <div>
+          <p className="eyebrow">Live assessment tracker</p>
+          <h2>{run?.targetName || detail?.target?.target_name || "Selected assessment"}</h2>
+          <p>{run?.message || `${detail?.status || "completed"} assessment with ${detail?.normalized_evidence?.length || 0} evidence records.`}</p>
+        </div>
+        <div className="timer">
+          <strong>{isRunning ? formatElapsed(elapsed) : run?.status || detail?.status || "ready"}</strong>
+          <span>{run?.resultId || detail?.id || "waiting for run"}</span>
+        </div>
+      </div>
+      <div className="stage-track">
+        {stages.map((stage: string, index: number) => {
+          const key = stage.toLowerCase();
+          const registry = frameworks.find((item) => frameworkKey(item) === key);
+          const status = completed.has(key) ? "completed" : index === activeIndex ? "running" : isRunning ? "queued" : "not selected";
+          return (
+            <article className={`stage ${status.replace(/\s/g, "-")}`} key={`${stage}-${index}`}>
+              <strong>{stage}</strong>
+              <StatusBadge status={status} />
+              <span>{registry?.version || "version pending"}</span>
+              <small>{registry?.health || "health unknown"}</small>
+            </article>
+          );
+        })}
+      </div>
+      {detail?.execution_plan?.length > 0 && (
+        <div className="decision-log">
+          {detail.execution_plan.slice(-4).map((item: any, index: number) => (
+            <article key={`${item.policy_rule_id || item.next_framework || index}-${index}`}>
+              <strong>{item.next_framework || item.action_type || "planner"}</strong>
+              <span>{item.rationale || item.stop_reason || "planner decision recorded"}</span>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function normalizeAssessments(nativeRuns: Assessment[], frameworkRuns: any[], targets: Target[]): AssessmentSummary[] {
   const targetById = new Map(targets.map((target) => [target.id, target]));
   const native = nativeRuns.map((assessment) => ({
@@ -676,6 +800,12 @@ function formatDate(value: string | null | undefined) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString();
+}
+
+function formatElapsed(seconds: number) {
+  const minutes = Math.floor(seconds / 60);
+  const rest = seconds % 60;
+  return `${minutes}:${String(rest).padStart(2, "0")}`;
 }
 
 function evidenceStatus(record: any) {
