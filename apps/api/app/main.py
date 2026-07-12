@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -18,8 +18,11 @@ from packages.security_assurance.orchestrator import default_orchestrator
 from packages.security_assurance.reporting import render_html_report
 from packages.security_assurance.storage import EvidenceStore
 from packages.security_assurance.target_manager import TargetCreateRequest, TargetManager
-from packages.security_assurance.target_models import TargetConfiguration, TargetCredential, TargetMessageRequest, TargetType
-
+from packages.security_assurance.target_models import (
+    TargetConfiguration,
+    TargetCredential,
+    TargetType,
+)
 
 ROOT = Path(__file__).resolve().parents[3]
 STORE = EvidenceStore(ROOT)
@@ -399,8 +402,8 @@ def run_demo_assessment(request: DemoAssessmentRequest) -> dict[str, Any]:
         environment_type=EnvironmentType.local_lab,
         system_owner=request.system_owner,
         authorized_tester=request.authorized_tester,
-        testing_start=datetime.now(timezone.utc),
-        testing_end=datetime.now(timezone.utc) + timedelta(hours=1),
+        testing_start=datetime.now(UTC),
+        testing_end=datetime.now(UTC) + timedelta(hours=1),
         allowed_attack_categories=[
             "Prompt Injection",
             "Indirect Prompt Injection",
@@ -452,8 +455,8 @@ async def run_target_assessment(request: TargetAssessmentRequest) -> dict[str, A
         environment_type=target.environment,
         system_owner=target.system_owner,
         authorized_tester=request.authorized_tester,
-        testing_start=datetime.now(timezone.utc),
-        testing_end=datetime.now(timezone.utc) + timedelta(seconds=target.max_duration_seconds),
+        testing_start=datetime.now(UTC),
+        testing_end=datetime.now(UTC) + timedelta(seconds=target.max_duration_seconds),
         allowed_attack_categories=target.allowed_testing_categories or [row.category for row in TARGETS.supported_campaigns(target.id) if row.supported],
         disallowed_activities=target.prohibited_actions,
         data_classification=target.data_classification,

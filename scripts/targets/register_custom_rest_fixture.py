@@ -2,7 +2,6 @@ import os
 
 import httpx
 
-
 API = os.getenv("AISEC_API_URL", "http://127.0.0.1:8080")
 BASE_URL = os.getenv("AISEC_CUSTOM_REST_FIXTURE_URL", "http://enterprise-assist:8090")
 

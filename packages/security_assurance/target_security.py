@@ -10,7 +10,6 @@ from urllib.parse import urljoin, urlparse
 
 from .target_models import ConfigurationValidationResult
 
-
 BLOCKED_EXACT_IPS = {
     ipaddress.ip_address("169.254.169.254"),
 }
@@ -25,7 +24,7 @@ class NetworkPolicy:
     max_redirects: int = 2
 
     @classmethod
-    def from_env(cls) -> "NetworkPolicy":
+    def from_env(cls) -> NetworkPolicy:
         allow_local = os.getenv("AISEC_ALLOW_LOCAL_TARGETS", "true").lower() in {"1", "true", "yes"}
         allow_private = os.getenv("AISEC_ALLOW_PRIVATE_TARGETS", "false").lower() in {"1", "true", "yes"}
         ports = os.getenv("AISEC_ALLOWED_TARGET_PORTS", "80,443,8000,8001,8080,8090,11434")

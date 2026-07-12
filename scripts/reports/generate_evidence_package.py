@@ -3,9 +3,8 @@ from __future__ import annotations
 import hashlib
 import json
 import zipfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "data"
@@ -18,12 +17,12 @@ def sha256(path: Path) -> str:
 
 def main() -> None:
     PACKAGE_DIR.mkdir(parents=True, exist_ok=True)
-    package_id = datetime.now(timezone.utc).strftime("evidence-package-%Y%m%d-%H%M%S")
+    package_id = datetime.now(UTC).strftime("evidence-package-%Y%m%d-%H%M%S")
     package_path = PACKAGE_DIR / f"{package_id}.zip"
     source_dirs = ["evidence", "reports", "targets", "framework-results", "framework-artifacts"]
     manifest = {
         "package_id": package_id,
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(UTC).isoformat(),
         "sources": source_dirs,
         "redaction": "Credentials are excluded by design; files are collected from sanitized platform stores.",
         "hashes": {},

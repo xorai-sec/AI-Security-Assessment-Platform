@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import os
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -132,7 +132,7 @@ class AdaptiveAttackPlanner:
         requests_used = max(len(evidence), len(result.worker_results))
         elapsed = 0
         if result.started_at:
-            elapsed = max(0, int((datetime.now(timezone.utc) - result.started_at).total_seconds()))
+            elapsed = max(0, int((datetime.now(UTC) - result.started_at).total_seconds()))
         return PlanningContext(
             assessment_id=result.id,
             policy_version=str(self.policy["version"]),

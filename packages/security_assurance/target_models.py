@@ -160,7 +160,7 @@ class TargetRecord(BaseModel):
     )
     emergency_contact: str = ""
     kill_switch_acknowledged: bool = False
-    last_health: "TargetHealth | None" = None
+    last_health: TargetHealth | None = None
     last_validated_at: datetime | None = None
     last_assessment_id: str | None = None
     created_at: datetime = Field(default_factory=utc_now)

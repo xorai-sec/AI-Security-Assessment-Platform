@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -11,7 +11,6 @@ from .adaptive_planner import AdaptiveAttackPlanner
 from .framework_models import FrameworkAssessmentRequest, FrameworkAssessmentResult, FrameworkDefinition
 from .target_manager import TargetManager
 from .target_models import TargetMessageRequest
-
 
 CHAIN_START = "garak"
 CHAIN_ORDER = ["garak", "pyrit", "promptfoo", "deepteam"]
@@ -64,12 +63,12 @@ class FrameworkManager:
                 framework.health = data.get("status", "unknown")
                 framework.version = data.get("version")
                 framework.last_error = None
-                framework.last_health_check = datetime.now(timezone.utc)
+                framework.last_health_check = datetime.now(UTC)
                 rows[framework_id] = data
             except Exception as exc:
                 framework.health = "unhealthy"
                 framework.last_error = str(exc)
-                framework.last_health_check = datetime.now(timezone.utc)
+                framework.last_health_check = datetime.now(UTC)
                 rows[framework_id] = framework.model_dump(mode="json")
         return rows
 
@@ -314,7 +313,7 @@ class FrameworkManager:
                         "event": "planner_stopped",
                         "reason": decision.stop_reason,
                         "rationale": decision.rationale,
-                        "at": datetime.now(timezone.utc).isoformat(),
+                        "at": datetime.now(UTC).isoformat(),
                     }
                 )
                 break
@@ -327,7 +326,7 @@ class FrameworkManager:
                     "policy_rule_id": decision.policy_rule_id,
                     "evidence_references": decision.evidence_references,
                     "expected_confirmation_condition": decision.expected_confirmation_condition,
-                    "at": datetime.now(timezone.utc).isoformat(),
+                    "at": datetime.now(UTC).isoformat(),
                 }
             )
             inherited_context = {
@@ -355,7 +354,7 @@ class FrameworkManager:
                 "planner_decision": decision_row,
             }
         result.correlated_findings = self.correlate_evidence(result.normalized_evidence)
-        result.completed_at = datetime.now(timezone.utc)
+        result.completed_at = datetime.now(UTC)
         result.status = "succeeded" if result.normalized_evidence and not result.errors else "partially_completed" if result.normalized_evidence else "failed"
         self._save_result(result)
         return result
@@ -383,7 +382,7 @@ class FrameworkManager:
                 model_roles=model_roles,
             )
 
-        result.completed_at = datetime.now(timezone.utc)
+        result.completed_at = datetime.now(UTC)
         result.correlated_findings = self.correlate_evidence(result.normalized_evidence)
         result.status = "succeeded" if result.normalized_evidence and not result.errors else "partially_completed" if result.normalized_evidence else "failed"
         self._save_result(result)

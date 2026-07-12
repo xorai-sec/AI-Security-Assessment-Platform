@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from .models import Finding, ISOMapping
 
-
 MAPPING_TEMPLATES = {
     "Prompt Injection": {
         "clause": "ISO/IEC 42001:2023 Clauses 6.1, 6.2, 8.1 and Annex A.6",

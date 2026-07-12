@@ -1,6 +1,13 @@
 from __future__ import annotations
 
-from ...target_models import TargetCapabilities, TargetHealth, TargetMessageRequest, TargetMessageResponse, TargetTelemetry, TargetVisibility
+from ...target_models import (
+    TargetCapabilities,
+    TargetHealth,
+    TargetMessageRequest,
+    TargetMessageResponse,
+    TargetTelemetry,
+    TargetVisibility,
+)
 from ...target_security import join_url
 from .base import AITargetAdapter, field_get
 

@@ -100,8 +100,6 @@ def _risk_score(result: AssessmentResult) -> str:
 
 def render_html_report(result: AssessmentResult) -> str:
     finding_by_id = {finding.id: finding for finding in result.findings}
-    execution_by_id = {execution.id: execution for execution in result.executions}
-    execution_by_hash = {execution.evidence_hash: execution for execution in result.executions}
 
     finding_rows = []
     for finding in result.findings:

@@ -22,7 +22,7 @@ from ...target_models import (
     TargetTelemetry,
     TargetVisibility,
 )
-from ...target_security import DevelopmentCredentialProtector, NetworkPolicy, join_url, validate_target_url
+from ...target_security import DevelopmentCredentialProtector, NetworkPolicy, validate_target_url
 
 
 class AITargetAdapter(ABC):

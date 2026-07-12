@@ -2,7 +2,14 @@ from __future__ import annotations
 
 from copy import deepcopy
 
-from ...target_models import TargetCapabilities, TargetHealth, TargetMessageRequest, TargetMessageResponse, TargetTelemetry, TargetVisibility
+from ...target_models import (
+    TargetCapabilities,
+    TargetHealth,
+    TargetMessageRequest,
+    TargetMessageResponse,
+    TargetTelemetry,
+    TargetVisibility,
+)
 from ...target_security import join_url
 from .base import AITargetAdapter, field_get, field_set
 

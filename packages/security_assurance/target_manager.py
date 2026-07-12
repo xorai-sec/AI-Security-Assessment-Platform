@@ -6,6 +6,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from .adapters.targets import build_target_adapter
 from .campaigns import NATIVE_CAMPAIGNS
 from .models import utc_now
 from .target_models import (
@@ -22,8 +23,6 @@ from .target_models import (
     TargetVisibility,
 )
 from .target_security import DevelopmentCredentialProtector
-from .adapters.targets import build_target_adapter
-
 
 CAMPAIGN_REQUIREMENTS: dict[str, set[str]] = {
     "system_prompt_leakage": {"chat"},

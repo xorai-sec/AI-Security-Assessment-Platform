@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
+from .adapters.targets import build_target_adapter
 from .campaigns import NATIVE_CAMPAIGNS, NativeCampaign
 from .correlation import correlate_findings
-from .adapters.targets import build_target_adapter
 from .enterprise_client import EnterpriseAssistClient
 from .evaluation import evaluate_campaign
 from .evidence import evidence_hash, redact_text
@@ -114,7 +114,7 @@ class AssessmentOrchestrator:
 
         result.findings = correlate_findings(result.findings)
         result.iso_mappings = [map_finding_to_iso(finding) for finding in result.findings]
-        result.completed_at = datetime.now(timezone.utc)
+        result.completed_at = datetime.now(UTC)
         result.reports = write_reports(result, self.store.report_dir)
         self.store.save_result(result)
         return result
@@ -192,7 +192,7 @@ class AssessmentOrchestrator:
 
         result.findings = correlate_findings(result.findings)
         result.iso_mappings = [map_finding_to_iso(finding) for finding in result.findings]
-        result.completed_at = datetime.now(timezone.utc)
+        result.completed_at = datetime.now(UTC)
         result.reports = write_reports(result, self.store.report_dir)
         self.store.save_result(result)
         return result

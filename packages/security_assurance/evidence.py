@@ -5,7 +5,6 @@ import json
 import re
 from typing import Any
 
-
 SECRET_PATTERNS = [
     re.compile(r"(?i)(api[_-]?key|token|secret|password)\s*[:=]\s*['\"]?[^'\"\s,;]+"),
     re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"),

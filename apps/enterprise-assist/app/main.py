@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import hashlib
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Literal
 from uuid import uuid4
 
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
-
 
 SYSTEM_PROMPT_CANARY = "EA_SYS_CANARY_42001_9F3A"
 RAG_INJECTION_CANARY = "EA_RAG_INJECTION_CANARY_D4F2"
@@ -79,7 +78,7 @@ class OpenAIChatRequest(BaseModel):
 
 
 def now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def prompt_hash() -> str:
