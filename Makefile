@@ -1,4 +1,4 @@
-.PHONY: install install-frameworks prepare-runtime validate-artifact-permissions setup-ollama-models lint typecheck test test-unit test-integration test-e2e security-check build build-frameworks up up-full up-frameworks up-gpu down migrate seed demo-up demo-seed demo-assess demo-report validate validate-targets validate-adapters validate-frameworks validate-e2e validate-gpu inspect-garak inspect-pyrit inspect-deepteam framework-health framework-self-test self-test-garak self-test-pyrit self-test-promptfoo self-test-deepteam target-health register-enterprise-assist register-ollama-target register-vllm-target register-openai-fixture register-custom-rest-fixture assess-target assess-native assess-garak assess-pyrit assess-promptfoo assess-deepteam assess-all assess-all-quick assess-all-standard assess-all-comprehensive validate-garak-native validate-pyrit-native validate-deepteam-native assess-target-group assess-model-group hardened-retest retest-finding generate-reports generate-pdf-reports generate-evidence-package clean
+.PHONY: install install-frameworks prepare-runtime validate-artifact-permissions setup-ollama-models lint typecheck test test-unit test-integration test-e2e security-check build build-frameworks up up-full up-frameworks up-gpu down migrate seed demo-up demo-seed demo-assess demo-report validate validate-targets validate-adapters validate-frameworks validate-e2e validate-gpu inspect-garak inspect-pyrit inspect-deepteam framework-health framework-self-test self-test-garak self-test-pyrit self-test-promptfoo self-test-deepteam target-health register-enterprise-assist register-ollama-target register-vllm-target register-openai-fixture register-custom-rest-fixture assess-target assess-native assess-garak assess-pyrit assess-promptfoo assess-deepteam assess-all assess-all-quick assess-all-standard assess-all-comprehensive assess-chain validate-garak-native validate-pyrit-native validate-promptfoo-native validate-deepteam-native assess-target-group assess-model-group hardened-retest retest-finding generate-reports generate-pdf-reports generate-evidence-package clean
 
 PYTHON ?= python
 
@@ -160,11 +160,17 @@ assess-all-standard:
 assess-all-comprehensive:
 	PROFILE=comprehensive FRAMEWORK_MAX_REQUESTS=14 FRAMEWORK_MAX_TURNS=8 FRAMEWORK_MAX_DURATION_SECONDS=1800 $(PYTHON) scripts/frameworks/assess_frameworks.py native garak pyrit promptfoo deepteam
 
+assess-chain:
+	FRAMEWORK_EXECUTION_MODE=chained FRAMEWORK_STRATEGY=attack-planning PROFILE=$${PROFILE:-quick} FRAMEWORK_MAX_REQUESTS=$${FRAMEWORK_MAX_REQUESTS:-4} FRAMEWORK_MAX_DURATION_SECONDS=$${FRAMEWORK_MAX_DURATION_SECONDS:-1200} $(PYTHON) scripts/frameworks/assess_frameworks.py garak pyrit promptfoo deepteam
+
 validate-garak-native:
 	TARGET_ID=$(TARGET_ID) PROFILE=$${PROFILE:-quick} FRAMEWORK_MAX_REQUESTS=$${FRAMEWORK_MAX_REQUESTS:-4} FRAMEWORK_MAX_DURATION_SECONDS=$${FRAMEWORK_MAX_DURATION_SECONDS:-900} $(PYTHON) scripts/frameworks/assess_frameworks.py garak
 
 validate-pyrit-native:
 	TARGET_ID=$(TARGET_ID) PROFILE=$${PROFILE:-quick} FRAMEWORK_MAX_REQUESTS=$${FRAMEWORK_MAX_REQUESTS:-4} FRAMEWORK_MAX_DURATION_SECONDS=$${FRAMEWORK_MAX_DURATION_SECONDS:-900} $(PYTHON) scripts/frameworks/assess_frameworks.py pyrit
+
+validate-promptfoo-native:
+	TARGET_ID=$(TARGET_ID) PROFILE=$${PROFILE:-quick} FRAMEWORK_MAX_REQUESTS=$${FRAMEWORK_MAX_REQUESTS:-4} FRAMEWORK_MAX_DURATION_SECONDS=$${FRAMEWORK_MAX_DURATION_SECONDS:-900} $(PYTHON) scripts/frameworks/assess_frameworks.py promptfoo
 
 validate-deepteam-native:
 	TARGET_ID=$(TARGET_ID) PROFILE=$${PROFILE:-quick} FRAMEWORK_MAX_REQUESTS=$${FRAMEWORK_MAX_REQUESTS:-4} FRAMEWORK_MAX_DURATION_SECONDS=$${FRAMEWORK_MAX_DURATION_SECONDS:-900} $(PYTHON) scripts/frameworks/assess_frameworks.py deepteam

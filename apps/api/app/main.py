@@ -157,7 +157,7 @@ def get_framework_assessment(assessment_id: str) -> dict[str, Any]:
     payload["assessment_type"] = "multi_framework"
     payload["target"] = target_metadata
     payload["framework_summaries"] = framework_summaries
-    payload["correlated_findings"] = []
+    payload["correlated_findings"] = result.correlated_findings
     payload["iso_mappings"] = [
         {
             "id": f"{result.id}-iso-42001-{index + 1}",

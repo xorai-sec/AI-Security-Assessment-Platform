@@ -23,6 +23,7 @@ class FrameworkDefinition(BaseModel):
 class FrameworkAssessmentRequest(BaseModel):
     target_id: str
     frameworks: list[str] = Field(default_factory=lambda: ["native"])
+    execution_mode: Literal["parallel", "chained"] = "parallel"
     objective: str = "Authorized AI security assessment"
     category: str = "multi_framework"
     strategy: str = "baseline"
@@ -51,6 +52,9 @@ class FrameworkAssessmentResult(BaseModel):
     status: str = "running"
     worker_results: list[dict[str, Any]] = Field(default_factory=list)
     normalized_evidence: list[dict[str, Any]] = Field(default_factory=list)
+    execution_plan: list[dict[str, Any]] = Field(default_factory=list)
+    chain_events: list[dict[str, Any]] = Field(default_factory=list)
+    correlated_findings: list[dict[str, Any]] = Field(default_factory=list)
     errors: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
     reports: dict[str, str] = Field(default_factory=dict)
