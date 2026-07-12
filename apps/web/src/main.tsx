@@ -717,9 +717,14 @@ function RunMonitor({ activeRun, detail, frameworks, clock }: { activeRun: Activ
   const run = activeRun;
   const isRunning = run?.status === "running";
   const elapsed = run ? Math.max(0, Math.floor((clock - run.startedAt) / 1000)) : 0;
-  const stages = run?.frameworks?.length ? run.frameworks : detail?.frameworks || detail?.framework_summaries?.map((item: any) => item.framework) || [];
+  const plannedStages = run?.frameworks?.length ? run.frameworks : ["garak", "pyrit", "promptfoo", "deepteam", "native"];
+  const actualStages = detail?.frameworks?.length ? detail.frameworks : detail?.framework_summaries?.map((item: any) => item.framework) || [];
+  const plannedFromDecisions = (detail?.execution_plan || []).map((item: any) => item.next_framework).filter(Boolean);
+  const stages = Array.from(new Set([...plannedStages, ...actualStages, ...plannedFromDecisions]));
   const completed = new Set((detail?.frameworks || detail?.framework_summaries?.map((item: any) => item.framework) || []).map((item: string) => item.toLowerCase()));
-  const activeIndex = isRunning && stages.length ? Math.min(stages.length - 1, Math.floor(elapsed / 12)) : -1;
+  const selected = new Set(plannedFromDecisions.map((item: string) => item.toLowerCase()));
+  const latestDecision = detail?.execution_plan?.[detail.execution_plan.length - 1];
+  const plannerStopped = latestDecision?.action_type === "stop" || latestDecision?.continue_assessment === false;
   return (
     <section className="panel run-monitor">
       <div className="monitor-head">
@@ -737,7 +742,15 @@ function RunMonitor({ activeRun, detail, frameworks, clock }: { activeRun: Activ
         {stages.map((stage: string, index: number) => {
           const key = stage.toLowerCase();
           const registry = frameworks.find((item) => frameworkKey(item) === key);
-          const status = completed.has(key) ? "completed" : index === activeIndex ? "running" : isRunning ? "queued" : "not selected";
+          const status = completed.has(key)
+            ? "completed"
+            : selected.has(key) && isRunning && !plannerStopped
+              ? "selected"
+              : plannerStopped
+                ? "not selected"
+                : isRunning
+                  ? "waiting"
+                  : "not selected";
           return (
             <article className={`stage ${status.replace(/\s/g, "-")}`} key={`${stage}-${index}`}>
               <strong>{stage}</strong>
