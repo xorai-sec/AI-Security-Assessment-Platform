@@ -6,8 +6,7 @@ import inspect
 import json
 import os
 import pkgutil
-from datetime import datetime, timezone
-from pathlib import Path
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -17,7 +16,6 @@ from workers.common.artifacts import run_artifacts
 from workers.common.base_runner import BaseFrameworkRunner
 from workers.common.protocol.schemas import FrameworkExecutionRequest, FrameworkExecutionResult, WorkerCapability
 from workers.common.server import create_worker_app
-
 
 DEEPTEAM_RED_TEAMER = "deepteam.red_teamer.red_teamer.RedTeamer"
 DEEPTEAM_RED_TEAM = "deepteam.red_team.red_team"
@@ -41,7 +39,7 @@ class OllamaDeepEvalModel:
         self.model_name = model_name.removeprefix("ollama/")
         self.base_url = base_url.rstrip("/")
 
-    def load_model(self) -> "OllamaDeepEvalModel":
+    def load_model(self) -> OllamaDeepEvalModel:
         return self
 
     def get_model_name(self) -> str:
@@ -187,6 +185,12 @@ def _object_to_jsonable(value: Any) -> Any:
     return repr(value)
 
 
+def _callable_path(value: Any) -> str:
+    module = getattr(value, "__module__", "")
+    name = getattr(value, "__qualname__", getattr(value, "__name__", value.__class__.__name__))
+    return f"{module}.{name}".strip(".")
+
+
 def _turn_text(turn: Any) -> str:
     if isinstance(turn, str):
         return turn
@@ -326,8 +330,35 @@ class DeepTeamRunner(BaseFrameworkRunner):
                 vulnerabilities.append(cls(**kwargs))
         return vulnerabilities
 
+    def _construct_red_teamer(self, RedTeamer: Any, simulator_model: Any, evaluation_model: Any, request: FrameworkExecutionRequest, attack_engine: Any | None) -> Any:
+        constructor_kwargs = {
+            "simulator_model": simulator_model,
+            "evaluation_model": evaluation_model,
+            "target_purpose": request.objective,
+            "async_mode": False,
+            "max_concurrent": max(1, min(request.limits.maximum_concurrency, 4)),
+            "attack_engine": attack_engine,
+        }
+        attempts = [
+            constructor_kwargs,
+            {key: value for key, value in constructor_kwargs.items() if key != "attack_engine"},
+            {
+                "simulator_model": simulator_model,
+                "evaluation_model": evaluation_model,
+                "target_purpose": request.objective,
+            },
+            {},
+        ]
+        failures = []
+        for kwargs in attempts:
+            try:
+                return RedTeamer(**kwargs)
+            except Exception as exc:
+                failures.append({"kwargs": sorted(kwargs), "error": str(exc)})
+        raise RuntimeError(f"Unable to construct DeepTeam RedTeamer: {failures}")
+
     async def execute(self, request: FrameworkExecutionRequest) -> FrameworkExecutionResult:
-        started = datetime.now(timezone.utc)
+        started = datetime.now(UTC)
         artifacts = run_artifacts(self.artifact_root, request.execution_id)
         discovery = self._discovery()
         discovery_path = artifacts.write_json("discovery.json", discovery)
@@ -350,7 +381,7 @@ class DeepTeamRunner(BaseFrameworkRunner):
         except Exception as exc:
             errors.append(f"DeepTeam AttackEngine unavailable; continuing with vulnerability API only: {exc}")
 
-        async def _send_to_target(prompt: str, turns: list[Any] | None = None) -> Any:
+        async def _send_to_target(prompt: str, turns: list[Any] | None = None, *, return_turn: bool = False) -> Any:
             index = len(traffic_rows) + 1
             conversation = [_object_to_jsonable(turn) for turn in (turns or [])]
             response = await self.proxy.send_message(
@@ -375,40 +406,134 @@ class DeepTeamRunner(BaseFrameworkRunner):
             traffic_rows.append(row)
             with traffic_path.open("a", encoding="utf-8") as handle:
                 handle.write(json.dumps(row, default=str) + "\n")
-            return _build_rt_turn(prompt, response)
+            if return_turn:
+                return _build_rt_turn(prompt, response)
+            return _turn_text(response)
 
-        def model_callback(prompt: str, turns: list[Any] | None = None) -> Any:
+        def _call_target(prompt: str, turns: list[Any] | None = None, *, return_turn: bool = False) -> Any:
             try:
-                loop = asyncio.get_running_loop()
+                asyncio.get_running_loop()
             except RuntimeError:
-                return asyncio.run(_send_to_target(prompt, turns))
+                return asyncio.run(_send_to_target(prompt, turns, return_turn=return_turn))
             raise RuntimeError("DeepTeam sync callback was invoked inside an active asyncio loop; use thread executor path") from None
+
+        def text_model_callback(prompt: str, turns: list[Any] | None = None) -> Any:
+            return _call_target(prompt, turns, return_turn=False)
+
+        def turn_model_callback(prompt: str, turns: list[Any] | None = None) -> Any:
+            return _call_target(prompt, turns, return_turn=True)
+
+        def tuple_model_callback(prompt: str, turns: list[Any] | None = None) -> Any:
+            return (str(prompt), _call_target(prompt, turns, return_turn=False))
+
+        def _filter_kwargs(func: Any, kwargs: dict[str, Any]) -> dict[str, Any]:
+            try:
+                signature = inspect.signature(func)
+            except Exception:
+                return kwargs
+            if any(parameter.kind == inspect.Parameter.VAR_KEYWORD for parameter in signature.parameters.values()):
+                return kwargs
+            return {key: value for key, value in kwargs.items() if key in signature.parameters}
 
         def _run_native_sync() -> Any:
             RedTeamer = _load_symbol(DEEPTEAM_RED_TEAMER)
             vulnerabilities = self._selected_vulnerabilities(request, attack_engine)
             plugin_ids.extend(f"{item.__class__.__module__}.{item.__class__.__name__}" for item in vulnerabilities)
-            red_teamer = RedTeamer(
-                simulator_model=simulator_model,
-                evaluation_model=evaluation_model,
-                target_purpose=request.objective,
-                async_mode=False,
-                max_concurrent=max(1, min(request.limits.maximum_concurrency, 4)),
-                attack_engine=attack_engine,
+            red_teamer = self._construct_red_teamer(RedTeamer, simulator_model, evaluation_model, request, attack_engine)
+
+            callbacks = [
+                ("text", text_model_callback),
+                ("tuple", tuple_model_callback),
+                ("RTTurn", turn_model_callback),
+            ]
+            callback_fields = ("model_callback", "target_callback", "target_model_callback", "callback")
+            vulnerability_variants: list[tuple[str, Any]] = [
+                ("objects", vulnerabilities),
+                ("class-paths", [f"{item.__class__.__module__}.{item.__class__.__name__}" for item in vulnerabilities]),
+            ]
+            attack_count = 1 if request.profile == "quick" else 2
+            common_kwargs = {
+                "attacks": None,
+                "simulator_model": simulator_model,
+                "evaluation_model": evaluation_model,
+                "attacks_per_vulnerability_type": attack_count,
+                "attacks_per_vulnerability": attack_count,
+                "ignore_errors": request.configuration.get("deepteam_ignore_errors", True),
+                "attack_engine": attack_engine,
+                "_print_assessment": False,
+                "_upload_to_confident": False,
+            }
+            attempts = []
+            for vulnerability_label, vulnerability_payload in vulnerability_variants:
+                for callback_label, callback in callbacks:
+                    for callback_field in callback_fields:
+                        kwargs = {
+                            **common_kwargs,
+                            "vulnerabilities": vulnerability_payload,
+                            callback_field: callback,
+                        }
+                        attempts.append(
+                            (
+                                f"RedTeamer.red_team {vulnerability_label}/{callback_field}/{callback_label}",
+                                red_teamer.red_team,
+                                kwargs,
+                            )
+                        )
+            try:
+                top_level_red_team = _load_symbol(DEEPTEAM_RED_TEAM)
+                for vulnerability_label, vulnerability_payload in vulnerability_variants:
+                    for callback_label, callback in callbacks:
+                        for callback_field in callback_fields:
+                            kwargs = {
+                                **common_kwargs,
+                                "vulnerabilities": vulnerability_payload,
+                                callback_field: callback,
+                            }
+                            attempts.append(
+                                (
+                                    f"deepteam.red_team {vulnerability_label}/{callback_field}/{callback_label}",
+                                    top_level_red_team,
+                                    kwargs,
+                                )
+                            )
+            except Exception:
+                pass
+            artifacts.write_json(
+                "native-api-candidates.json",
+                {
+                    "red_teamer": _callable_path(RedTeamer),
+                    "red_team_method": _callable_path(red_teamer.red_team),
+                    "attempt_count": len(attempts),
+                    "vulnerabilities": [
+                        f"{item.__class__.__module__}.{item.__class__.__name__}" for item in vulnerabilities
+                    ],
+                },
             )
-            return red_teamer.red_team(
-                model_callback=model_callback,
-                vulnerabilities=vulnerabilities,
-                attacks=None,
-                simulator_model=simulator_model,
-                evaluation_model=evaluation_model,
-                attacks_per_vulnerability_type=1 if request.profile == "quick" else 2,
-                ignore_errors=request.configuration.get("deepteam_ignore_errors", True),
-                metadata={"execution_id": request.execution_id, "assessment_id": request.assessment_id},
-                attack_engine=attack_engine,
-                _print_assessment=False,
-                _upload_to_confident=False,
-            )
+            failures = []
+            for label, func, kwargs in attempts:
+                try:
+                    result = func(**_filter_kwargs(func, kwargs))
+                    artifacts.write_json(
+                        "native-api-attempts.json",
+                        {
+                            "selected": label,
+                            "selected_callable": _callable_path(func),
+                            "failures": failures,
+                            "traffic_count": len(traffic_rows),
+                        },
+                    )
+                    return {"api": label, "result": result}
+                except Exception as exc:
+                    failures.append(
+                        {
+                            "api": label,
+                            "callable": _callable_path(func),
+                            "kwargs": sorted(_filter_kwargs(func, kwargs)),
+                            "error": str(exc),
+                        }
+                    )
+            artifacts.write_json("native-api-attempts.json", {"selected": None, "failures": failures})
+            raise RuntimeError("; ".join(f"{item['api']}: {item['error']}" for item in failures[-4:]))
 
         native_api = (
             f"{DEEPTEAM_RED_TEAMER}.red_team(vulnerabilities={DEFAULT_VULNERABILITIES}, "
@@ -471,7 +596,7 @@ class DeepTeamRunner(BaseFrameworkRunner):
             framework=self.framework_name,
             status=status,
             started_at=started,
-            completed_at=datetime.now(timezone.utc),
+            completed_at=datetime.now(UTC),
             raw_artifacts=[str(discovery_path), str(traffic_path), str(native_result_path), str(artifacts.path("unsupported-attack-modules.json"))],
             evidence=evidence,
             errors=errors,
