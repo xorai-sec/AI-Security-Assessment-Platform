@@ -3,9 +3,11 @@ set -euo pipefail
 
 DOCKER_BIN="${DOCKER_BIN:-docker}"
 OLLAMA_SERVICE="${OLLAMA_SERVICE:-ollama}"
-TARGET_MODEL="${OLLAMA_TARGET_MODEL:-llama3.2:3b}"
-ATTACKER_MODEL="${OLLAMA_ATTACKER_MODEL:-llama3.1:8b}"
-JUDGE_MODEL="${OLLAMA_JUDGE_MODEL:-llama3.1:8b}"
+TARGET_MODEL="${OLLAMA_TARGET_MODEL:-qwen3:4b}"
+ATTACKER_MODEL="${OLLAMA_ATTACKER_MODEL:-qwen3:14b}"
+JUDGE_MODEL="${OLLAMA_JUDGE_MODEL:-gpt-oss:20b}"
+PLANNER_MODEL="${OLLAMA_PLANNER_MODEL:-qwen3:8b}"
+EMBEDDING_MODEL="${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text}"
 OLLAMA_CONTAINER="${OLLAMA_CONTAINER:-}"
 COMPOSE_FILES=(-f docker-compose.yml -f docker-compose.frameworks.yml)
 
@@ -57,11 +59,13 @@ if [[ -z "$CONTAINER" ]]; then
 fi
 
 echo "Configured model roles:"
-echo "  target:   $TARGET_MODEL"
-echo "  attacker: $ATTACKER_MODEL"
-echo "  judge:    $JUDGE_MODEL"
+echo "  target:    $TARGET_MODEL"
+echo "  attacker:  $ATTACKER_MODEL"
+echo "  judge:     $JUDGE_MODEL"
+echo "  planner:   $PLANNER_MODEL"
+echo "  embedding: $EMBEDDING_MODEL"
 
-if [[ "$TARGET_MODEL" == "$ATTACKER_MODEL" || "$TARGET_MODEL" == "$JUDGE_MODEL" || "$ATTACKER_MODEL" == "$JUDGE_MODEL" ]]; then
+if [[ "$TARGET_MODEL" == "$ATTACKER_MODEL" || "$TARGET_MODEL" == "$JUDGE_MODEL" || "$TARGET_MODEL" == "$PLANNER_MODEL" || "$ATTACKER_MODEL" == "$JUDGE_MODEL" || "$ATTACKER_MODEL" == "$PLANNER_MODEL" || "$JUDGE_MODEL" == "$PLANNER_MODEL" ]]; then
   echo "Warning: at least two model roles share the same model. This is allowed for lab work, but judge results can be biased."
 fi
 
@@ -70,6 +74,8 @@ echo "Using Ollama container: $CONTAINER"
 pull_model "$CONTAINER" "$TARGET_MODEL"
 pull_model "$CONTAINER" "$ATTACKER_MODEL"
 pull_model "$CONTAINER" "$JUDGE_MODEL"
+pull_model "$CONTAINER" "$PLANNER_MODEL"
+pull_model "$CONTAINER" "$EMBEDDING_MODEL"
 
 echo "Available Ollama models:"
 ollama_exec "$CONTAINER" ollama list

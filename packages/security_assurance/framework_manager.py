@@ -9,6 +9,7 @@ import httpx
 
 from .adaptive_planner import AdaptiveAttackPlanner
 from .framework_models import FrameworkAssessmentRequest, FrameworkAssessmentResult, FrameworkDefinition
+from .reporting import write_framework_reports
 from .target_manager import TargetManager
 from .target_models import TargetMessageRequest
 
@@ -22,6 +23,8 @@ class FrameworkManager:
         self.target_manager = target_manager
         self.result_dir = root / "data" / "framework-results"
         self.result_dir.mkdir(parents=True, exist_ok=True)
+        self.cancel_dir = root / "data" / "framework-cancel"
+        self.cancel_dir.mkdir(parents=True, exist_ok=True)
         self.frameworks = {
             "native": FrameworkDefinition(id="native", name="native", worker_url=os.getenv("NATIVE_WORKER_URL", "http://native-worker:8091"), enabled=True),
             "garak": FrameworkDefinition(id="garak", name="garak", worker_url=os.getenv("GARAK_WORKER_URL", "http://garak-worker:8092"), enabled=os.getenv("FRAMEWORK_GARAK_ENABLED", "true").lower() == "true"),
@@ -35,6 +38,8 @@ class FrameworkManager:
         attacker = request.attacker_model or os.getenv("OLLAMA_ATTACKER_MODEL") or os.getenv("ATTACKER_MODEL") or target_model
         judge = request.judge_model or os.getenv("OLLAMA_JUDGE_MODEL") or os.getenv("JUDGE_MODEL") or target_model
         resolved_target = request.target_model or target_model
+        planner = os.getenv("OLLAMA_PLANNER_MODEL") or os.getenv("PLANNER_MODEL") or attacker
+        embedding = os.getenv("OLLAMA_EMBEDDING_MODEL") or os.getenv("EMBEDDING_MODEL") or "nomic-embed-text"
         same_model = len({resolved_target, attacker, judge}) < 3
         warning = None
         if same_model and not request.allow_same_model_eval:
@@ -46,6 +51,8 @@ class FrameworkManager:
             "target_model": resolved_target,
             "attacker_model": attacker,
             "judge_model": judge,
+            "planner_model": planner,
+            "embedding_model": embedding,
             "allow_same_model_eval": request.allow_same_model_eval,
             "bias_warning": warning,
         }
@@ -145,6 +152,27 @@ class FrameworkManager:
             "configuration": configuration,
             "callback_url": f"{api_base_url.rstrip('/')}/internal/framework-events",
         }
+
+    def cancel_assessment(self, target_id: str | None = None, assessment_id: str | None = None) -> dict[str, Any]:
+        marker = assessment_id or target_id or "global"
+        path = self.cancel_dir / f"{marker}.cancel"
+        path.write_text(datetime.now(UTC).isoformat(), encoding="utf-8")
+        return {"cancel_requested": True, "marker": marker, "path": str(path)}
+
+    def _cancel_requested(self, result: FrameworkAssessmentResult, target_id: str) -> bool:
+        return any(
+            path.exists()
+            for path in (
+                self.cancel_dir / "global.cancel",
+                self.cancel_dir / f"{target_id}.cancel",
+                self.cancel_dir / f"{result.id}.cancel",
+            )
+        )
+
+    def _clear_cancel_markers(self, target_id: str) -> None:
+        for path in (self.cancel_dir / "global.cancel", self.cancel_dir / f"{target_id}.cancel"):
+            if path.exists():
+                path.unlink()
 
     def _execute_framework(
         self,
@@ -284,6 +312,7 @@ class FrameworkManager:
         if not target.enabled:
             raise ValueError(f"Target is disabled: {target.disabled_reason}")
         requested = request.frameworks or CHAIN_ORDER
+        self._clear_cancel_markers(target.id)
         result = FrameworkAssessmentResult(target_id=target.id, frameworks=[])
         model_roles = self._model_roles(request, target.model_name)
         if model_roles.get("bias_warning"):
@@ -293,6 +322,17 @@ class FrameworkManager:
         inherited_context: dict[str, Any] = {}
         step = 0
         while len(completed) < len(requested):
+            if self._cancel_requested(result, target.id):
+                result.status = "cancelled"
+                result.chain_events.append(
+                    {
+                        "event": "planner_stopped",
+                        "reason": "cancel_requested",
+                        "rationale": "Assessment cancellation was requested by the operator.",
+                        "at": datetime.now(UTC).isoformat(),
+                    }
+                )
+                break
             step += 1
             correlated_findings = self.correlate_evidence(result.normalized_evidence)
             context = self.planner.build_context(
@@ -347,6 +387,18 @@ class FrameworkManager:
             )
             completed.append(framework_id)
             result.frameworks.append(framework_id)
+            self._save_result(result)
+            if self._cancel_requested(result, target.id):
+                result.status = "cancelled"
+                result.chain_events.append(
+                    {
+                        "event": "planner_stopped",
+                        "reason": "cancel_requested",
+                        "rationale": "Assessment cancellation was requested after the current framework stage completed.",
+                        "at": datetime.now(UTC).isoformat(),
+                    }
+                )
+                break
             inherited_context = {
                 "completed_frameworks": completed,
                 "correlated_findings": self.correlate_evidence(result.normalized_evidence),
@@ -355,7 +407,8 @@ class FrameworkManager:
             }
         result.correlated_findings = self.correlate_evidence(result.normalized_evidence)
         result.completed_at = datetime.now(UTC)
-        result.status = "succeeded" if result.normalized_evidence and not result.errors else "partially_completed" if result.normalized_evidence else "failed"
+        if result.status != "cancelled":
+            result.status = "succeeded" if result.normalized_evidence and not result.errors else "partially_completed" if result.normalized_evidence else "failed"
         self._save_result(result)
         return result
 
@@ -367,6 +420,7 @@ class FrameworkManager:
             raise ValueError("Written authorization must be confirmed")
         if not target.enabled:
             raise ValueError(f"Target is disabled: {target.disabled_reason}")
+        self._clear_cancel_markers(target.id)
 
         result = FrameworkAssessmentResult(target_id=target.id, frameworks=request.frameworks)
         model_roles = self._model_roles(request, target.model_name)
@@ -389,6 +443,7 @@ class FrameworkManager:
         return result
 
     def _save_result(self, result: FrameworkAssessmentResult) -> None:
+        result.reports = write_framework_reports(result, self.root / "data" / "reports")
         path = self.result_dir / f"{result.id}.json"
         path.write_text(result.model_dump_json(indent=2), encoding="utf-8")
 

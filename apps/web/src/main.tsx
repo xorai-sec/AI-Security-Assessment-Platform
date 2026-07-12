@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   Activity,
@@ -11,6 +11,7 @@ import {
   ServerCog,
   ShieldCheck,
   SlidersHorizontal,
+  Square,
   TriangleAlert,
 } from "lucide-react";
 import "./styles.css";
@@ -123,14 +124,15 @@ const blankForm = {
 
 const defaultFrameworkRun = {
   profile: "quick",
-  target_model: "",
-  attacker_model: "",
-  judge_model: "",
+  target_model: "qwen3:4b",
+  attacker_model: "qwen3:14b",
+  judge_model: "gpt-oss:20b",
   allow_same_model_eval: false,
-  maximum_requests: 4,
-  maximum_turns: 3,
+  maximum_requests: 24,
+  maximum_turns: 8,
   maximum_concurrency: 1,
-  maximum_tokens: 2048,
+  maximum_tokens: 4096,
+  maximum_duration_seconds: 1800,
   probe_families: "",
   promptfoo_plugins: "",
   promptfoo_strategies: "",
@@ -156,6 +158,7 @@ function App() {
   const [busy, setBusy] = useState(false);
   const [activeRun, setActiveRun] = useState<ActiveRun | null>(null);
   const [clock, setClock] = useState(Date.now());
+  const assessmentAbort = useRef<AbortController | null>(null);
 
   async function api(path: string, options?: RequestInit) {
     try {
@@ -358,6 +361,8 @@ function App() {
     if (!selectedTargetId) return;
     const plannedFrameworks = ["garak", "pyrit", "promptfoo", "deepteam", "native"];
     const targetName = selectedTarget?.target_name || selectedTargetId;
+    const controller = new AbortController();
+    assessmentAbort.current = controller;
     setBusy(true);
     setNotice("Adaptive framework assessment started.");
     setActiveRun({
@@ -371,6 +376,7 @@ function App() {
     try {
       const data = await api("/api/assessments/frameworks", {
         method: "POST",
+        signal: controller.signal,
         body: JSON.stringify({
           target_id: selectedTargetId,
           frameworks: plannedFrameworks,
@@ -384,6 +390,7 @@ function App() {
           judge_model: frameworkRun.judge_model || undefined,
           allow_same_model_eval: frameworkRun.allow_same_model_eval,
           maximum_requests: Number(frameworkRun.maximum_requests),
+          maximum_duration_seconds: Number(frameworkRun.maximum_duration_seconds),
           maximum_turns: Number(frameworkRun.maximum_turns),
           maximum_concurrency: Number(frameworkRun.maximum_concurrency),
           maximum_tokens: Number(frameworkRun.maximum_tokens),
@@ -412,19 +419,36 @@ function App() {
       setNotice("Adaptive framework assessment completed.");
       await refresh();
     } catch (error: any) {
-      setActiveRun((current) => current ? { ...current, status: "failed", message: error.message } : null);
-      setNotice(`Adaptive framework assessment failed: ${error.message}`);
+      if (error?.name === "AbortError") {
+        setActiveRun((current) => current ? { ...current, status: "failed", message: "Run cancellation requested. The current framework stage may finish before the planner stops." } : null);
+        setNotice("Adaptive framework assessment cancellation requested.");
+      } else {
+        setActiveRun((current) => current ? { ...current, status: "failed", message: error.message } : null);
+        setNotice(`Adaptive framework assessment failed: ${error.message}`);
+      }
     } finally {
+      assessmentAbort.current = null;
       setBusy(false);
     }
   }
 
+  async function cancelAdaptiveRun() {
+    assessmentAbort.current?.abort();
+    await api("/api/assessments/frameworks/cancel", {
+      method: "POST",
+      body: JSON.stringify({ target_id: selectedTargetId, assessment_id: activeRun?.resultId }),
+    }).catch(() => undefined);
+    setActiveRun((current) => current ? { ...current, status: "failed", message: "Cancellation requested. Waiting framework stages will stop at the next planner checkpoint." } : null);
+    setBusy(false);
+  }
+
   function openIsoEvidence(mapping: any) {
-    const finding = detail?.findings?.find((item: any) => item.id === mapping.finding_id);
-    const executionId = finding?.related_executions?.[0];
+    const findingId = mapping.finding_id || mapping.evidence_id;
+    const finding = [...(detail?.findings || []), ...(detail?.correlated_findings || [])].find((item: any) => item.id === findingId);
+    const executionId = finding?.related_executions?.[0] || finding?.evidence_ids?.[0] || mapping.evidence_id || findingId;
     setView("evidence");
     window.setTimeout(() => {
-      const element = document.getElementById(executionId || mapping.finding_id);
+      const element = document.getElementById(executionId || findingId);
       element?.scrollIntoView({ behavior: "smooth", block: "start" });
       if (element) window.history.replaceState(null, "", `#${element.id}`);
     }, 80);
@@ -468,7 +492,7 @@ function App() {
             <h1>General Target Assessment Console</h1>
             <p>Register approved AI systems, validate connectivity, run controlled campaigns, inspect evidence, and generate human-reviewed assurance reports.</p>
           </div>
-          <button className="ghost" onClick={() => refresh()} disabled={busy}><RefreshCw size={16} /> Refresh</button>
+          <button className="ghost" onClick={() => refresh()}><RefreshCw size={16} /> Refresh</button>
         </header>
 
         {notice && <div className="notice">{notice}</div>}
@@ -552,6 +576,7 @@ function App() {
             <div className="actions">
               <button onClick={checkFrameworks} disabled={busy}><RefreshCw size={16} /> Health + Capabilities</button>
               <button onClick={runAllFrameworks} disabled={busy || !selectedTargetId}><Play size={16} /> Run Adaptive Chain</button>
+              {busy && activeRun?.status === "running" && <button className="danger" onClick={cancelAdaptiveRun}><Square size={16} /> Cancel Run</button>}
             </div>
             <RunMonitor activeRun={activeRun} detail={detail} frameworks={frameworks} clock={clock} />
             <FrameworkRunControls value={frameworkRun} setValue={setFrameworkRun} selectedTarget={selectedTarget} />
@@ -597,7 +622,7 @@ function App() {
               {!detail?.iso_mappings?.length && <div className="empty">Select or run an assessment to view ISO mappings.</div>}
               {detail?.iso_mappings.map((mapping: any) => (
                 <div className="row iso-row" key={mapping.id}>
-                  <span><button className="textlink" onClick={() => openIsoEvidence(mapping)}>{mapping.finding_id}</button></span>
+                  <span><button className="textlink" onClick={() => openIsoEvidence(mapping)}>{mapping.finding_id || mapping.evidence_id}</button></span>
                   <span>{mapping.clause_or_control_id} · {mapping.requirement_title}</span>
                   <span>{mapping.evidence_sufficiency}</span>
                   <span>{mapping.human_review_status}</span>
@@ -611,8 +636,7 @@ function App() {
           <section className="panel">
             <PanelTitle icon={<FileText />} title="Reports" subtitle="Open report artifacts generated from persisted assessment evidence." />
             {!selectedAssessmentId && <div className="empty">Run an assessment first.</div>}
-            {selectedAssessmentId?.startsWith("MFASM-") && <div className="empty">Multi-framework report export is not generated yet. Use the Evidence view for normalized framework evidence.</div>}
-            {selectedAssessmentId && !selectedAssessmentId.startsWith("MFASM-") && (
+            {selectedAssessmentId && (
               <div className="actions">
                 <a className="buttonlike" href={`${API}/api/reports/${selectedAssessmentId}/markdown`} target="_blank">Markdown</a>
                 <a className="buttonlike" href={`${API}/api/reports/${selectedAssessmentId}/html`} target="_blank">Professional HTML</a>
@@ -885,12 +909,28 @@ function TargetInventory({ targets, selectedTargetId, setSelectedTargetId, onVal
 
 function FrameworkRunControls({ value, setValue, selectedTarget }: any) {
   const set = (key: string, next: string | boolean | number) => setValue((current: any) => ({ ...current, [key]: next }));
+  const applyProfile = (profile: string) => {
+    const defaults: Record<string, any> = {
+      quick: { maximum_requests: 24, maximum_turns: 8, maximum_tokens: 4096, maximum_duration_seconds: 1800 },
+      standard: { maximum_requests: 48, maximum_turns: 12, maximum_tokens: 6144, maximum_duration_seconds: 2700 },
+      comprehensive: { maximum_requests: 96, maximum_turns: 20, maximum_tokens: 8192, maximum_duration_seconds: 5400 },
+    };
+    const selected = defaults[profile] || defaults.quick;
+    setValue((current: any) => ({
+      ...current,
+      profile,
+      maximum_requests: Math.max(Number(current.maximum_requests) || 0, selected.maximum_requests),
+      maximum_turns: Math.max(Number(current.maximum_turns) || 0, selected.maximum_turns),
+      maximum_tokens: Math.max(Number(current.maximum_tokens) || 0, selected.maximum_tokens),
+      maximum_duration_seconds: Math.max(Number(current.maximum_duration_seconds) || 0, selected.maximum_duration_seconds),
+    }));
+  };
   const roleModels = [value.target_model || selectedTarget?.model_name, value.attacker_model, value.judge_model].filter(Boolean);
   const sameModel = new Set(roleModels).size < roleModels.length;
   return (
     <section className="run-controls">
       <div className="form-grid">
-        <label>Assessment profile<select value={value.profile} onChange={(event) => set("profile", event.target.value)}>
+        <label>Assessment profile<select value={value.profile} onChange={(event) => applyProfile(event.target.value)}>
           <option value="quick">Quick</option>
           <option value="standard">Standard</option>
           <option value="comprehensive">Comprehensive</option>
@@ -902,6 +942,7 @@ function FrameworkRunControls({ value, setValue, selectedTarget }: any) {
         <label>Turns<input type="number" min="1" value={value.maximum_turns} onChange={(event) => set("maximum_turns", Number(event.target.value))} /></label>
         <label>Concurrency<input type="number" min="1" value={value.maximum_concurrency} onChange={(event) => set("maximum_concurrency", Number(event.target.value))} /></label>
         <label>Token limit<input type="number" min="256" value={value.maximum_tokens} onChange={(event) => set("maximum_tokens", Number(event.target.value))} /></label>
+        <label>Duration seconds<input type="number" min="300" value={value.maximum_duration_seconds} onChange={(event) => set("maximum_duration_seconds", Number(event.target.value))} /></label>
         <label>Probe families<input value={value.probe_families} placeholder="optional comma list" onChange={(event) => set("probe_families", event.target.value)} /></label>
         <label>Promptfoo plugins<input value={value.promptfoo_plugins} placeholder="optional comma list" onChange={(event) => set("promptfoo_plugins", event.target.value)} /></label>
         <label>Promptfoo strategies<input value={value.promptfoo_strategies} placeholder="optional comma list" onChange={(event) => set("promptfoo_strategies", event.target.value)} /></label>
@@ -917,6 +958,7 @@ function FrameworkRunControls({ value, setValue, selectedTarget }: any) {
 function EvidenceView({ detail, executions }: { detail: any | null; executions: AssessmentDetail["executions"] }) {
   const normalizedEvidence = detail?.normalized_evidence || [];
   const frameworkSummaries = detail?.framework_summaries || [];
+  const findingRows = [...(detail?.findings || []), ...(detail?.correlated_findings || [])];
   return (
     <section className="panel">
       <PanelTitle icon={<ClipboardCheck />} title="Evidence Transcript" subtitle="Prompt, response, framework result, telemetry, and confidence from the selected assessment." />
@@ -945,10 +987,10 @@ function EvidenceView({ detail, executions }: { detail: any | null; executions: 
             </div>
           )}
           <div className="finding-strip">
-            {(detail.findings || []).map((finding: any) => (
-              <article id={finding.id} key={finding.id}><strong>{finding.severity}</strong><span>{finding.category}</span><p>{finding.title}</p></article>
+            {findingRows.map((finding: any) => (
+              <article id={finding.id} key={finding.id}><strong>{finding.severity || finding.status || "candidate"}</strong><span>{finding.category || (finding.frameworks || []).join(", ") || "correlated evidence"}</span><p>{finding.title}</p></article>
             ))}
-            {!(detail.findings || []).length && normalizedEvidence.length > 0 && (
+            {!findingRows.length && normalizedEvidence.length > 0 && (
               <article><strong>Evidence captured</strong><span>Human review needed</span><p>No confirmed findings are stored yet. Review framework evidence and map findings manually.</p></article>
             )}
           </div>

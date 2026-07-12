@@ -57,6 +57,14 @@ services:
       PROMPTFOO_WORKER_URL: http://promptfoo-worker:8095
       DEEPTEAM_WORKER_URL: http://deepteam-worker:8094
       API_INTERNAL_BASE_URL: http://api:8080
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      OLLAMA_TARGET_MODEL: ${OLLAMA_TARGET_MODEL:-qwen3:4b}
+      OLLAMA_ATTACKER_MODEL: ${OLLAMA_ATTACKER_MODEL:-qwen3:14b}
+      OLLAMA_JUDGE_MODEL: ${OLLAMA_JUDGE_MODEL:-gpt-oss:20b}
+      OLLAMA_PLANNER_MODEL: ${OLLAMA_PLANNER_MODEL:-qwen3:8b}
+      OLLAMA_EMBEDDING_MODEL: ${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text}
+      ADAPTIVE_PLANNER_LLM_ENABLED: ${ADAPTIVE_PLANNER_LLM_ENABLED:-true}
+      ADAPTIVE_PLANNER_KILL_SWITCH: ${ADAPTIVE_PLANNER_KILL_SWITCH:-false}
       DATABASE_URL: postgresql+psycopg://aisec:aisec@postgres:5432/aisec
       REDIS_URL: redis://redis:6379/0
     ports:

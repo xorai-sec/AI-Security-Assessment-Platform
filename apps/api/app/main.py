@@ -15,7 +15,11 @@ from packages.security_assurance.framework_manager import FrameworkManager
 from packages.security_assurance.framework_models import FrameworkAssessmentRequest
 from packages.security_assurance.models import AISystem, AssessmentScope, EnvironmentType, Organization
 from packages.security_assurance.orchestrator import default_orchestrator
-from packages.security_assurance.reporting import render_html_report
+from packages.security_assurance.reporting import (
+    render_framework_html_report,
+    render_framework_markdown_report,
+    render_html_report,
+)
 from packages.security_assurance.storage import EvidenceStore
 from packages.security_assurance.target_manager import TargetCreateRequest, TargetManager
 from packages.security_assurance.target_models import (
@@ -115,6 +119,14 @@ def run_framework_assessment(request: FrameworkAssessmentRequest) -> dict[str, A
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
+@app.post("/api/assessments/frameworks/cancel")
+def cancel_framework_assessment(request: dict[str, Any]) -> dict[str, Any]:
+    return FRAMEWORKS.cancel_assessment(
+        target_id=request.get("target_id"),
+        assessment_id=request.get("assessment_id"),
+    )
+
+
 @app.get("/api/assessments/frameworks")
 def list_framework_assessments() -> dict[str, Any]:
     return {"assessments": FRAMEWORKS.list_results()}
@@ -164,6 +176,7 @@ def get_framework_assessment(assessment_id: str) -> dict[str, Any]:
     payload["iso_mappings"] = [
         {
             "id": f"{result.id}-iso-42001-{index + 1}",
+            "finding_id": evidence.get("correlated_finding_id") or evidence.get("finding_id") or evidence.get("id") or evidence.get("evidence_id") or f"framework-evidence-{index + 1}",
             "evidence_id": evidence.get("id") or evidence.get("evidence_id") or f"evidence-{index + 1}",
             "clause_or_control_id": evidence.get("iso_42001_control", "ISO/IEC 42001 governance evidence"),
             "requirement_title": evidence.get("risk_category", evidence.get("category", "AI security control evidence")),
@@ -502,6 +515,7 @@ def report_markdown(assessment_id: str) -> str:
 @app.get("/api/reports")
 def list_reports() -> dict[str, Any]:
     native = STORE.list_results()
+    framework = FRAMEWORKS.list_results()
     return {
         "reports": [
             {
@@ -514,11 +528,38 @@ def list_reports() -> dict[str, Any]:
             }
             for row in native
         ]
+        + [
+            {
+                "id": row["id"],
+                "target": row.get("target_id"),
+                "mode": "multi_framework",
+                "findings": row.get("findings", 0),
+                "completed_at": row.get("completed_at"),
+                "formats": ["html", "markdown", "json", "csv"],
+            }
+            for row in framework
+        ]
     }
 
 
 @app.get("/api/reports/{assessment_id}/{kind}", response_model=None)
 def report_file(assessment_id: str, kind: str):
+    if assessment_id.startswith("MFASM-"):
+        try:
+            result = FRAMEWORKS.load_result(assessment_id)
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=404, detail="Framework report not found") from exc
+        if kind == "html":
+            return PlainTextResponse(render_framework_html_report(result), media_type="text/html")
+        if kind == "markdown":
+            return PlainTextResponse(render_framework_markdown_report(result), media_type="text/markdown")
+        suffix = {"json": ".json", "csv": "-findings.csv"}.get(kind)
+        if suffix is None:
+            raise HTTPException(status_code=400, detail="kind must be html, markdown, json or csv")
+        path = STORE.report_dir / f"{assessment_id}{suffix}"
+        if not path.exists():
+            raise HTTPException(status_code=404, detail="Framework report artifact not found")
+        return FileResponse(path)
     if kind == "html":
         try:
             result = STORE.load_result(assessment_id)

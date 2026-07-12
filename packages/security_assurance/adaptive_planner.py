@@ -129,7 +129,10 @@ class AdaptiveAttackPlanner:
         unsupported = [
             error for error in result.errors if "unsupported" in error.lower() or "not supported" in error.lower()
         ]
-        requests_used = max(len(evidence), len(result.worker_results))
+        # The planner budget controls framework-stage decisions. A framework can
+        # normalize hundreds of evidence rows from one native run, so evidence
+        # volume must not consume the remaining planner request budget.
+        requests_used = len(result.worker_results)
         elapsed = 0
         if result.started_at:
             elapsed = max(0, int((datetime.now(UTC) - result.started_at).total_seconds()))
@@ -542,7 +545,7 @@ class AdaptiveAttackPlanner:
         return os.getenv("ADAPTIVE_PLANNER_LLM_ENABLED", "false").lower() == "true"
 
     def _llm_recommendation(self, context: PlanningContext, model_roles: dict[str, Any]) -> dict[str, Any] | None:
-        model = os.getenv("OLLAMA_PLANNER_MODEL") or model_roles.get("attacker_model")
+        model = os.getenv("OLLAMA_PLANNER_MODEL") or model_roles.get("planner_model") or model_roles.get("attacker_model")
         if not model:
             return None
         base_url = os.getenv("OLLAMA_BASE_URL", "http://host.docker.internal:11434").rstrip("/")
