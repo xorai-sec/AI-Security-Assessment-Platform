@@ -364,6 +364,8 @@ function App() {
     const controller = new AbortController();
     assessmentAbort.current = controller;
     setBusy(true);
+    setDetail(null);
+    setSelectedAssessmentId("");
     setNotice("Adaptive framework assessment started.");
     setActiveRun({
       targetId: selectedTargetId,
@@ -713,29 +715,31 @@ function ErrorSummary({ errors }: { errors: Record<string, string> }) {
 }
 
 function RunMonitor({ activeRun, detail, frameworks, clock }: { activeRun: ActiveRun | null; detail: any | null; frameworks: any[]; clock: number }) {
-  if (!activeRun && !detail?.assessment_type) return null;
+  const detailMatchesRun = !activeRun?.resultId || detail?.id === activeRun.resultId;
+  const monitorDetail = detailMatchesRun ? detail : null;
+  if (!activeRun && !monitorDetail?.assessment_type) return null;
   const run = activeRun;
   const isRunning = run?.status === "running";
   const elapsed = run ? Math.max(0, Math.floor((clock - run.startedAt) / 1000)) : 0;
   const plannedStages = run?.frameworks?.length ? run.frameworks : ["garak", "pyrit", "promptfoo", "deepteam", "native"];
-  const actualStages = detail?.frameworks?.length ? detail.frameworks : detail?.framework_summaries?.map((item: any) => item.framework) || [];
-  const plannedFromDecisions = (detail?.execution_plan || []).map((item: any) => item.next_framework).filter(Boolean);
+  const actualStages = monitorDetail?.frameworks?.length ? monitorDetail.frameworks : monitorDetail?.framework_summaries?.map((item: any) => item.framework) || [];
+  const plannedFromDecisions = (monitorDetail?.execution_plan || []).map((item: any) => item.next_framework).filter(Boolean);
   const stages = Array.from(new Set([...plannedStages, ...actualStages, ...plannedFromDecisions]));
-  const completed = new Set((detail?.frameworks || detail?.framework_summaries?.map((item: any) => item.framework) || []).map((item: string) => item.toLowerCase()));
+  const completed = new Set((monitorDetail?.frameworks || monitorDetail?.framework_summaries?.map((item: any) => item.framework) || []).map((item: string) => item.toLowerCase()));
   const selected = new Set(plannedFromDecisions.map((item: string) => item.toLowerCase()));
-  const latestDecision = detail?.execution_plan?.[detail.execution_plan.length - 1];
+  const latestDecision = monitorDetail?.execution_plan?.[monitorDetail.execution_plan.length - 1];
   const plannerStopped = latestDecision?.action_type === "stop" || latestDecision?.continue_assessment === false;
   return (
     <section className="panel run-monitor">
       <div className="monitor-head">
         <div>
           <p className="eyebrow">Live assessment tracker</p>
-          <h2>{run?.targetName || detail?.target?.target_name || "Selected assessment"}</h2>
-          <p>{run?.message || `${detail?.status || "completed"} assessment with ${detail?.normalized_evidence?.length || 0} evidence records.`}</p>
+          <h2>{run?.targetName || monitorDetail?.target?.target_name || "Selected assessment"}</h2>
+          <p>{run?.message || `${monitorDetail?.status || "completed"} assessment with ${monitorDetail?.normalized_evidence?.length || 0} evidence records.`}</p>
         </div>
         <div className="timer">
-          <strong>{isRunning ? formatElapsed(elapsed) : run?.status || detail?.status || "ready"}</strong>
-          <span>{run?.resultId || detail?.id || "waiting for run"}</span>
+          <strong>{isRunning ? formatElapsed(elapsed) : run?.status || monitorDetail?.status || "ready"}</strong>
+          <span>{run?.resultId || monitorDetail?.id || "waiting for run"}</span>
         </div>
       </div>
       <div className="stage-track">
@@ -761,9 +765,9 @@ function RunMonitor({ activeRun, detail, frameworks, clock }: { activeRun: Activ
           );
         })}
       </div>
-      {detail?.execution_plan?.length > 0 && (
+      {monitorDetail?.execution_plan?.length > 0 && (
         <div className="decision-log">
-          {detail.execution_plan.slice(-4).map((item: any, index: number) => (
+          {monitorDetail.execution_plan.slice(-4).map((item: any, index: number) => (
             <article key={`${item.policy_rule_id || item.next_framework || index}-${index}`}>
               <strong>{item.next_framework || item.action_type || "planner"}</strong>
               <span>{item.rationale || item.stop_reason || "planner decision recorded"}</span>
