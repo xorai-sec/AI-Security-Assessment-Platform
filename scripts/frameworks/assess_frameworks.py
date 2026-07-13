@@ -21,7 +21,7 @@ def find_target() -> str:
 
 
 def main() -> None:
-    frameworks = sys.argv[1:] or os.getenv("FRAMEWORKS", "native,garak,pyrit,promptfoo,deepteam").split(",")
+    frameworks = sys.argv[1:] or os.getenv("FRAMEWORKS", "native,garak,pyrit,promptfoo").split(",")
     profile = os.getenv("PROFILE", "quick")
     defaults = PROFILE_DEFAULTS.get(profile, PROFILE_DEFAULTS["quick"])
     strict_budget = os.getenv("STRICT_FRAMEWORK_BUDGETS", "false").lower() == "true"

@@ -50,7 +50,7 @@ services:
       FRAMEWORK_GARAK_ENABLED: "true"
       FRAMEWORK_PYRIT_ENABLED: "true"
       FRAMEWORK_PROMPTFOO_ENABLED: "true"
-      FRAMEWORK_DEEPTEAM_ENABLED: "true"
+      FRAMEWORK_DEEPTEAM_ENABLED: ${FRAMEWORK_DEEPTEAM_ENABLED:-false}
       NATIVE_WORKER_URL: http://native-worker:8091
       GARAK_WORKER_URL: http://garak-worker:8092
       PYRIT_WORKER_URL: http://pyrit-worker:8093

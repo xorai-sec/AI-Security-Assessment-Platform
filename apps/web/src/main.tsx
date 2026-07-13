@@ -17,6 +17,7 @@ import {
 import "./styles.css";
 
 const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:8080";
+const STABLE_FRAMEWORKS = ["garak", "pyrit", "promptfoo", "native"];
 
 type Target = {
   id: string;
@@ -87,7 +88,7 @@ type AssessmentDetail = {
   reports: Record<string, string>;
 };
 
-type Health = { status: string; adapters: Record<string, { status: string; version: string | null }> };
+type Health = { status: string; adapters: Record<string, { status: string; version: string | null; enabled?: boolean }> };
 
 type ActiveRun = {
   targetId: string;
@@ -124,15 +125,15 @@ const blankForm = {
 
 const defaultFrameworkRun = {
   profile: "quick",
-  target_model: "qwen3:4b",
-  attacker_model: "qwen3:14b",
-  judge_model: "gpt-oss:20b",
+  target_model: "",
+  attacker_model: "qwen3:8b",
+  judge_model: "qwen3:14b",
   allow_same_model_eval: false,
-  maximum_requests: 24,
-  maximum_turns: 8,
+  maximum_requests: 40,
+  maximum_turns: 12,
   maximum_concurrency: 1,
   maximum_tokens: 4096,
-  maximum_duration_seconds: 1800,
+  maximum_duration_seconds: 3600,
   probe_families: "",
   promptfoo_plugins: "",
   promptfoo_strategies: "",
@@ -251,6 +252,15 @@ function App() {
     setSelectedAssessmentId((current) => current || firstAssessment);
   }
 
+  async function manualRefresh() {
+    try {
+      await refresh();
+      setNotice("Dashboard refreshed.");
+    } catch (error: any) {
+      setNotice(`Refresh failed: ${error.message}`);
+    }
+  }
+
   async function loadAssessment(id: string) {
     if (!id) return;
     const endpoint = id.startsWith("MFASM-") ? `/api/assessments/frameworks/${id}` : `/api/assessments/${id}`;
@@ -359,21 +369,21 @@ function App() {
 
   async function runAllFrameworks() {
     if (!selectedTargetId) return;
-    const plannedFrameworks = ["garak", "pyrit", "promptfoo", "deepteam", "native"];
+    const plannedFrameworks = STABLE_FRAMEWORKS;
     const targetName = selectedTarget?.target_name || selectedTargetId;
     const controller = new AbortController();
     assessmentAbort.current = controller;
     setBusy(true);
     setDetail(null);
     setSelectedAssessmentId("");
-    setNotice("Adaptive framework assessment started.");
+    setNotice("Complete AI security assessment started.");
     setActiveRun({
       targetId: selectedTargetId,
       targetName,
       frameworks: plannedFrameworks,
       startedAt: Date.now(),
       status: "running",
-      message: "Planner is validating authorization, target capability, and budget before selecting the first framework.",
+      message: "Running the stable assessment path: garak reconnaissance, PyRIT multi-turn testing, Promptfoo reproducibility, and native baseline evidence.",
     });
     try {
       const data = await api("/api/assessments/frameworks", {
@@ -382,10 +392,10 @@ function App() {
         body: JSON.stringify({
           target_id: selectedTargetId,
           frameworks: plannedFrameworks,
-          objective: "Authorized adaptive multi-framework AI security assessment",
+          objective: "Authorized complete AI security assessment across stable native engines",
           category: "multi_framework",
           execution_mode: "chained",
-          strategy: "adaptive",
+          strategy: "complete-pentest",
           profile: frameworkRun.profile,
           target_model: frameworkRun.target_model || selectedTarget?.model_name,
           attacker_model: frameworkRun.attacker_model || undefined,
@@ -418,15 +428,15 @@ function App() {
         errors,
         message: `${data.status} with ${data.normalized_evidence?.length || 0} evidence records and ${errors} errors.`,
       }));
-      setNotice("Adaptive framework assessment completed.");
+      setNotice("Complete AI security assessment completed.");
       await refresh();
     } catch (error: any) {
       if (error?.name === "AbortError") {
         setActiveRun((current) => current ? { ...current, status: "failed", message: "Run cancellation requested. The current framework stage may finish before the planner stops." } : null);
-        setNotice("Adaptive framework assessment cancellation requested.");
+        setNotice("Complete AI security assessment cancellation requested.");
       } else {
         setActiveRun((current) => current ? { ...current, status: "failed", message: error.message } : null);
-        setNotice(`Adaptive framework assessment failed: ${error.message}`);
+        setNotice(`Complete AI security assessment failed: ${error.message}`);
       }
     } finally {
       assessmentAbort.current = null;
@@ -494,7 +504,7 @@ function App() {
             <h1>General Target Assessment Console</h1>
             <p>Register approved AI systems, validate connectivity, run controlled campaigns, inspect evidence, and generate human-reviewed assurance reports.</p>
           </div>
-          <button className="ghost" onClick={() => refresh()}><RefreshCw size={16} /> Refresh</button>
+          <button className="ghost" onClick={manualRefresh}><RefreshCw size={16} /> Refresh</button>
         </header>
 
         {notice && <div className="notice">{notice}</div>}
@@ -516,7 +526,7 @@ function App() {
                 <div className="cards compact">
                   {loadingSections.health && <div className="empty">Loading adapter and framework health...</div>}
                   {!loadingSections.health && !health && <div className="empty">API health is unavailable. Check the API container, then refresh.</div>}
-                  {health && Object.entries(health.adapters).map(([name, value]) => (
+                  {health && Object.entries(health.adapters).filter(([, value]) => value.enabled !== false).map(([name, value]) => (
                     <article className="card" key={name}>
                       <strong>{name}</strong>
                       <StatusBadge status={value.status} />
@@ -575,9 +585,19 @@ function App() {
         {view === "frameworks" && (
           <section className="panel">
             <PanelTitle icon={<SlidersHorizontal />} title="Framework Manager" subtitle="Isolated worker health, capabilities, and controlled multi-framework execution." />
+            <div className="target-picker">
+              <label>Assessment target
+                <select value={selectedTargetId} onChange={(event) => setSelectedTargetId(event.target.value)}>
+                  {targets.map((target) => (
+                    <option key={target.id} value={target.id}>{target.target_name} · {target.model_name}</option>
+                  ))}
+                </select>
+              </label>
+              <span>Stable path: {STABLE_FRAMEWORKS.join(" → ")}</span>
+            </div>
             <div className="actions">
               <button onClick={checkFrameworks} disabled={busy}><RefreshCw size={16} /> Health + Capabilities</button>
-              <button onClick={runAllFrameworks} disabled={busy || !selectedTargetId}><Play size={16} /> Run Adaptive Chain</button>
+              <button onClick={runAllFrameworks} disabled={busy || !selectedTargetId}><Play size={16} /> Run Complete Assessment</button>
               {busy && activeRun?.status === "running" && <button className="danger" onClick={cancelAdaptiveRun}><Square size={16} /> Cancel Run</button>}
             </div>
             <RunMonitor activeRun={activeRun} detail={detail} frameworks={frameworks} clock={clock} />
@@ -585,7 +605,7 @@ function App() {
             <div className="cards">
               {loadingSections.frameworks && <div className="empty">Loading framework registry...</div>}
               {!loadingSections.frameworks && frameworks.length === 0 && <div className="empty">No framework workers are registered. Start the framework Docker profile and refresh.</div>}
-              {frameworks.map((framework: any) => (
+              {frameworks.filter((framework: any) => framework.enabled !== false).map((framework: any) => (
                 <article className="card" key={framework.id}>
                   <strong>{framework.name}</strong>
                   <StatusBadge status={framework.health || "unknown"} />
@@ -721,7 +741,7 @@ function RunMonitor({ activeRun, detail, frameworks, clock }: { activeRun: Activ
   const run = activeRun;
   const isRunning = run?.status === "running";
   const elapsed = run ? Math.max(0, Math.floor((clock - run.startedAt) / 1000)) : 0;
-  const plannedStages = run?.frameworks?.length ? run.frameworks : ["garak", "pyrit", "promptfoo", "deepteam", "native"];
+  const plannedStages = run?.frameworks?.length ? run.frameworks : STABLE_FRAMEWORKS;
   const actualStages = monitorDetail?.frameworks?.length ? monitorDetail.frameworks : monitorDetail?.framework_summaries?.map((item: any) => item.framework) || [];
   const plannedFromDecisions = (monitorDetail?.execution_plan || []).map((item: any) => item.next_framework).filter(Boolean);
   const stages = Array.from(new Set([...plannedStages, ...actualStages, ...plannedFromDecisions]));
@@ -960,13 +980,18 @@ function FrameworkRunControls({ value, setValue, selectedTarget }: any) {
         <label>Concurrency<input type="number" min="1" value={value.maximum_concurrency} onChange={(event) => set("maximum_concurrency", Number(event.target.value))} /></label>
         <label>Token limit<input type="number" min="256" value={value.maximum_tokens} onChange={(event) => set("maximum_tokens", Number(event.target.value))} /></label>
         <label>Duration seconds<input type="number" min="300" value={value.maximum_duration_seconds} onChange={(event) => set("maximum_duration_seconds", Number(event.target.value))} /></label>
-        <label>Probe families<input value={value.probe_families} placeholder="optional comma list" onChange={(event) => set("probe_families", event.target.value)} /></label>
-        <label>Promptfoo plugins<input value={value.promptfoo_plugins} placeholder="optional comma list" onChange={(event) => set("promptfoo_plugins", event.target.value)} /></label>
-        <label>Promptfoo strategies<input value={value.promptfoo_strategies} placeholder="optional comma list" onChange={(event) => set("promptfoo_strategies", event.target.value)} /></label>
       </div>
-      <div className="toggles">
-        <label><input type="checkbox" checked={value.allow_same_model_eval} onChange={(event) => set("allow_same_model_eval", event.target.checked)} /> allow same model for target/attacker/judge</label>
-      </div>
+      <details className="advanced-controls">
+        <summary>Advanced selectors</summary>
+        <div className="form-grid">
+          <label>Probe families<input value={value.probe_families} placeholder="optional comma list" onChange={(event) => set("probe_families", event.target.value)} /></label>
+          <label>Promptfoo plugins<input value={value.promptfoo_plugins} placeholder="optional comma list" onChange={(event) => set("promptfoo_plugins", event.target.value)} /></label>
+          <label>Promptfoo strategies<input value={value.promptfoo_strategies} placeholder="optional comma list" onChange={(event) => set("promptfoo_strategies", event.target.value)} /></label>
+        </div>
+        <div className="toggles">
+          <label><input type="checkbox" checked={value.allow_same_model_eval} onChange={(event) => set("allow_same_model_eval", event.target.checked)} /> allow same model for target/attacker/judge</label>
+        </div>
+      </details>
       {sameModel && !value.allow_same_model_eval && <div className="notice">Evaluation bias warning: choose separate target, attacker, and judge models when possible.</div>}
     </section>
   );

@@ -6,7 +6,7 @@ install:
 	$(PYTHON) -m pip install -r apps/api/requirements.txt -r apps/enterprise-assist/requirements.txt -r requirements-dev.txt
 
 install-frameworks:
-	docker compose -f docker-compose.yml -f docker-compose.frameworks.yml build native-worker garak-worker pyrit-worker promptfoo-worker deepteam-worker
+	docker compose -f docker-compose.yml -f docker-compose.frameworks.yml build native-worker garak-worker pyrit-worker promptfoo-worker
 
 prepare-runtime:
 	bash scripts/runtime/prepare_runtime.sh
@@ -152,25 +152,25 @@ assess-deepteam:
 	$(PYTHON) scripts/frameworks/assess_frameworks.py deepteam
 
 assess-all:
-	$(PYTHON) scripts/frameworks/assess_frameworks.py native garak pyrit promptfoo deepteam
+	$(PYTHON) scripts/frameworks/assess_frameworks.py native garak pyrit promptfoo
 
 assess-all-quick:
-	PROFILE=quick FRAMEWORK_MAX_REQUESTS=24 FRAMEWORK_MAX_TURNS=8 $(PYTHON) scripts/frameworks/assess_frameworks.py native garak pyrit promptfoo deepteam
+	PROFILE=quick FRAMEWORK_MAX_REQUESTS=24 FRAMEWORK_MAX_TURNS=8 $(PYTHON) scripts/frameworks/assess_frameworks.py native garak pyrit promptfoo
 
 assess-all-standard:
-	PROFILE=standard FRAMEWORK_MAX_REQUESTS=48 FRAMEWORK_MAX_TURNS=12 $(PYTHON) scripts/frameworks/assess_frameworks.py native garak pyrit promptfoo deepteam
+	PROFILE=standard FRAMEWORK_MAX_REQUESTS=48 FRAMEWORK_MAX_TURNS=12 $(PYTHON) scripts/frameworks/assess_frameworks.py native garak pyrit promptfoo
 
 assess-all-comprehensive:
-	PROFILE=comprehensive FRAMEWORK_MAX_REQUESTS=96 FRAMEWORK_MAX_TURNS=20 FRAMEWORK_MAX_DURATION_SECONDS=5400 $(PYTHON) scripts/frameworks/assess_frameworks.py native garak pyrit promptfoo deepteam
+	PROFILE=comprehensive FRAMEWORK_MAX_REQUESTS=96 FRAMEWORK_MAX_TURNS=20 FRAMEWORK_MAX_DURATION_SECONDS=5400 $(PYTHON) scripts/frameworks/assess_frameworks.py native garak pyrit promptfoo
 
 assess-chain:
-	FRAMEWORK_EXECUTION_MODE=chained FRAMEWORK_STRATEGY=attack-planning PROFILE=$${PROFILE:-quick} FRAMEWORK_MAX_REQUESTS=$${FRAMEWORK_MAX_REQUESTS:-24} FRAMEWORK_MAX_TURNS=$${FRAMEWORK_MAX_TURNS:-8} FRAMEWORK_MAX_DURATION_SECONDS=$${FRAMEWORK_MAX_DURATION_SECONDS:-1800} $(PYTHON) scripts/frameworks/assess_frameworks.py garak pyrit promptfoo deepteam
+	FRAMEWORK_EXECUTION_MODE=chained FRAMEWORK_STRATEGY=attack-planning PROFILE=$${PROFILE:-quick} FRAMEWORK_MAX_REQUESTS=$${FRAMEWORK_MAX_REQUESTS:-24} FRAMEWORK_MAX_TURNS=$${FRAMEWORK_MAX_TURNS:-8} FRAMEWORK_MAX_DURATION_SECONDS=$${FRAMEWORK_MAX_DURATION_SECONDS:-1800} $(PYTHON) scripts/frameworks/assess_frameworks.py garak pyrit promptfoo native
 
 assess-adaptive:
-	TARGET_ID=$(TARGET_ID) FRAMEWORK_EXECUTION_MODE=chained FRAMEWORK_STRATEGY=adaptive PROFILE=$${PROFILE:-quick} FRAMEWORK_MAX_REQUESTS=$${FRAMEWORK_MAX_REQUESTS:-24} FRAMEWORK_MAX_TURNS=$${FRAMEWORK_MAX_TURNS:-8} FRAMEWORK_MAX_DURATION_SECONDS=$${FRAMEWORK_MAX_DURATION_SECONDS:-1800} $(PYTHON) scripts/frameworks/assess_frameworks.py garak pyrit promptfoo deepteam native
+	TARGET_ID=$(TARGET_ID) FRAMEWORK_EXECUTION_MODE=chained FRAMEWORK_STRATEGY=adaptive PROFILE=$${PROFILE:-quick} FRAMEWORK_MAX_REQUESTS=$${FRAMEWORK_MAX_REQUESTS:-24} FRAMEWORK_MAX_TURNS=$${FRAMEWORK_MAX_TURNS:-8} FRAMEWORK_MAX_DURATION_SECONDS=$${FRAMEWORK_MAX_DURATION_SECONDS:-1800} $(PYTHON) scripts/frameworks/assess_frameworks.py garak pyrit promptfoo native
 
 assess-complete-pentest:
-	TARGET_ID=$(TARGET_ID) FRAMEWORK_EXECUTION_MODE=chained FRAMEWORK_STRATEGY=complete-pentest PROFILE=$${PROFILE:-quick} FRAMEWORK_MAX_REQUESTS=$${FRAMEWORK_MAX_REQUESTS:-40} FRAMEWORK_MAX_TURNS=$${FRAMEWORK_MAX_TURNS:-12} FRAMEWORK_MAX_DURATION_SECONDS=$${FRAMEWORK_MAX_DURATION_SECONDS:-3600} $(PYTHON) scripts/frameworks/assess_frameworks.py garak pyrit promptfoo deepteam native
+	TARGET_ID=$(TARGET_ID) FRAMEWORK_EXECUTION_MODE=chained FRAMEWORK_STRATEGY=complete-pentest PROFILE=$${PROFILE:-quick} FRAMEWORK_MAX_REQUESTS=$${FRAMEWORK_MAX_REQUESTS:-40} FRAMEWORK_MAX_TURNS=$${FRAMEWORK_MAX_TURNS:-12} FRAMEWORK_MAX_DURATION_SECONDS=$${FRAMEWORK_MAX_DURATION_SECONDS:-3600} $(PYTHON) scripts/frameworks/assess_frameworks.py garak pyrit promptfoo native
 
 validate-adaptive-planner:
 	TARGET_ID=$(TARGET_ID) $(PYTHON) scripts/frameworks/validate_adaptive_planner.py
@@ -218,7 +218,7 @@ validate-frameworks:
 
 validate-e2e:
 	$(PYTHON) scripts/targets/validate_targets.py
-	$(PYTHON) scripts/frameworks/assess_frameworks.py native garak pyrit promptfoo deepteam
+	$(PYTHON) scripts/frameworks/assess_frameworks.py native garak pyrit promptfoo
 
 clean:
 	rm -rf data/evidence data/reports .pytest_cache .mypy_cache .ruff_cache

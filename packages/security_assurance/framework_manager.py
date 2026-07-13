@@ -7,14 +7,14 @@ from typing import Any
 
 import httpx
 
-from .adaptive_planner import AdaptiveAttackPlanner
+from .adaptive_planner import AdaptiveAttackPlanner, PlannerDecision
 from .framework_models import FrameworkAssessmentRequest, FrameworkAssessmentResult, FrameworkDefinition
 from .reporting import write_framework_reports
 from .target_manager import TargetManager
 from .target_models import TargetMessageRequest
 
 CHAIN_START = "garak"
-CHAIN_ORDER = ["garak", "pyrit", "promptfoo", "deepteam"]
+CHAIN_ORDER = ["garak", "pyrit", "promptfoo", "native"]
 
 
 class FrameworkManager:
@@ -29,7 +29,7 @@ class FrameworkManager:
             "native": FrameworkDefinition(id="native", name="native", worker_url=os.getenv("NATIVE_WORKER_URL", "http://native-worker:8091"), enabled=True),
             "garak": FrameworkDefinition(id="garak", name="garak", worker_url=os.getenv("GARAK_WORKER_URL", "http://garak-worker:8092"), enabled=os.getenv("FRAMEWORK_GARAK_ENABLED", "true").lower() == "true"),
             "pyrit": FrameworkDefinition(id="pyrit", name="pyrit", worker_url=os.getenv("PYRIT_WORKER_URL", "http://pyrit-worker:8093"), enabled=os.getenv("FRAMEWORK_PYRIT_ENABLED", "true").lower() == "true"),
-            "deepteam": FrameworkDefinition(id="deepteam", name="deepteam", worker_url=os.getenv("DEEPTEAM_WORKER_URL", "http://deepteam-worker:8094"), enabled=os.getenv("FRAMEWORK_DEEPTEAM_ENABLED", "true").lower() == "true"),
+            "deepteam": FrameworkDefinition(id="deepteam", name="deepteam", worker_url=os.getenv("DEEPTEAM_WORKER_URL", "http://deepteam-worker:8094"), enabled=os.getenv("FRAMEWORK_DEEPTEAM_ENABLED", "false").lower() == "true"),
             "promptfoo": FrameworkDefinition(id="promptfoo", name="promptfoo", worker_url=os.getenv("PROMPTFOO_WORKER_URL", "http://promptfoo-worker:8095"), enabled=os.getenv("FRAMEWORK_PROMPTFOO_ENABLED", "true").lower() == "true"),
         }
         self.planner = AdaptiveAttackPlanner(root, self.frameworks)
@@ -63,6 +63,12 @@ class FrameworkManager:
     def health(self) -> dict[str, Any]:
         rows = {}
         for framework_id, framework in self.frameworks.items():
+            if not framework.enabled:
+                framework.health = "disabled"
+                framework.last_error = None
+                framework.last_health_check = datetime.now(UTC)
+                rows[framework_id] = framework.model_dump(mode="json")
+                continue
             try:
                 response = httpx.get(f"{framework.worker_url}/health", timeout=20)
                 response.raise_for_status()
@@ -82,6 +88,10 @@ class FrameworkManager:
     def capabilities(self) -> dict[str, Any]:
         rows = {}
         for framework_id, framework in self.frameworks.items():
+            if not framework.enabled:
+                rows[framework_id] = {"capabilities": [], "status": "disabled"}
+                framework.capabilities = []
+                continue
             try:
                 response = httpx.get(f"{framework.worker_url}/capabilities", timeout=20)
                 response.raise_for_status()
@@ -311,13 +321,19 @@ class FrameworkManager:
             raise ValueError("Written authorization must be confirmed")
         if not target.enabled:
             raise ValueError(f"Target is disabled: {target.disabled_reason}")
-        requested = request.frameworks or CHAIN_ORDER
+        requested = [framework for framework in (request.frameworks or CHAIN_ORDER) if framework in self.frameworks]
+        disabled_requested = [framework for framework in requested if not self.frameworks[framework].enabled]
+        requested = [framework for framework in requested if self.frameworks[framework].enabled]
+        if not requested:
+            raise ValueError("No enabled frameworks were selected for this assessment")
         complete_chain = request.strategy in {"complete-pentest", "full-chain", "pentest"}
         self._clear_cancel_markers(target.id)
         result = FrameworkAssessmentResult(target_id=target.id, frameworks=[])
         model_roles = self._model_roles(request, target.model_name)
         if model_roles.get("bias_warning"):
             result.warnings.append(model_roles["bias_warning"])
+        if disabled_requested:
+            result.warnings.append(f"Disabled frameworks skipped: {', '.join(disabled_requested)}")
         completed: list[str] = []
         latest: dict[str, Any] | None = None
         inherited_context: dict[str, Any] = {}
@@ -344,26 +360,41 @@ class FrameworkManager:
                 correlated_findings=correlated_findings,
                 latest=latest,
             )
-            decision = self.planner.decide(context, request, model_roles)
-            if complete_chain and (not decision.continue_assessment or not decision.next_framework):
+            if complete_chain:
                 remaining = [framework for framework in requested if framework not in completed]
-                if remaining and decision.stop_reason != "requested_frameworks_completed":
-                    decision.next_framework = remaining[0]
-                    decision.action_type = "complete_pentest_stage"
-                    decision.objective = request.objective
-                    decision.profile = request.profile
-                    decision.request_budget = max(1, min(4, context.remaining_budget.requests))
-                    decision.turn_budget = max(1, min(3, context.remaining_budget.turns))
-                    decision.token_budget = max(1, min(request.maximum_tokens, context.remaining_budget.tokens))
-                    decision.time_budget_seconds = max(1, min(request.maximum_duration_seconds, context.remaining_budget.time_seconds))
-                    decision.rationale = (
-                        f"Complete pentest mode continues with {remaining[0]} even though the adaptive planner "
-                        f"would stop for {decision.stop_reason or 'no matching rule'}."
+                if remaining:
+                    next_framework = remaining[0]
+                    decision = PlannerDecision(
+                        next_framework=next_framework,
+                        action_type="complete_pentest_stage",
+                        objective=request.objective,
+                        profile=request.profile,
+                        request_budget=max(1, min(6, context.remaining_budget.requests or request.maximum_requests)),
+                        turn_budget=max(1, min(4, context.remaining_budget.turns or request.maximum_turns)),
+                        token_budget=max(1, min(request.maximum_tokens, context.remaining_budget.tokens or request.maximum_tokens)),
+                        time_budget_seconds=max(1, min(request.maximum_duration_seconds, context.remaining_budget.time_seconds or request.maximum_duration_seconds)),
+                        rationale=(
+                            f"Complete assessment mode runs the stable native engines in presentation order. "
+                            f"Next stage: {next_framework}."
+                        ),
+                        evidence_references=[f"target:{target.id}", "mode:complete-pentest"],
+                        expected_confirmation_condition="Native framework artifact and normalized evidence are recorded.",
+                        continue_assessment=True,
+                        policy_rule_id="complete-pentest-fixed-order",
+                        safety_decision={"approved": True, "reason": "complete_pentest_mode"},
                     )
-                    decision.continue_assessment = True
-                    decision.stop_reason = None
-                    decision.policy_rule_id = "complete-pentest-next-framework"
-                    decision.safety_decision = {"approved": True, "reason": "complete_pentest_mode"}
+                else:
+                    decision = PlannerDecision(
+                        action_type="stop",
+                        objective=request.objective,
+                        rationale="All selected stable frameworks completed.",
+                        continue_assessment=False,
+                        stop_reason="requested_frameworks_completed",
+                        policy_rule_id="complete-pentest-complete",
+                        safety_decision={"approved": True, "reason": "requested_frameworks_completed"},
+                    )
+            else:
+                decision = self.planner.decide(context, request, model_roles)
             self.planner.persist(result.id, step, context, decision)
             decision_row = decision.model_dump(mode="json")
             result.execution_plan.append(decision_row)
@@ -442,11 +473,19 @@ class FrameworkManager:
             raise ValueError(f"Target is disabled: {target.disabled_reason}")
         self._clear_cancel_markers(target.id)
 
-        result = FrameworkAssessmentResult(target_id=target.id, frameworks=request.frameworks)
+        requested = [framework for framework in request.frameworks if framework in self.frameworks]
+        disabled_requested = [framework for framework in requested if not self.frameworks[framework].enabled]
+        requested = [framework for framework in requested if self.frameworks[framework].enabled]
+        if not requested:
+            raise ValueError("No enabled frameworks were selected for this assessment")
+
+        result = FrameworkAssessmentResult(target_id=target.id, frameworks=requested)
         model_roles = self._model_roles(request, target.model_name)
         if model_roles.get("bias_warning"):
             result.warnings.append(model_roles["bias_warning"])
-        for framework_id in request.frameworks:
+        if disabled_requested:
+            result.warnings.append(f"Disabled frameworks skipped: {', '.join(disabled_requested)}")
+        for framework_id in requested:
             self._execute_framework(
                 request=request,
                 result=result,
