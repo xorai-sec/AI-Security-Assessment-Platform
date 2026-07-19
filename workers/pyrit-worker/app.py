@@ -22,13 +22,11 @@ from workers.common.server import create_worker_app
 
 PYRIT_PROMPT_TARGET = "pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget"
 PYRIT_ATTACK = "pyrit.executor.attack.single_turn.prompt_sending.PromptSendingAttack"
-PYRIT_OFFICIAL_ATTACKS = {
-    "red_teaming": ("pyrit.executor.attack.red_teaming.red_teaming_attack.RedTeamingAttack",),
-    "crescendo": ("pyrit.executor.attack.multi_turn.crescendo_attack.CrescendoAttack",),
-    "tap": (
-        "pyrit.executor.attack.multi_turn.tree_of_attacks.TreeOfAttacksAttack",
-        "pyrit.executor.attack.multi_turn.tap_attack.TAPAttack",
-    ),
+# Verified against the pinned PyRIT 0.13.0 package.  The historical
+# red_teaming/crescendo/tap paths do not exist in this release; keeping them
+# here would create fictional support and risk a silent downgrade.
+PYRIT_OFFICIAL_ATTACKS: dict[str, tuple[str, ...]] = {
+    "prompt_sending": (PYRIT_ATTACK,),
 }
 PYRIT_EXECUTOR = "pyrit.executor.attack.core.attack_executor.AttackExecutor"
 PYRIT_MEMORY = "pyrit.memory.sqlite_memory.SQLiteMemory"
@@ -351,17 +349,12 @@ class PyRITRunner(BaseFrameworkRunner):
 
     async def _execute_native(self, request: FrameworkExecutionRequest, target: TargetProxyPromptTarget) -> Any:
         requested_attack = str(request.configuration.get("pyrit_attack") or "prompt_sending")
-        attack_class = None
-        if requested_attack in PYRIT_OFFICIAL_ATTACKS:
-            for candidate in PYRIT_OFFICIAL_ATTACKS[requested_attack]:
-                try:
-                    attack_class = _load_symbol(candidate)
-                    break
-                except (ImportError, AttributeError):
-                    continue
-        if requested_attack != "prompt_sending" and attack_class is None:
-            raise RuntimeError(f"requested PyRIT attack unavailable: {requested_attack}")
-        PromptSendingAttack = attack_class or _load_symbol(PYRIT_ATTACK)
+        if requested_attack not in PYRIT_OFFICIAL_ATTACKS:
+            raise RuntimeError(
+                f"requested PyRIT attack unavailable in pinned PyRIT 0.13.0: {requested_attack}; "
+                "supported attack: prompt_sending"
+            )
+        PromptSendingAttack = _load_symbol(PYRIT_OFFICIAL_ATTACKS[requested_attack][0])
         AttackExecutor = _load_symbol(PYRIT_EXECUTOR)
         scoring_config, scorer_meta = self._build_scoring_config(request, target)
         attack_kwargs: dict[str, Any] = {"objective_target": target}
@@ -630,15 +623,7 @@ class PyRITRunner(BaseFrameworkRunner):
             metrics={
                 "requested_attack": requested_attack,
                 "executed_attack": requested_attack if native_result is not None else None,
-                "official_pyrit_class": (
-                    type(_load_symbol(PYRIT_OFFICIAL_ATTACKS[requested_attack][0])).__name__
-                    if False
-                    else (
-                        PYRIT_OFFICIAL_ATTACKS.get(requested_attack, (PYRIT_ATTACK,))[0]
-                        if requested_attack != "prompt_sending"
-                        else PYRIT_ATTACK
-                    )
-                ),
+                "official_pyrit_class": PYRIT_OFFICIAL_ATTACKS.get(requested_attack, (None,))[0],
                 "attack_mode": attack_mode,
                 "attacker_invocations": len(attacker_invocations),
                 "target_turns": len(target.rows),
