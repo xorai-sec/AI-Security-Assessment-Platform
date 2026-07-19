@@ -1210,7 +1210,13 @@ class FrameworkManager:
     def list_results(self) -> list[dict[str, Any]]:
         rows = []
         for path in sorted(self.result_dir.glob("MFASM-*.json"), reverse=True):
-            data = FrameworkAssessmentResult.model_validate_json(path.read_text(encoding="utf-8"))
+            # The directory may contain handoff/lifecycle artifacts from
+            # chained assessments. They are not FrameworkAssessmentResult
+            # records and must not make the dashboard endpoint fail.
+            try:
+                data = FrameworkAssessmentResult.model_validate_json(path.read_text(encoding="utf-8"))
+            except Exception:
+                continue
             current_framework = next(
                 (
                     str(item.get("next_framework"))
