@@ -21,18 +21,15 @@ It does **not** certify ISO/IEC 42001 conformity and does **not** declare legal 
 ## Architecture
 
 ```mermaid
-flowchart TD
-    Web["React Target Console"] --> API["FastAPI API"]
-    API --> TM["Target Manager"]
-    TM --> Inventory["Target Inventory"]
-    TM --> Adapter["Target Adapter"]
-    Adapter --> Target["Authorized AI System"]
-    API --> Orch["Assessment Orchestrator"]
-    Orch --> Native["Native Campaigns"]
-    Native --> Adapter
-    Orch --> Evidence["Evidence Store"]
-    Evidence --> Reports["Reports"]
-    Evidence --> ISO["ISO/IEC 42001 Candidate Mapping"]
+graph TD
+    WEB[React console] --> API[FastAPI API]
+    API --> TARGETS[Target manager and adapters]
+    TARGETS --> TARGET[Authorized AI system]
+    API --> ORCH[Assessment orchestrator]
+    ORCH --> WORKERS[Native and framework workers]
+    WORKERS --> TARGETS
+    ORCH --> EVIDENCE[Evidence store]
+    EVIDENCE --> REPORTS[Reports and ISO review mappings]
 ```
 
 ## Quick Start
