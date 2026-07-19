@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "express": "4.19.2",
-    "promptfoo": "latest",
+    "promptfoo": "0.121.18",
     "yaml": "2.6.1"
   }
 }

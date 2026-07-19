@@ -3,8 +3,6 @@ from __future__ import annotations
 import os
 import secrets
 from datetime import datetime, timezone
-
-UTC = timezone.utc
 from pathlib import Path
 from typing import Any
 
@@ -13,10 +11,13 @@ import httpx
 from .adaptive_planner import AdaptiveAttackPlanner, PlannerDecision
 from .evidence_handoff import AttackOpportunity, EvidenceHandoffPlanner, HandoffPlan
 from .framework_models import FrameworkAssessmentRequest, FrameworkAssessmentResult, FrameworkDefinition
+from .model_gateway import ModelGatewayError, ModelRoleGateway
 from .reporting import write_framework_reports
 from .target_manager import TargetManager
 from .target_models import TargetMessageRequest
 from .vulnerability_justification import judge_evidence, supported_owasp
+
+UTC = timezone.utc  # noqa: UP017
 
 CHAIN_START = "garak"
 CHAIN_ORDER = ["garak", "pyrit", "promptfoo", "native"]
@@ -39,14 +40,23 @@ class FrameworkManager:
         self.planner = AdaptiveAttackPlanner(root, self.frameworks)
         self.handoff_planner = EvidenceHandoffPlanner(root)
         self._assessment_canaries: dict[str, str] = {}
+        self.model_gateway = ModelRoleGateway.from_environment()
 
     def _model_roles(self, request: FrameworkAssessmentRequest, target_model: str) -> dict[str, Any]:
-        attacker = request.attacker_model or os.getenv("OLLAMA_ATTACKER_MODEL") or os.getenv("ATTACKER_MODEL") or target_model
-        judge = request.judge_model or os.getenv("OLLAMA_JUDGE_MODEL") or os.getenv("JUDGE_MODEL") or target_model
+        attacker = request.attacker_model or os.getenv("ATTACKER_MODEL") or os.getenv("OLLAMA_ATTACKER_MODEL")
+        judge = request.judge_model or os.getenv("JUDGE_MODEL") or os.getenv("OLLAMA_JUDGE_MODEL")
         resolved_target = request.target_model or target_model
-        planner = os.getenv("OLLAMA_PLANNER_MODEL") or os.getenv("PLANNER_MODEL") or attacker
-        embedding = os.getenv("OLLAMA_EMBEDDING_MODEL") or os.getenv("EMBEDDING_MODEL") or "nomic-embed-text"
+        planner = os.getenv("PLANNER_MODEL") or os.getenv("OLLAMA_PLANNER_MODEL")
+        embedding = os.getenv("EMBEDDING_MODEL") or os.getenv("OLLAMA_EMBEDDING_MODEL") or "nomic-embed-text"
+        development_fallback = os.getenv("ALLOW_MODEL_ROLE_FALLBACK", "false").lower() == "true"
+        if not attacker or not judge:
+            if not development_fallback:
+                raise ModelGatewayError("Attacker and judge model roles must be explicitly configured")
+            attacker = attacker or resolved_target
+            judge = judge or resolved_target
         same_model = len({resolved_target, attacker, judge}) < 3
+        if os.getenv("REQUIRE_DISTINCT_MODEL_ROLES", "true").lower() == "true" and same_model and not request.allow_same_model_eval and not development_fallback:
+            raise ModelGatewayError("Target, attacker, and judge roles must be distinct")
         warning = None
         if same_model and not request.allow_same_model_eval:
             warning = (
@@ -59,6 +69,12 @@ class FrameworkManager:
             "judge_model": judge,
             "planner_model": planner,
             "embedding_model": embedding,
+            "attacker_base_url": os.getenv("ATTACKER_BASE_URL") or os.getenv("OLLAMA_BASE_URL"),
+            "judge_base_url": os.getenv("JUDGE_BASE_URL") or os.getenv("OLLAMA_BASE_URL"),
+            "planner_base_url": os.getenv("PLANNER_BASE_URL") or os.getenv("OLLAMA_BASE_URL"),
+            "embedding_base_url": os.getenv("EMBEDDING_BASE_URL") or os.getenv("OLLAMA_BASE_URL"),
+            "role_gateway": "configured" if attacker and judge else "unavailable",
+            "role_gateway_limited": development_fallback,
             "allow_same_model_eval": request.allow_same_model_eval,
             "bias_warning": warning,
         }
