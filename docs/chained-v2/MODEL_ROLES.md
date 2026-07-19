@@ -11,14 +11,19 @@ their attack behavior is unchanged in this step.
 Set model names and endpoints independently in `.env`:
 
 ```dotenv
-ATTACKER_MODEL=red-teamer-mistral-nemo:q4_k_m
+ATTACKER_MODEL=red-agent:12b-q4km
 ATTACKER_BASE_URL=http://attacker-model:8000/v1
-JUDGE_MODEL=Qwen3Guard-Gen-4B
+JUDGE_MODEL=qwen3guard-judge:4b-q4km
 JUDGE_BASE_URL=http://judge-model:8000/v1
-PLANNER_MODEL=RedSage-Qwen3-8B-Ins
+PLANNER_MODEL=redsage-planner:8b-q4km
 PLANNER_BASE_URL=http://planner-model:8000/v1
 PLANNER_LLM_ENABLED=false
 EMBEDDING_MODEL=nomic-embed-text
+
+The verified community GGUF manifest and import procedure are in
+`config/models/specialized-model-manifest.json` and
+`scripts/import_specialized_gguf.sh`. GGUF files remain outside Git under
+`SPECIALIZED_MODEL_DIR` and are mounted read-only into Ollama.
 EMBEDDING_BASE_URL=http://ollama:11434
 REQUIRE_DISTINCT_MODEL_ROLES=true
 ALLOW_SAME_MODEL_EVAL=false

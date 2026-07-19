@@ -1,18 +1,27 @@
 services:
   ollama:
-    image: ollama/ollama:latest
+    image: ollama/ollama:rocm
     ports:
       - "11434:11434"
     volumes:
       - ollama-data:/root/.ollama
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+      - ${SPECIALIZED_MODEL_DIR:-/home/ai/ai-security-models/gguf}:/models:ro
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - "44"
+      - "990"
+    environment:
+      OLLAMA_HOST: "0.0.0.0:11434"
+      OLLAMA_DEBUG: "1"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
 
 volumes:
   ollama-data:
-

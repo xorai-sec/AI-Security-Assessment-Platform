@@ -1,0 +1,8 @@
+{
+  "generated_from": "Hugging Face expanded tree API",
+  "artifacts": [
+    {"role":"attacker","source_repository":"romaingrx/red-teamer-mistral-nemo","gguf_repository":"AIgotahole/red-teamer-mistral-nemo-Q4_K_M-GGUF","revision":"4ef7ed9d69997cb6f7dd80ae95f4e8b8c386c517","file_revision":"0bace680f877f44a829b77f255314e811653c1c1","filename":"red-teamer-mistral-nemo-q4_k_m.gguf","quantization":"Q4_K_M","size":7477208224,"sha256":"a0199022fd466c4114b3f4629a41927382ad4a3e5ec86485c65c6a124546f838","license":"community quantization; base-model license requires review","alias":"red-agent:12b-q4km"},
+    {"role":"planner","source_repository":"RISys-Lab/RedSage-Qwen3-8B-Ins","gguf_repository":"mradermacher/RedSage-Qwen3-8B-Ins-GGUF","revision":"841fd703117ebb36ad337060d367c373f33d1adc","file_revision":"2826a2def80d01d24bf97f69527a2a3e4bc35006","filename":"RedSage-Qwen3-8B-Ins.Q4_K_M.gguf","quantization":"Q4_K_M","size":5027782816,"sha256":"05b6fb5c58f86801db8eaeaf07bad0abbdc9c45dde40e97a5b47a70daa8acd25","license":"community quantization; base-model license requires review","alias":"redsage-planner:8b-q4km"},
+    {"role":"judge","source_repository":"Qwen/Qwen3Guard-Gen-4B","gguf_repository":"mradermacher/Qwen3Guard-Gen-4B-GGUF","revision":"b3b010b37c75197c5e887fa7dce9ff907d0be6ff","file_revision":"149c5d1d78ed1e0532935a28f4cfedf512a275dd","filename":"Qwen3Guard-Gen-4B.Q4_K_M.gguf","quantization":"Q4_K_M","size":2716068928,"sha256":"c81d88da8e1f90a80d1b892a29fb3deac592fc5f321b35fc964a568398c1dbfb","license":"Apache-2.0 for base model; community quantization","alias":"qwen3guard-judge:4b-q4km"}
+  ]
+}
