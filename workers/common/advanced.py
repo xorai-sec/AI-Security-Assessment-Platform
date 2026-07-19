@@ -4,6 +4,8 @@ import json
 import subprocess
 from dataclasses import dataclass
 from datetime import datetime, timezone
+
+UTC = timezone.utc
 from pathlib import Path
 from typing import Any
 
@@ -23,7 +25,7 @@ class AttackCase:
     turns: tuple[str, ...] = ()
 
 
-PROFILE_LIMITS = {"quick": 4, "standard": 8, "comprehensive": 14}
+PROFILE_LIMITS = {"quick": 4, "standard": 8, "comprehensive": 14, "deep-owasp": 80, "deep-owasp-4h": 400, "deep-owasp-large": 200000}
 
 
 ATTACK_CATALOG: list[AttackCase] = [
@@ -105,7 +107,8 @@ def framework_evidence(
 ) -> NormalizedFrameworkEvidence:
     text = str(response.get("text", ""))
     telemetry = response.get("telemetry", {}) or {}
-    confirmation = deterministic_confirmation(text, telemetry)
+    assessment_canary = str(request.configuration.get("assessment_canary") or "")
+    confirmation = deterministic_confirmation(text, telemetry, canaries=[assessment_canary] if assessment_canary else None)
     evaluator = {"detector": case.detector, **confirmation, **(evaluator_extra or {})}
     limitations = list(telemetry.get("unavailable", []) or [])
     if request.model_roles.bias_warning:
@@ -118,7 +121,7 @@ def framework_evidence(
         "evaluator": evaluator,
         "model_roles": request.model_roles.model_dump(mode="json"),
     }
-    return NormalizedFrameworkEvidence(
+    evidence = NormalizedFrameworkEvidence(
         execution_id=f"{request.execution_id}-{index}",
         assessment_id=request.assessment_id,
         campaign_id=request.campaign_id,
@@ -163,9 +166,13 @@ def framework_evidence(
         bias_warning=request.model_roles.bias_warning,
         request_count=request_count,
         latency_ms=int(response.get("latency_ms", 0) or 0),
-        started_at=datetime.now(timezone.utc),
-        completed_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
+        completed_at=datetime.now(UTC),
         stop_reason=stop_reason,
         raw_artifact_reference=str(artifact_path),
         evidence_hash=evidence_hash(row),
     )
+    payload = evidence.model_dump(mode="json")
+    payload["assessment_canary"] = assessment_canary or None
+    return NormalizedFrameworkEvidence.model_validate(payload)
+# ruff: noqa: E402, UP017

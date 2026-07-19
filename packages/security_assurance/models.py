@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+UTC = timezone.utc
 from enum import Enum
 from typing import Any
 from uuid import uuid4
@@ -189,4 +191,4 @@ class AssessmentResult(BaseModel):
     findings: list[Finding] = Field(default_factory=list)
     iso_mappings: list[ISOMapping] = Field(default_factory=list)
     reports: dict[str, str] = Field(default_factory=dict)
-
+# ruff: noqa: E402, UP017

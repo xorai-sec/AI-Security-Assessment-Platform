@@ -27,7 +27,7 @@ class FrameworkAssessmentRequest(BaseModel):
     objective: str = "Authorized AI security assessment"
     category: str = "multi_framework"
     strategy: str = "baseline"
-    profile: Literal["quick", "standard", "comprehensive"] = "quick"
+    profile: Literal["quick", "standard", "comprehensive", "deep-owasp", "deep-owasp-4h", "deep-owasp-large"] = "quick"
     target_model: str | None = None
     attacker_model: str | None = None
     judge_model: str | None = None
@@ -40,6 +40,8 @@ class FrameworkAssessmentRequest(BaseModel):
     probe_families: list[str] = Field(default_factory=list)
     promptfoo_plugins: list[str] = Field(default_factory=list)
     promptfoo_strategies: list[str] = Field(default_factory=list)
+    adaptive_minimum_frameworks: int = 3
+    continue_on_framework_error: bool = True
     written_authorization_confirmed: bool = True
 
 
@@ -47,6 +49,7 @@ class FrameworkAssessmentResult(BaseModel):
     id: str = Field(default_factory=lambda: new_id("MFASM"))
     target_id: str
     frameworks: list[str]
+    strategy: str = "baseline"
     started_at: datetime = Field(default_factory=utc_now)
     completed_at: datetime | None = None
     status: str = "running"
@@ -54,6 +57,10 @@ class FrameworkAssessmentResult(BaseModel):
     normalized_evidence: list[dict[str, Any]] = Field(default_factory=list)
     execution_plan: list[dict[str, Any]] = Field(default_factory=list)
     chain_events: list[dict[str, Any]] = Field(default_factory=list)
+    evidence_signals: list[dict[str, Any]] = Field(default_factory=list)
+    attack_opportunities: list[dict[str, Any]] = Field(default_factory=list)
+    handoff_plans: list[dict[str, Any]] = Field(default_factory=list)
+    adaptive_artifacts: dict[str, str] = Field(default_factory=dict)
     correlated_findings: list[dict[str, Any]] = Field(default_factory=list)
     errors: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)

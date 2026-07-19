@@ -100,7 +100,14 @@ type ActiveRun = {
   resultId?: string;
   evidence?: number;
   errors?: number;
+  completedFrameworks?: string[];
+  currentFramework?: string;
+  mode?: string;
+  plannerRationale?: string;
+  sourceEvidenceIds?: string[];
 };
+
+type AssessmentMode = "stable-complete" | "adaptive-stable" | "hard-adaptive";
 
 const blankForm = {
   target_name: "Local AI chat endpoint",
@@ -153,6 +160,7 @@ function App() {
   const [detail, setDetail] = useState<any | null>(null);
   const [form, setForm] = useState(blankForm);
   const [frameworkRun, setFrameworkRun] = useState(defaultFrameworkRun);
+  const [assessmentMode, setAssessmentMode] = useState<AssessmentMode>("stable-complete");
   const [notice, setNotice] = useState("");
   const [dataErrors, setDataErrors] = useState<Record<string, string>>({});
   const [loadingSections, setLoadingSections] = useState<Record<string, boolean>>({});
@@ -371,19 +379,37 @@ function App() {
     if (!selectedTargetId) return;
     const plannedFrameworks = STABLE_FRAMEWORKS;
     const targetName = selectedTarget?.target_name || selectedTargetId;
+    const modeConfig = {
+      "stable-complete": {
+        strategy: "complete-pentest",
+        label: "Stable Complete",
+        objective: "Authorized complete AI security assessment across stable native engines",
+      },
+      "adaptive-stable": {
+        strategy: "adaptive-stable",
+        label: "Adaptive Stable",
+        objective: "Authorized adaptive evidence-handoff assessment across stable native engines",
+      },
+      "hard-adaptive": {
+        strategy: "hard-adaptive",
+        label: "Hard Adaptive",
+        objective: "Authorized hard adaptive evidence-handoff assessment across all useful stable native engines",
+      },
+    }[assessmentMode];
     const controller = new AbortController();
     assessmentAbort.current = controller;
     setBusy(true);
     setDetail(null);
     setSelectedAssessmentId("");
-    setNotice("Complete AI security assessment started.");
+    setNotice(`${modeConfig.label} assessment started.`);
     setActiveRun({
       targetId: selectedTargetId,
       targetName,
       frameworks: plannedFrameworks,
       startedAt: Date.now(),
       status: "running",
-      message: "Running the stable assessment path: garak reconnaissance, PyRIT multi-turn testing, Promptfoo reproducibility, and native baseline evidence.",
+      mode: assessmentMode,
+      message: `Running ${modeConfig.label}: garak reconnaissance, evidence translation, targeted PyRIT testing, Promptfoo reproduction, and native verification.`,
     });
     try {
       const data = await api("/api/assessments/frameworks", {
@@ -392,10 +418,10 @@ function App() {
         body: JSON.stringify({
           target_id: selectedTargetId,
           frameworks: plannedFrameworks,
-          objective: "Authorized complete AI security assessment across stable native engines",
+          objective: modeConfig.objective,
           category: "multi_framework",
           execution_mode: "chained",
-          strategy: "complete-pentest",
+          strategy: modeConfig.strategy,
           profile: frameworkRun.profile,
           target_model: frameworkRun.target_model || selectedTarget?.model_name,
           attacker_model: frameworkRun.attacker_model || undefined,
@@ -409,6 +435,8 @@ function App() {
           probe_families: frameworkRun.probe_families.split(",").map((item) => item.trim()).filter(Boolean),
           promptfoo_plugins: frameworkRun.promptfoo_plugins.split(",").map((item) => item.trim()).filter(Boolean),
           promptfoo_strategies: frameworkRun.promptfoo_strategies.split(",").map((item) => item.trim()).filter(Boolean),
+          adaptive_minimum_frameworks: 3,
+          continue_on_framework_error: true,
           written_authorization_confirmed: true,
         }),
       });
@@ -428,15 +456,15 @@ function App() {
         errors,
         message: `${data.status} with ${data.normalized_evidence?.length || 0} evidence records and ${errors} errors.`,
       }));
-      setNotice("Complete AI security assessment completed.");
+      setNotice(`${modeConfig.label} assessment completed.`);
       await refresh();
     } catch (error: any) {
       if (error?.name === "AbortError") {
         setActiveRun((current) => current ? { ...current, status: "failed", message: "Run cancellation requested. The current framework stage may finish before the planner stops." } : null);
-        setNotice("Complete AI security assessment cancellation requested.");
+        setNotice(`${modeConfig.label} assessment cancellation requested.`);
       } else {
         setActiveRun((current) => current ? { ...current, status: "failed", message: error.message } : null);
-        setNotice(`Complete AI security assessment failed: ${error.message}`);
+        setNotice(`${modeConfig.label} assessment failed: ${error.message}`);
       }
     } finally {
       assessmentAbort.current = null;
@@ -452,6 +480,18 @@ function App() {
     }).catch(() => undefined);
     setActiveRun((current) => current ? { ...current, status: "failed", message: "Cancellation requested. Waiting framework stages will stop at the next planner checkpoint." } : null);
     setBusy(false);
+  }
+
+  async function deleteReport(assessmentId: string) {
+    if (!window.confirm(`Delete generated reports for ${assessmentId}? Framework results and evidence will be preserved.`)) return;
+    try {
+      await api(`/api/reports/${assessmentId}`, { method: "DELETE" });
+      if (selectedAssessmentId === assessmentId) setSelectedAssessmentId("");
+      setNotice(`Generated reports deleted for ${assessmentId}. Raw evidence was preserved.`);
+      await refresh();
+    } catch (error: any) {
+      setNotice(`Report deletion failed: ${error.message}`);
+    }
   }
 
   function openIsoEvidence(mapping: any) {
@@ -480,11 +520,64 @@ function App() {
     return () => window.clearInterval(timer);
   }, [activeRun]);
 
+  useEffect(() => {
+    if (!activeRun || activeRun.status !== "running") return;
+    let stopped = false;
+
+    async function pollActiveRun() {
+      try {
+        const data = await api("/api/assessments/frameworks");
+        const rows = data.assessments || [];
+        const current = activeRun?.resultId
+          ? rows.find((item: any) => item.id === activeRun.resultId)
+          : rows
+              .filter((item: any) => item.status === "running" && item.target_id === activeRun?.targetId)
+              .sort((left: any, right: any) => String(right.started_at || "").localeCompare(String(left.started_at || "")))[0];
+        if (stopped) return;
+        if (!current) return;
+        setFrameworkAssessments(rows);
+        setSelectedAssessmentId(current.id);
+        setActiveRun((run) => run ? {
+          ...run,
+          resultId: current.id,
+          completedFrameworks: current.frameworks || [],
+          currentFramework: current.current_framework || undefined,
+          evidence: current.evidence || 0,
+          errors: current.errors || 0,
+          plannerRationale: current.planner_rationale,
+          sourceEvidenceIds: current.source_evidence_ids || [],
+          message: `Running ${current.current_framework || "assessment setup"}; ${(current.frameworks || []).length} completed stage(s) and ${current.evidence || 0} evidence records.`,
+        } : null);
+      } catch (error: any) {
+        if (!stopped) setDataErrors((current) => ({ ...current, activeRun: error.message }));
+      }
+    }
+
+    pollActiveRun();
+    const timer = window.setInterval(pollActiveRun, 2000);
+    return () => {
+      stopped = true;
+      window.clearInterval(timer);
+    };
+  }, [activeRun?.status, activeRun?.resultId, activeRun?.targetId]);
+
   const selectedTarget = useMemo(() => targets.find((target) => target.id === selectedTargetId), [targets, selectedTargetId]);
   const assessmentRows = useMemo(() => normalizeAssessments(assessments, frameworkAssessments, targets), [assessments, frameworkAssessments, targets]);
   const totalFindings = assessmentRows.reduce((sum, assessment) => sum + assessment.finding_count, 0);
   const enabledTargets = targets.filter((target) => target.enabled).length;
-  const latestExecutions = detail?.executions || [];
+  const latestExecutions = detail?.executions?.length
+    ? detail.executions
+    : (detail?.normalized_evidence || []).map((record: any) => ({
+        id: record.execution_id || record.evidence_hash,
+        framework: record.framework,
+        prompt: record.prompt || "",
+        response: record.response || "",
+        success: Boolean(record.success || record.confirmed),
+        confidence: Number(record.confidence || 0),
+        retrieval_trace: record.retrieval_trace || [],
+        tool_trace: record.tool_trace || [],
+        authorization_trace: record.authorization_trace || [],
+      }));
 
   return (
     <main>
@@ -593,11 +686,24 @@ function App() {
                   ))}
                 </select>
               </label>
+              <label>Assessment mode
+                <select value={assessmentMode} onChange={(event) => setAssessmentMode(event.target.value as AssessmentMode)}>
+                  <option value="stable-complete">Stable Complete</option>
+                  <option value="adaptive-stable">Adaptive Stable</option>
+                  <option value="hard-adaptive">Hard Adaptive</option>
+                </select>
+              </label>
               <span>Stable path: {STABLE_FRAMEWORKS.join(" → ")}</span>
             </div>
             <div className="actions">
               <button onClick={checkFrameworks} disabled={busy}><RefreshCw size={16} /> Health + Capabilities</button>
-              <button onClick={runAllFrameworks} disabled={busy || !selectedTargetId}><Play size={16} /> Run Complete Assessment</button>
+              <button onClick={runAllFrameworks} disabled={busy || !selectedTargetId}><Play size={16} /> {
+                assessmentMode === "stable-complete"
+                  ? "Run Stable Complete"
+                  : assessmentMode === "adaptive-stable"
+                    ? "Run Adaptive Stable"
+                    : "Run Hard Adaptive"
+              }</button>
               {busy && activeRun?.status === "running" && <button className="danger" onClick={cancelAdaptiveRun}><Square size={16} /> Cancel Run</button>}
             </div>
             <RunMonitor activeRun={activeRun} detail={detail} frameworks={frameworks} clock={clock} />
@@ -657,6 +763,7 @@ function App() {
         {view === "reports" && (
           <section className="panel">
             <PanelTitle icon={<FileText />} title="Reports" subtitle="Open report artifacts generated from persisted assessment evidence." />
+            <div className="actions"><button onClick={() => refresh()} disabled={busy}><RefreshCw size={16} /> Refresh reports</button></div>
             {!selectedAssessmentId && <div className="empty">Run an assessment first.</div>}
             {selectedAssessmentId && (
               <div className="actions">
@@ -667,19 +774,23 @@ function App() {
               </div>
             )}
             <div className="table report-table">
-              <div className="row report-head"><span>Report</span><span>Target</span><span>Findings</span><span>Completed</span><span>Open</span></div>
+              <div className="row report-head"><span>Report</span><span>Target</span><span>Status</span><span>Evidence</span><span>Findings</span><span>Completed</span><span>Open</span></div>
               {loadingSections.reports && <div className="empty">Loading previous reports...</div>}
               {!loadingSections.reports && reports.length === 0 && <div className="empty">No report artifacts are available yet.</div>}
-              {reports.map((report) => (
+              {reports.map((report, index) => (
                 <div className="row report-row" key={report.id}>
-                  <span><strong>{report.id}</strong><small>{report.mode}</small></span>
+                  <span><strong>{report.id}{index === 0 ? " · Latest" : ""}</strong><small>{report.mode}</small></span>
                   <span>{report.target || "Target"}</span>
+                  <span><StatusBadge status={report.status || "generated"} /></span>
+                  <span>{report.evidence || 0}</span>
                   <span>{report.findings || 0}</span>
                   <span>{formatDate(report.completed_at)}</span>
                   <span className="mini-actions">
                     <a href={`${API}/api/reports/${report.id}/html`} target="_blank">HTML</a>
                     <a href={`${API}/api/reports/${report.id}/markdown`} target="_blank">MD</a>
+                    <a href={`${API}/api/reports/${report.id}/json`} target="_blank">JSON</a>
                     <a href={`${API}/api/reports/${report.id}/csv`} target="_blank">CSV</a>
+                    <button className="textlink danger-link" onClick={() => deleteReport(report.id)}>Delete</button>
                   </span>
                 </div>
               ))}
@@ -742,12 +853,17 @@ function RunMonitor({ activeRun, detail, frameworks, clock }: { activeRun: Activ
   const isRunning = run?.status === "running";
   const elapsed = run ? Math.max(0, Math.floor((clock - run.startedAt) / 1000)) : 0;
   const plannedStages = run?.frameworks?.length ? run.frameworks : STABLE_FRAMEWORKS;
-  const actualStages = monitorDetail?.frameworks?.length ? monitorDetail.frameworks : monitorDetail?.framework_summaries?.map((item: any) => item.framework) || [];
+  const actualStages = monitorDetail?.frameworks?.length ? monitorDetail.frameworks : monitorDetail?.framework_summaries?.map((item: any) => item.framework) || run?.completedFrameworks || [];
   const plannedFromDecisions = (monitorDetail?.execution_plan || []).map((item: any) => item.next_framework).filter(Boolean);
   const stages = Array.from(new Set([...plannedStages, ...actualStages, ...plannedFromDecisions]));
-  const completed = new Set((monitorDetail?.frameworks || monitorDetail?.framework_summaries?.map((item: any) => item.framework) || []).map((item: string) => item.toLowerCase()));
-  const selected = new Set(plannedFromDecisions.map((item: string) => item.toLowerCase()));
+  const completed = new Set((monitorDetail?.frameworks || monitorDetail?.framework_summaries?.map((item: any) => item.framework) || run?.completedFrameworks || []).map((item: string) => item.toLowerCase()));
+  const selected = new Set(
+    [...plannedFromDecisions, run?.currentFramework]
+      .filter((item): item is string => Boolean(item))
+      .map((item) => item.toLowerCase()),
+  );
   const latestDecision = monitorDetail?.execution_plan?.[monitorDetail.execution_plan.length - 1];
+  const sourceEvidence = run?.sourceEvidenceIds || latestDecision?.evidence_references || [];
   const plannerStopped = latestDecision?.action_type === "stop" || latestDecision?.continue_assessment === false;
   return (
     <section className="panel run-monitor">
@@ -785,12 +901,33 @@ function RunMonitor({ activeRun, detail, frameworks, clock }: { activeRun: Activ
           );
         })}
       </div>
+      {(run?.plannerRationale || latestDecision?.rationale) && (
+        <div className="planner-rationale">
+          <strong>Planner rationale</strong>
+          <span>{run?.plannerRationale || latestDecision?.rationale}</span>
+          {sourceEvidence.length > 0 && (
+            <small>Source evidence: {sourceEvidence.slice(0, 8).join(", ")}</small>
+          )}
+        </div>
+      )}
       {monitorDetail?.execution_plan?.length > 0 && (
         <div className="decision-log">
           {monitorDetail.execution_plan.slice(-4).map((item: any, index: number) => (
             <article key={`${item.policy_rule_id || item.next_framework || index}-${index}`}>
               <strong>{item.next_framework || item.action_type || "planner"}</strong>
               <span>{item.rationale || item.stop_reason || "planner decision recorded"}</span>
+            </article>
+          ))}
+        </div>
+      )}
+      {monitorDetail?.handoff_plans?.length > 0 && (
+        <div className="handoff-chain">
+          <h3>Evidence handoff chain</h3>
+          {monitorDetail.handoff_plans.map((handoff: any) => (
+            <article key={handoff.handoff_id}>
+              <strong>{handoff.source_framework} → {handoff.target_framework}</strong>
+              <span>{handoff.payload?.objective || handoff.rationale}</span>
+              <small>{handoff.evidence_references?.length || 0} source evidence reference(s) · {handoff.opportunity_ids?.length || 0} opportunity(s)</small>
             </article>
           ))}
         </div>
@@ -1001,6 +1138,7 @@ function EvidenceView({ detail, executions }: { detail: any | null; executions: 
   const normalizedEvidence = detail?.normalized_evidence || [];
   const frameworkSummaries = detail?.framework_summaries || [];
   const findingRows = [...(detail?.findings || []), ...(detail?.correlated_findings || [])];
+  const statusCount = (status: string) => findingRows.filter((finding: any) => finding.status === status).length;
   return (
     <section className="panel">
       <PanelTitle icon={<ClipboardCheck />} title="Evidence Transcript" subtitle="Prompt, response, framework result, telemetry, and confidence from the selected assessment." />
@@ -1013,6 +1151,11 @@ function EvidenceView({ detail, executions }: { detail: any | null; executions: 
               <article><strong>{frameworkSummaries.length}</strong><span>Frameworks</span></article>
               <article><strong>{normalizedEvidence.length}</strong><span>Evidence records</span></article>
               <article><strong>{detail.errors?.length || 0}</strong><span>Errors</span></article>
+              <article><strong>{statusCount("confirmed")}</strong><span>Confirmed</span></article>
+              <article><strong>{statusCount("corroborated")}</strong><span>Corroborated</span></article>
+              <article><strong>{statusCount("candidate")}</strong><span>Candidate</span></article>
+              <article><strong>{statusCount("inconclusive")}</strong><span>Inconclusive</span></article>
+              <article><strong>{statusCount("false_positive")}</strong><span>False positive</span></article>
             </div>
           )}
           {frameworkSummaries.length > 0 && (
@@ -1036,6 +1179,28 @@ function EvidenceView({ detail, executions }: { detail: any | null; executions: 
               <article><strong>Evidence captured</strong><span>Human review needed</span><p>No confirmed findings are stored yet. Review framework evidence and map findings manually.</p></article>
             )}
           </div>
+          {detail.correlated_findings?.length > 0 && (
+            <section className="compliance-evidence">
+              <h3>Compliance Evidence Mapping</h3>
+              <p className="muted">These are candidate mappings for auditor review, not certification or conformity claims.</p>
+              {detail.correlated_findings.map((finding: any) => (
+                <article className="compliance-card" key={`compliance-${finding.id}`}>
+                  <div className="evidence-head"><strong>{finding.id} · {finding.title}</strong><StatusBadge status={finding.status} /><span>{finding.severity || "candidate"} · {Math.round((finding.confidence || 0) * 100)}%</span></div>
+                  <p><strong>Technical evidence:</strong> {finding.technical_evidence_summary || "Review linked prompt/response evidence."}</p>
+                  <p><strong>OWASP LLM:</strong> {(finding.owasp_llm_mapping || []).join(", ") || "Analyst classification required"}</p>
+                  <p><strong>OWASP mapping reason:</strong> {finding.owasp_mapping_reason || "No concrete OWASP exploit mapping is supported."}</p>
+                  <p><strong>Finding justification:</strong> {finding.vulnerability_justification || "Evidence has not justified confirmation."}</p>
+                  <p><strong>Canary matched:</strong> {finding.canary_matched ? "yes" : "no"}</p>
+                  <p><strong>Framework contribution:</strong> {Object.entries(finding.framework_contributions || {}).map(([name, count]) => `${name}: ${count}`).join(", ") || "none"}</p>
+                  <p><strong>ISO/IEC 42001 candidate:</strong> {finding.iso_42001_clause_control_candidate?.control_id || "A.8.4"} · {finding.iso_42001_clause_control_candidate?.area || "AI system monitoring evidence"}</p>
+                  <p><strong>Why it matters:</strong> {finding.compliance_rationale || "Supports review of AI risk controls and monitoring."}</p>
+                  <p><strong>Auditor question:</strong> {finding.auditor_question || "What control prevents or detects this behavior?"}</p>
+                  <p><strong>Remediation:</strong> {finding.remediation_recommendation || "Assign a control owner and validate remediation with repeat testing."}</p>
+                  <small>Evidence sufficiency: {finding.evidence_sufficiency || "candidate"} · Human review: {finding.human_review_status || "requires_human_review"}</small>
+                </article>
+              ))}
+            </section>
+          )}
           <div className="evidence-list">
             {executions.map((execution, index) => (
               <article className="evidence" id={execution.id} key={execution.id}>

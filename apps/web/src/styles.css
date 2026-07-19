@@ -78,7 +78,7 @@ label { display: grid; gap: 6px; color: #34445a; font-size: 13px; font-weight: 7
 .row.head { background: #f6f8fb; font-weight: 850; }
 .row.clickable:hover { background: #edf8f6; }
 .row.iso-head, .row.iso-row { grid-template-columns: .8fr 1.7fr .8fr .7fr; }
-.row.report-head, .row.report-row { grid-template-columns: 1fr 1fr .4fr .9fr .8fr; }
+.row.report-head, .row.report-row { grid-template-columns: 1fr 1fr .7fr .5fr .5fr .9fr 1.3fr; }
 .mini-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .mini-actions a { color: var(--accent); font-weight: 850; text-decoration: none; }
 .empty { padding: 22px; color: var(--muted); background: #f8fafc; border: 1px dashed var(--line); border-radius: 8px; }
@@ -99,6 +99,19 @@ label { display: grid; gap: 6px; color: #34445a; font-size: 13px; font-weight: 7
 .decision-log { display: grid; gap: 8px; }
 .decision-log article { border-left: 3px solid var(--accent); background: #f8fafc; padding: 10px 12px; border-radius: 6px; display: grid; gap: 4px; }
 .decision-log span { color: var(--muted); }
+.planner-rationale { margin-top: 12px; border: 1px solid var(--line); background: #f8fafc; padding: 12px; border-radius: 8px; display: grid; gap: 5px; }
+.planner-rationale span, .planner-rationale small { color: var(--muted); overflow-wrap: anywhere; }
+.handoff-chain { margin-top: 14px; display: grid; gap: 8px; }
+.handoff-chain h3 { margin: 0; }
+.handoff-chain article { border: 1px solid var(--line); border-radius: 8px; padding: 11px 12px; display: grid; gap: 4px; background: #fff; }
+.handoff-chain span, .handoff-chain small { color: var(--muted); }
+.compliance-evidence { margin-top: 18px; }
+.compliance-evidence > h3 { margin-bottom: 4px; }
+.muted { color: var(--muted); }
+.compliance-card { border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; padding: 14px; margin-top: 10px; background: #fbfdff; }
+.compliance-card p { margin: 7px 0; }
+.compliance-card small { color: var(--muted); }
+.danger-link { color: var(--danger) !important; }
 .summary-band { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .summary-band article { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: #fbfdff; display: grid; gap: 4px; }
 .summary-band strong { font-size: 20px; overflow-wrap: anywhere; }

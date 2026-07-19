@@ -3,7 +3,9 @@ from __future__ import annotations
 import json
 import os
 from collections import Counter
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+UTC = timezone.utc
 from pathlib import Path
 from typing import Any
 
@@ -584,3 +586,4 @@ class AdaptiveAttackPlanner:
         except Exception as exc:
             return {"error": str(exc), "model": model}
         return None
+# ruff: noqa: E402, UP017

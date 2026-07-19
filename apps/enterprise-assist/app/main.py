@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import hashlib
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+UTC = timezone.utc
 from typing import Any, Literal
 from uuid import uuid4
 
@@ -275,3 +277,4 @@ def openai_chat(req: OpenAIChatRequest) -> dict[str, Any]:
 @app.get("/logs")
 def logs() -> dict[str, Any]:
     return {"logs": APP_LOGS[-200:]}
+# ruff: noqa: E402, UP017

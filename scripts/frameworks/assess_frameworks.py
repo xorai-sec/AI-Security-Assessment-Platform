@@ -9,6 +9,9 @@ PROFILE_DEFAULTS = {
     "quick": {"requests": 24, "turns": 8, "duration": 1800, "tokens": 4096},
     "standard": {"requests": 48, "turns": 12, "duration": 2700, "tokens": 6144},
     "comprehensive": {"requests": 96, "turns": 20, "duration": 5400, "tokens": 8192},
+    "deep-owasp": {"requests": 80, "turns": 16, "duration": 7200, "tokens": 4096},
+    "deep-owasp-4h": {"requests": 400, "turns": 32, "duration": 14400, "tokens": 4096},
+    "deep-owasp-large": {"requests": 200000, "turns": 64, "duration": 172800, "tokens": 4096},
 }
 
 
@@ -54,6 +57,8 @@ def main() -> None:
         "probe_families": [item.strip() for item in os.getenv("PROBE_FAMILIES", "").split(",") if item.strip()],
         "promptfoo_plugins": [item.strip() for item in os.getenv("PROMPTFOO_PLUGINS", "").split(",") if item.strip()],
         "promptfoo_strategies": [item.strip() for item in os.getenv("PROMPTFOO_STRATEGIES", "").split(",") if item.strip()],
+        "adaptive_minimum_frameworks": int(os.getenv("ADAPTIVE_MINIMUM_FRAMEWORKS", "3")),
+        "continue_on_framework_error": os.getenv("CONTINUE_ON_FRAMEWORK_ERROR", "true").lower() == "true",
         "written_authorization_confirmed": True,
     }
     timeout = max(configured_duration + 900, 1800)
