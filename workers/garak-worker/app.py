@@ -4,10 +4,11 @@ import json
 import re
 import shutil
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from packages.security_assurance.garak_discovery import capability_probe_selection
 from workers.common.advanced import command_capture, write_json
 from workers.common.artifacts import run_artifacts
 from workers.common.base_runner import BaseFrameworkRunner
@@ -20,7 +21,6 @@ from workers.common.protocol.schemas import (
     WorkerHealth,
 )
 from workers.common.server import create_worker_app
-
 
 GARAK_GENERATOR = "target_proxy.TargetProxyGenerator"
 GARAK_GENERATOR_CLASS = "garak.generators.target_proxy.TargetProxyGenerator"
@@ -93,16 +93,26 @@ class GarakRunner(BaseFrameworkRunner):
     async def capabilities(self) -> list[WorkerCapability]:
         discovery = self._garak_discovery()
         return [
-            WorkerCapability(name="real_cli_discovery", supported=discovery["probes"]["returncode"] == 0, detail="python -m garak --list_probes"),
+            WorkerCapability(
+                name="real_cli_discovery",
+                supported=discovery["probes"]["returncode"] == 0,
+                detail="python -m garak --list_probes",
+            ),
             WorkerCapability(name="official_generator_loader", supported=True, detail=GARAK_GENERATOR_CLASS),
             WorkerCapability(name="official_probe_execution", supported=True, detail="python -m garak --probes ..."),
-            WorkerCapability(name="official_detector_execution", supported=True, detail="garak probewise/PxD harness detectors"),
+            WorkerCapability(
+                name="official_detector_execution", supported=True, detail="garak probewise/PxD harness detectors"
+            ),
             WorkerCapability(name="native_jsonl_artifacts", supported=True, detail="unmodified garak .report.jsonl"),
         ]
 
     def _probe_spec(self, request: FrameworkExecutionRequest) -> str:
         configured = request.configuration.get("probe_families") or []
-        probes = list(configured) if configured else DEFAULT_PROBES.get(request.profile, DEFAULT_PROBES["quick"]).split(",")
+        capabilities = request.configuration.get("target_capabilities") or {}
+        phase = str(request.configuration.get("discovery_phase") or "reconnaissance")
+        probes = list(configured) if configured else capability_probe_selection(capabilities, phase)
+        if configured and phase == "reconnaissance":
+            probes = probes[:2]
         # The API accepts high-level probe-family labels (for example
         # ``prompt_injection``), but Garak's CLI requires concrete module
         # names such as ``promptinject.HijackLongPrompt``.  Never pass labels
@@ -168,7 +178,7 @@ class GarakRunner(BaseFrameworkRunner):
             str(generations),
             "--skip_unknown",
         ]
-        started = datetime.now(timezone.utc)
+        started = datetime.now(UTC)
         try:
             proc = subprocess.run(
                 command,
@@ -182,24 +192,30 @@ class GarakRunner(BaseFrameworkRunner):
                 "stdout": proc.stdout,
                 "stderr": proc.stderr,
                 "started_at": started.isoformat(),
-                "completed_at": datetime.now(timezone.utc).isoformat(),
+                "completed_at": datetime.now(UTC).isoformat(),
             }
         except subprocess.TimeoutExpired as exc:
-            stdout = exc.stdout.decode("utf-8", errors="replace") if isinstance(exc.stdout, bytes) else (exc.stdout or "")
-            stderr = exc.stderr.decode("utf-8", errors="replace") if isinstance(exc.stderr, bytes) else (exc.stderr or "")
+            stdout = (
+                exc.stdout.decode("utf-8", errors="replace") if isinstance(exc.stdout, bytes) else (exc.stdout or "")
+            )
+            stderr = (
+                exc.stderr.decode("utf-8", errors="replace") if isinstance(exc.stderr, bytes) else (exc.stderr or "")
+            )
             return {
                 "command": command,
                 "returncode": -1,
                 "stdout": stdout,
                 "stderr": stderr or f"garak timed out after {request.limits.maximum_duration_seconds}s",
                 "started_at": started.isoformat(),
-                "completed_at": datetime.now(timezone.utc).isoformat(),
+                "completed_at": datetime.now(UTC).isoformat(),
             }
 
     def _report_path(self, report_prefix: Path) -> Path:
         return Path(str(report_prefix) + ".report.jsonl")
 
-    def _discover_report_path(self, request: FrameworkExecutionRequest, report_prefix: Path, cli_result: dict[str, Any]) -> Path:
+    def _discover_report_path(
+        self, request: FrameworkExecutionRequest, report_prefix: Path, cli_result: dict[str, Any]
+    ) -> Path:
         expected = self._report_path(report_prefix)
         if expected.exists():
             return expected
@@ -242,10 +258,7 @@ class GarakRunner(BaseFrameworkRunner):
         evidence: list[NormalizedFrameworkEvidence] = []
         plugin_ids: set[str] = {GARAK_GENERATOR_CLASS}
         eval_rows = [row for row in rows if row.get("entry_type") == "eval"]
-        eval_by_probe_detector = {
-            (row.get("probe"), row.get("detector")): row
-            for row in eval_rows
-        }
+        eval_by_probe_detector = {(row.get("probe"), row.get("detector")): row for row in eval_rows}
         for index, row in enumerate([item for item in rows if item.get("entry_type") == "attempt"], start=1):
             probe = row.get("probe_classname") or row.get("probe") or "unknown"
             prompt = _conversation_prompt(row.get("prompt"))
@@ -255,7 +268,11 @@ class GarakRunner(BaseFrameworkRunner):
             detector = ",".join(sorted(detector_results.keys())) or None
             plugin_ids.add(f"garak.probes.{probe}" if not str(probe).startswith("garak.") else str(probe))
             for detector_name in detector_results:
-                plugin_ids.add(f"garak.detectors.{detector_name}" if not str(detector_name).startswith("garak.") else str(detector_name))
+                plugin_ids.add(
+                    f"garak.detectors.{detector_name}"
+                    if not str(detector_name).startswith("garak.")
+                    else str(detector_name)
+                )
             scores = [
                 float(score)
                 for score_list in detector_results.values()
@@ -302,7 +319,10 @@ class GarakRunner(BaseFrameworkRunner):
                     attack_method="garak-native-probe",
                     prompt=prompt,
                     response=response,
-                    conversation_trace=[{"role": "user", "content": prompt}, {"role": "assistant", "content": response}],
+                    conversation_trace=[
+                        {"role": "user", "content": prompt},
+                        {"role": "assistant", "content": response},
+                    ],
                     evaluator_results=evaluator_results,
                     raw_score=confidence,
                     success=confirmed,
@@ -319,8 +339,8 @@ class GarakRunner(BaseFrameworkRunner):
                     evidence_limitations=[request.model_roles.bias_warning] if request.model_roles.bias_warning else [],
                     bias_warning=request.model_roles.bias_warning,
                     request_count=1,
-                    started_at=datetime.now(timezone.utc),
-                    completed_at=datetime.now(timezone.utc),
+                    started_at=datetime.now(UTC),
+                    completed_at=datetime.now(UTC),
                     stop_reason="garak_native_report_attempt",
                     raw_artifact_reference=str(report_path),
                     evidence_hash=evidence_hash(artifact_row),
@@ -329,7 +349,7 @@ class GarakRunner(BaseFrameworkRunner):
         return evidence, sorted(plugin_ids)
 
     async def execute(self, request: FrameworkExecutionRequest) -> FrameworkExecutionResult:
-        started = datetime.now(timezone.utc)
+        started = datetime.now(UTC)
         discovery = self._garak_discovery()
         artifacts = run_artifacts(self.artifact_root, request.execution_id)
         discovery_path = write_json(artifacts.path("discovery.json"), discovery)
@@ -348,9 +368,14 @@ class GarakRunner(BaseFrameworkRunner):
         rows = self._load_report_rows(report_path)
         command_line = " ".join(cli_result["command"])
         evidence, plugin_ids = self._normalise_report(request, rows, report_path, command_line)
+        attempted = len([row for row in rows if row.get("entry_type") == "attempt"])
+        successful = sum(1 for item in evidence if item.success)
+        fingerprints = {item.evidence_hash for item in evidence}
         errors = []
         if cli_result["returncode"] != 0:
-            errors.append(f"garak CLI returned {cli_result['returncode']}: {cli_result['stderr'] or cli_result['stdout']}")
+            errors.append(
+                f"garak CLI returned {cli_result['returncode']}: {cli_result['stderr'] or cli_result['stdout']}"
+            )
         if not report_path.exists():
             errors.append(
                 "Native garak report was not created at "
@@ -365,7 +390,7 @@ class GarakRunner(BaseFrameworkRunner):
             framework=self.framework_name,
             status=status,
             started_at=started,
-            completed_at=datetime.now(timezone.utc),
+            completed_at=datetime.now(UTC),
             raw_artifacts=[
                 str(discovery_path),
                 str(options_path),
@@ -385,6 +410,17 @@ class GarakRunner(BaseFrameworkRunner):
             native_plugin_identifiers=plugin_ids,
             fallback_used=False,
             fallback_reason=None,
+            metrics={
+                "phase": request.configuration.get("discovery_phase", "reconnaissance"),
+                "attempted_probes": attempted,
+                "successful_probes": successful,
+                "unique_signals": len(fingerprints),
+                "duplicate_rate": round((attempted - len(fingerprints)) / attempted, 3) if attempted else 0.0,
+                "detector_coverage": round(sum(bool(item.detector) for item in evidence) / attempted, 3)
+                if attempted
+                else 0.0,
+                "handoffs_created": 0,
+            },
         )
 
 

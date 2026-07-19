@@ -349,6 +349,10 @@ class EvidenceHandoffPlanner:
             groups.setdefault((signal.source_framework, signal.weakness_type), []).append(signal)
         opportunities: list[AttackOpportunity] = []
         for (framework, weakness), rows in sorted(groups.items()):
+            if framework == "garak":
+                rows = [item for item in rows if item.prompt_sample.strip() and item.response_sample.strip() and item.confidence >= 0.35]
+                if not rows:
+                    continue
             unique_rows = list(
                 {
                     self._digest(item.prompt_sample, item.response_sample, item.detector_or_assertion or ""): item

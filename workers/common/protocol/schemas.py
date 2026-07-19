@@ -164,4 +164,5 @@ class FrameworkExecutionResult(BaseModel):
     native_plugin_identifiers: list[str] = Field(default_factory=list)
     fallback_used: bool = False
     fallback_reason: str | None = None
+    metrics: dict[str, Any] = Field(default_factory=dict)
 # ruff: noqa: E402, UP017
