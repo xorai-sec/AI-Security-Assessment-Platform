@@ -6,7 +6,7 @@ The platform registers approved AI systems, validates target connectivity, disco
 
 It does **not** certify ISO/IEC 42001 conformity and does **not** declare legal compliance or final nonconformity. Human review is required.
 
-## What changed in Phase 3
+## Implemented capabilities
 
 - General target inventory and target manager.
 - Target adapter abstraction independent from assessment frameworks.
@@ -124,12 +124,12 @@ Reports are generated under `data/reports/`; evidence is stored under `data/evid
 - Development credential protection must be replaced before enterprise deployment.
 - PDF and evidence package export are planned.
 
-## Documentation
+## Project documentation
 
-- `docs/PHASE3_GENERAL_TARGET_ASSESSMENT_PLAN.md`
-- `docs/PHASE3_FINAL_BUILD_REPORT.md`
-- `docs/PHASE3_TARGET_SUPPORT_MATRIX.md`
-- `docs/PHASE3_RELEASE_BLOCKERS.md`
+- General target assessment plan: `docs/PHASE3_GENERAL_TARGET_ASSESSMENT_PLAN.md`
+- Build and validation report: `docs/PHASE3_FINAL_BUILD_REPORT.md`
+- Target support matrix: `docs/PHASE3_TARGET_SUPPORT_MATRIX.md`
+- Release blockers and limitations: `docs/PHASE3_RELEASE_BLOCKERS.md`
 - `docs/security/SSRF_PROTECTION.md`
 - `docs/demo/CLIENT_PRESENTATION_SCRIPT.md`
 
