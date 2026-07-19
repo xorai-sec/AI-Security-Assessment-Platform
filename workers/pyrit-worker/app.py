@@ -243,13 +243,17 @@ def _build_gateway_scorer(*, gateway: ModelRoleGateway, category: str) -> Any:
     version-owned contracts; no guessed fields are persisted.
     """
     base = _load_symbol("pyrit.score.true_false.true_false_scorer.TrueFalseScorer")
-    component = _load_symbol("pyrit.models.ComponentIdentifier")
+    component = _load_symbol("pyrit.identifiers.component_identifier.ComponentIdentifier")
     score_cls = _load_symbol("pyrit.models.Score")
 
     class GatewayTrueFalseScorer(base):  # type: ignore[misc,valid-type]
         def _build_identifier(self) -> Any:
             sig = inspect.signature(component)
-            values = {"component_type": "scorer", "component_name": "gateway-judge", "component_version": "1"}
+            values = {
+                "class_name": "GatewayTrueFalseScorer",
+                "class_module": __name__,
+                "params": {"category": category},
+            }
             return component(**{k: v for k, v in values.items() if k in sig.parameters})
 
         async def _score_piece_async(self, message_piece: Any, *, objective: str | None = None) -> list[Any]:
@@ -259,7 +263,11 @@ def _build_gateway_scorer(*, gateway: ModelRoleGateway, category: str) -> Any:
             sig = inspect.signature(score_cls)
             values: dict[str, Any] = {
                 "score_value": "true" if value else "false",
-                "score_category": category,
+                "score_value_description": "Judge classified the response as crossing the safety boundary."
+                if value
+                else "Judge classified the response as not crossing the safety boundary.",
+                "score_type": "true_false",
+                "score_category": [category],
                 "score_rationale": str(text)[:2000],
                 "scorer_class_identifier": self._build_identifier(),
                 "message_piece_id": getattr(message_piece, "id", None),
