@@ -11,6 +11,10 @@ for spec in \
   IFS='|' read -r alias file expected system <<< "$spec"
   local_file="$ROOT/$file"; [[ -f "$local_file" ]] || { echo "missing $local_file" >&2; exit 1; }
   actual="$(sha256sum "$local_file" | awk '{print $1}')"; [[ "$actual" == "$expected" ]] || { echo "SHA-256 mismatch for $file" >&2; exit 1; }
-  printf 'FROM /models/%s\nPARAMETER num_ctx 4096\nPARAMETER temperature 0.2\nSYSTEM %s\n' "$file" "$system" | docker exec -i "$container" ollama create "$alias" -f -
+  modelfile="/tmp/Modelfile.$(echo "$alias" | tr ':/' '__')"
+  printf 'FROM /models/%s\nPARAMETER num_ctx 4096\nPARAMETER temperature 0.2\nSYSTEM %s\n' "$file" "$system" \
+    | docker exec -i "$container" sh -c "cat > '$modelfile'"
+  docker exec "$container" ollama create "$alias" -f "$modelfile"
+  docker exec "$container" rm -f "$modelfile"
 done
 docker exec "$container" ollama list
