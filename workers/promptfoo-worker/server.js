@@ -110,6 +110,7 @@ function writePromptfooFiles(request, testCases) {
   const dir = path.join(artifactRoot, framework, request.execution_id);
   fs.mkdirSync(dir, { recursive: true });
   const providerPath = path.join(dir, "target-proxy-provider.js");
+  const attackerProviderPath = path.join(dir, "local-attacker-provider.js");
   fs.writeFileSync(providerPath, `
 module.exports = class TargetProxyProvider {
   constructor(options = {}) {
@@ -139,6 +140,21 @@ module.exports = class TargetProxyProvider {
   }
 };
 `, "utf8");
+  fs.writeFileSync(attackerProviderPath, `
+module.exports = class LocalAttackerProvider {
+  id() { return 'local-attacker-provider'; }
+  async callApi(prompt) {
+    const base = process.env.PROMPTFOO_ATTACKER_BASE_URL;
+    if (!base || process.env.PROMPTFOO_DISABLE_REDTEAM_REMOTE_GENERATION !== 'true') throw new Error('local attacker only');
+    const response = await fetch(base.replace(/\\/$/, '') + '/chat/completions', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({model:process.env.PROMPTFOO_ATTACKER_MODEL, messages:[{role:'user',content:String(prompt)}], temperature:0})});
+    if (!response.ok) throw new Error(await response.text());
+    const data = await response.json();
+    const output = data?.choices?.[0]?.message?.content || '';
+    fs.appendFileSync(process.env.PROMPTFOO_ATTACKER_INVOCATIONS, JSON.stringify({prompt:String(prompt), response_hash:crypto.createHash('sha256').update(output).digest('hex'), at:new Date().toISOString()})+'\\n');
+    return {output};
+  }
+};
+`, "utf8");
   const tests = testCases.map((item) => ({
     description: item.description,
     vars: { prompt: item.prompt },
@@ -152,9 +168,16 @@ module.exports = class TargetProxyProvider {
     tests,
     defaultTest: { options: { provider: `file://${providerPath}` } }
   };
+  config.redteam = {
+    provider: `file://${attackerProviderPath}`,
+    purpose: "authorized local attacker generation",
+    plugins: request.configuration?.target_capabilities?.rag ? ["indirect-prompt-injection"] : ["prompt-injection", "jailbreak"],
+    strategies: request.configuration?.handoff_payload ? ["best-of-n"] : ["basic"],
+    numTests: profileLimit(request.profile, request.limits?.maximum_requests),
+  };
   const yamlPath = path.join(dir, "promptfooconfig.yaml");
   fs.writeFileSync(yamlPath, YAML.stringify(config), "utf8");
-  return { dir, providerPath, yamlPath, jsonPath: path.join(dir, "promptfoo-results.json") };
+  return { dir, providerPath, attackerProviderPath, yamlPath, jsonPath: path.join(dir, "promptfoo-results.json"), generatedPath: path.join(dir, "redteam-generated.yaml"), invocationPath: path.join(dir, "attacker-invocations.jsonl") };
 }
 
 app.get("/health", async (_req, res) => {
@@ -186,22 +209,31 @@ app.post("/execute", async (req, res) => {
   const testCases = resolveTests(request);
   const detectedVersion = await version();
   const files = writePromptfooFiles(request, testCases);
+  fs.writeFileSync(files.invocationPath, "", "utf8");
+  const generation = await runCommand("./node_modules/.bin/promptfoo", ["redteam", "generate", "-c", files.yamlPath, "--output", files.generatedPath], (request.limits?.maximum_duration_seconds || 120) * 1000, {
+    PROMPTFOO_DISABLE_REDTEAM_REMOTE_GENERATION: "true",
+    PROMPTFOO_ATTACKER_BASE_URL: request.configuration?.attacker_base_url || process.env.ATTACKER_BASE_URL || "",
+    PROMPTFOO_ATTACKER_MODEL: request.model_roles?.attacker_model || process.env.ATTACKER_MODEL || "",
+    PROMPTFOO_ATTACKER_INVOCATIONS: files.invocationPath,
+  });
+  const evaluatedConfig = fs.existsSync(files.generatedPath) ? files.generatedPath : files.yamlPath;
   const cli = await runCommand(
     "./node_modules/.bin/promptfoo",
-    ["eval", "-c", files.yamlPath, "--output", files.jsonPath],
+    ["eval", "-c", evaluatedConfig, "--output", files.jsonPath],
     (request.limits?.maximum_duration_seconds || 120) * 1000,
     {
       PROMPTFOO_PROXY_URL: `${apiBase}/internal/targets/${request.target.target_id}/message`,
       PROMPTFOO_EXECUTION_ID: request.execution_id,
       PROMPTFOO_CAMPAIGN_ID: request.campaign_id,
       TARGET_PROXY_SECRET: token
+      ,PROMPTFOO_DISABLE_REDTEAM_REMOTE_GENERATION: "true"
     }
   );
   fs.writeFileSync(path.join(files.dir, "promptfoo-cli.json"), JSON.stringify(cli, null, 2));
   const nativeCommand = cli.command.join(" ");
   const nativePlugins = [
     "promptfoo.eval",
-    `file://${files.providerPath}`,
+    `file://${files.providerPath}`, `file://${files.attackerProviderPath}`,
     "promptfoo.assertion.not-contains",
     "promptfoo.assertion.javascript"
   ];
@@ -230,7 +262,8 @@ app.post("/execute", async (req, res) => {
       native_artifact_path: files.jsonPath,
       native_plugin_identifiers: nativePlugins,
       fallback_used: false,
-      fallback_reason: null
+      fallback_reason: null,
+      metrics: {redteam_generation: generation, attacker_invocations: fs.readFileSync(files.invocationPath, "utf8").split("\n").filter(Boolean).length, handoff_consumed: Boolean(request.configuration?.handoff_payload)}
     });
   }
 
@@ -338,7 +371,7 @@ app.post("/execute", async (req, res) => {
     status: evidence.length ? "succeeded" : "failed",
     started_at: startedAt,
     completed_at: new Date().toISOString(),
-    raw_artifacts: [files.yamlPath, files.providerPath, files.jsonPath, path.join(files.dir, "promptfoo-cli.json"), directPath],
+    raw_artifacts: [files.yamlPath, files.generatedPath, files.providerPath, files.attackerProviderPath, files.invocationPath, files.jsonPath, path.join(files.dir, "promptfoo-cli.json"), directPath],
     evidence,
     errors: [],
     native_engine_invoked: true,
@@ -347,7 +380,8 @@ app.post("/execute", async (req, res) => {
     native_artifact_path: files.jsonPath,
     native_plugin_identifiers: nativePlugins,
     fallback_used: false,
-    fallback_reason: null
+    fallback_reason: null,
+    metrics: {redteam_generation: generation, attacker_invocations: fs.readFileSync(files.invocationPath, "utf8").split("\n").filter(Boolean).length, handoff_consumed: Boolean(request.configuration?.handoff_payload)}
   });
 });
 

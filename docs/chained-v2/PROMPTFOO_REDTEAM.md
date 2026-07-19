@@ -1,0 +1,5 @@
+# Local attacker-driven Promptfoo red teaming
+
+Promptfoo uses the pinned `0.121.18` CLI and committed lockfile. Red-team generation is local-only (`PROMPTFOO_DISABLE_REDTEAM_REMOTE_GENERATION=true`): `redteam.provider` points to a generated local attacker provider, while the target remains a separate target-proxy provider. Generated YAML, evaluated configuration, CLI command/version, attacker invocation JSONL, native results, assertions, grader output, telemetry, and hashes are stored under the Promptfoo artifact directory.
+
+Two suites are produced: bounded attacker-generated tests and deterministic regression tests derived from consumed PyRIT conversation evidence. Plugins and strategies are capability/weakness-selected and bounded by request count, prompt size, concurrency, and duration. Benign controls measure over-refusal; they must not require blanket refusal. Canaries, retrieval, tools, confirmation, and memory are evaluated deterministically from target telemetry. The judge may provide semantic safety scores only as candidate evidence and cannot override deterministic telemetry.
