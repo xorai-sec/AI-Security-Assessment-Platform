@@ -456,6 +456,8 @@ class PyRITRunner(BaseFrameworkRunner):
         requested_attack = str(request.configuration.get("pyrit_attack") or "prompt_sending")
         PromptSendingAttack, public_export = _resolve_public_attack(requested_attack)
         scoring_config, scorer_meta = self._build_scoring_config(request, target)
+        if scoring_config is None:
+            raise RuntimeError(f"PyRIT objective scorer unavailable: {scorer_meta.get('scorer_error')}")
         attack_kwargs: dict[str, Any] = {"objective_target": target}
         if requested_attack != "prompt_sending":
             attack_base = _load_symbol("pyrit.executor.attack.AttackAdversarialConfig")
