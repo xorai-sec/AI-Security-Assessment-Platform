@@ -1,5 +1,8 @@
 # Implementation Plan
 
+> Historical planning document. DeepTeam references below are superseded and
+> are not part of the active product.
+
 ## Current-State Summary
 
 This is a new repository created as a separate project from the earlier
@@ -101,4 +104,3 @@ flowchart TD
 
 Mitigation: clear statuses, controlled synthetic target, deterministic canaries,
 evidence redaction, and explicit human-review fields.
-

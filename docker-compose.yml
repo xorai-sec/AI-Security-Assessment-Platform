@@ -50,12 +50,10 @@ services:
       FRAMEWORK_GARAK_ENABLED: "true"
       FRAMEWORK_PYRIT_ENABLED: "true"
       FRAMEWORK_PROMPTFOO_ENABLED: "true"
-      FRAMEWORK_DEEPTEAM_ENABLED: ${FRAMEWORK_DEEPTEAM_ENABLED:-false}
       NATIVE_WORKER_URL: http://native-worker:8091
       GARAK_WORKER_URL: http://garak-worker:8092
       PYRIT_WORKER_URL: http://pyrit-worker:8093
       PROMPTFOO_WORKER_URL: http://promptfoo-worker:8095
-      DEEPTEAM_WORKER_URL: http://deepteam-worker:8094
       API_INTERNAL_BASE_URL: http://api:8080
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
       OLLAMA_TARGET_MODEL: ${OLLAMA_TARGET_MODEL:-qwen3:4b}

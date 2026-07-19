@@ -9,7 +9,6 @@ mkdir -p \
   "$ROOT/data/framework-artifacts/native" \
   "$ROOT/data/framework-artifacts/garak" \
   "$ROOT/data/framework-artifacts/pyrit" \
-  "$ROOT/data/framework-artifacts/deepteam" \
   "$ROOT/data/framework-artifacts/promptfoo" \
   "$ROOT/data/framework-results" \
   "$ROOT/data/evidence" \
@@ -19,7 +18,6 @@ chmod 775 \
   "$ROOT/data/framework-artifacts/native" \
   "$ROOT/data/framework-artifacts/garak" \
   "$ROOT/data/framework-artifacts/pyrit" \
-  "$ROOT/data/framework-artifacts/deepteam" \
   "$ROOT/data/framework-artifacts/promptfoo"
 
 if command -v chown >/dev/null 2>&1; then
@@ -28,14 +26,12 @@ if command -v chown >/dev/null 2>&1; then
       "$ROOT/data/framework-artifacts/native" \
       "$ROOT/data/framework-artifacts/garak" \
       "$ROOT/data/framework-artifacts/pyrit" \
-      "$ROOT/data/framework-artifacts/deepteam" \
       "$ROOT/data/framework-artifacts/promptfoo"
   elif [ "${ALLOW_SUDO:-0}" = "1" ] && command -v sudo >/dev/null 2>&1; then
     sudo chown "$WORKER_UID:$WORKER_GID" \
       "$ROOT/data/framework-artifacts/native" \
       "$ROOT/data/framework-artifacts/garak" \
       "$ROOT/data/framework-artifacts/pyrit" \
-      "$ROOT/data/framework-artifacts/deepteam" \
       "$ROOT/data/framework-artifacts/promptfoo"
   fi
 fi

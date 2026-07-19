@@ -16,9 +16,6 @@ write_promptfoo() {
 write_python native-worker /artifacts/native
 write_python garak-worker /artifacts/garak
 write_python pyrit-worker /artifacts/pyrit
-if [ "${INCLUDE_DEEPTEAM:-0}" = "1" ]; then
-  write_python deepteam-worker /artifacts/deepteam
-fi
 write_promptfoo
 
 echo "All framework workers can write to their own artifact directories."

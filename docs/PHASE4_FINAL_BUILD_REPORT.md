@@ -1,5 +1,8 @@
 # Phase 4 Final Build Report
 
+> Historical report. DeepTeam references are retained only for migration and
+> audit context; the active product no longer includes it.
+
 ## Implemented in this patch
 
 - Isolated framework worker protocol.
@@ -29,4 +32,3 @@
 ## Release decision
 
 NOT READY
-

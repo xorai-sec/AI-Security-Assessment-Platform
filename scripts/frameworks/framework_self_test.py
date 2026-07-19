@@ -13,7 +13,7 @@ def run(framework: str) -> bool:
 
 
 def main() -> None:
-    frameworks = sys.argv[1:] or ["native", "garak", "pyrit", "promptfoo", "deepteam"]
+    frameworks = sys.argv[1:] or ["native", "garak", "pyrit", "promptfoo"]
     ok = all(run(framework) for framework in frameworks)
     sys.exit(0 if ok else 1)
 

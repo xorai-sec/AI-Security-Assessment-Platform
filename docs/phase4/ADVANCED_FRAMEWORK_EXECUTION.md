@@ -1,5 +1,8 @@
 # Advanced Framework Execution
 
+> Historical document. DeepTeam references are retained for migration context
+> only; it is not part of the active product.
+
 This platform runs authorized assessments through isolated workers for the native engine, garak, PyRIT, Promptfoo, and DeepTeam. Workers call the internal target proxy so tests stay inside registered, authorized targets.
 
 Strict framework proof is enforced. A worker must set `native_engine_invoked=true` and `fallback_used=false` before its output should be treated as native framework execution. Discovery output, normalized proxy evidence, or framework-shaped files are not enough.

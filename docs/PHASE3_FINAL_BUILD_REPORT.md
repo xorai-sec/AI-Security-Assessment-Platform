@@ -1,5 +1,8 @@
 # Phase 3 Final Build Report
 
+> Historical report. Its DeepTeam references are superseded by the chained-v2
+> removal decision and do not describe current support.
+
 ## What was implemented
 
 - General target adapter architecture.
@@ -62,4 +65,3 @@ make demo-report
 ## Release decision
 
 READY FOR AUTHORIZED CLIENT DEMONSTRATION WITH DOCUMENTED LIMITATIONS
-

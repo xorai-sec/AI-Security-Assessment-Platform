@@ -1,5 +1,8 @@
 # Phase 4 Framework Execution Plan
 
+> Historical plan. DeepTeam references are superseded and do not describe the
+> active framework stack.
+
 ## Current repository state
 
 Phase 3 at `a7bdcbe` provided target adapters, target manager APIs, target registration UI, native target-based assessments, evidence, ISO mapping and reports.
@@ -70,4 +73,3 @@ Framework execution is CPU-first. GPU is only required for optional local attack
 - PyRIT and DeepTeam package versions may require Python version changes or external scorer/evaluator model configuration.
 - Promptfoo currently requires modern Node; Docker worker uses Node 24.
 - garak probe APIs change between releases. This worker validates CLI availability and uses proxy-based prompts for controlled execution.
-

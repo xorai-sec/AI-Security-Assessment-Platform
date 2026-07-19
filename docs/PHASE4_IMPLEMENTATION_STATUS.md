@@ -1,5 +1,8 @@
 # Phase 4 Implementation Status
 
+> Historical status document. DeepTeam references are superseded and do not
+> describe the active product.
+
 | Component | Status | Notes |
 |---|---|---|
 | Repository audit and Phase 4 plan | Complete but validation blocked | Implemented in docs. |
@@ -26,4 +29,3 @@
 | PyRIT | Runtime detected | Pending Ubuntu build | Pending | Pending | Pending | Implemented | Implemented |
 | Promptfoo | Runtime detected | Pending Ubuntu build | Pending | Pending | Pending | Implemented | Implemented |
 | DeepTeam | Runtime detected | Pending Ubuntu build | Pending | Pending | Pending | Implemented | Implemented |
-

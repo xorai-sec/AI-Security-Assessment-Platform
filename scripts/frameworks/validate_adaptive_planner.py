@@ -167,7 +167,6 @@ def main() -> None:
         "CORR-001-prompt-leakage" in leakage_decision.evidence_references,
         "decision must reference correlated evidence",
     )
-    assert_true("deepteam" not in request(raw.id).frameworks, "DeepTeam must stay outside adaptive framework selection")
     assert_true(leakage_decision.request_budget <= 12, "request budget must be bounded")
     assert_true(leakage_decision.continue_assessment, "valid leakage decision should continue")
 

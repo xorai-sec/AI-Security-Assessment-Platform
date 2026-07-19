@@ -5,14 +5,15 @@ Branch: `codex/chained-redteam-v2`
 
 This document records the repository baseline before any chained-assessment
 redesign. Existing worktree changes and generated assessment artifacts were
-preserved; this baseline does not remove DeepTeam or change framework behavior.
+preserved; this baseline was captured before the subsequent DeepTeam removal
+commit and does not describe the post-removal active stack.
 
 ## Repository and architecture inventory
 
 - API/orchestration: `apps/api/app`, `packages/security_assurance/`
 - Workers: `workers/native-worker`, `workers/garak-worker`,
-  `workers/pyrit-worker`, `workers/promptfoo-worker`, and
-  `workers/deepteam-worker`
+  `workers/pyrit-worker`, and `workers/promptfoo-worker`; the baseline also
+  recorded a DeepTeam worker that was removed in the next migration step.
 - Framework dispatch: `packages/security_assurance/framework_manager.py`
 - Handoff construction and analysis:
   `packages/security_assurance/evidence_handoff.py`
@@ -20,7 +21,7 @@ preserved; this baseline does not remove DeepTeam or change framework behavior.
 - Assessment entry point: `scripts/frameworks/assess_frameworks.py`
 - Frontend: `apps/web`
 - Compose services: API, EnterpriseAssist, PostgreSQL, Redis, web, and the
-  framework overlay workers (including an optional DeepTeam profile)
+  framework overlay workers
 - Model roles: `OLLAMA_TARGET_MODEL`, `OLLAMA_ATTACKER_MODEL`,
   `OLLAMA_JUDGE_MODEL`, `OLLAMA_PLANNER_MODEL`, and
   `OLLAMA_EMBEDDING_MODEL`

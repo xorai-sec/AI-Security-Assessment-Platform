@@ -15,8 +15,6 @@
 - garak adapter execution and native report ingestion.
 - PyRIT multi-turn objective campaigns.
 - Promptfoo regression-suite export.
-- DeepTeam cross-framework validation.
 - Full React workflow pages and role-based authentication.
 - PDF report rendering.
 - vLLM high-throughput deployment profile.
-

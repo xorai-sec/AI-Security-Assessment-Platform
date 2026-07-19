@@ -1,5 +1,8 @@
 # Implementation Status
 
+> Historical status document. DeepTeam references below are superseded and
+> are not part of the active product.
+
 ## Capability Status
 
 | Capability | Status | Notes |
@@ -26,4 +29,3 @@
 - Framework adapters are represented by health interfaces and roadmap status until implemented.
 - Full authentication and RBAC are not complete in the first release.
 - Docker Compose starts PostgreSQL/Redis, but the first working demo stores evidence locally.
-

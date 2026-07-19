@@ -84,7 +84,6 @@ make demo-report
 | garak | Isolated worker implemented; Ubuntu Docker validation pending |
 | PyRIT | Isolated worker implemented; Ubuntu Docker validation pending |
 | Promptfoo | Isolated Node worker implemented; Ubuntu Docker validation pending |
-| DeepTeam | Isolated worker implemented; Ubuntu Docker validation pending |
 
 Run framework workers:
 

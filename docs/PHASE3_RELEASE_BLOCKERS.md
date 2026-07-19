@@ -1,5 +1,8 @@
 # Phase 3 Release Blockers
 
+> Historical release record. DeepTeam references are superseded and do not
+> describe current support.
+
 Release decision: READY FOR AUTHORIZED CLIENT DEMONSTRATION WITH DOCUMENTED LIMITATIONS
 
 ## Blockers before authorized client assessment
@@ -10,4 +13,3 @@ Release decision: READY FOR AUTHORIZED CLIENT DEMONSTRATION WITH DOCUMENTED LIMI
 - Credential protection is development-grade and must be replaced for enterprise use.
 - PDF and evidence package generation are not implemented.
 - Full end-to-end frontend tests are not implemented.
-

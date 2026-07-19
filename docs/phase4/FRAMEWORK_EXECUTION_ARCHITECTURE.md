@@ -1,5 +1,8 @@
 # Framework Execution Architecture
 
+> Historical architecture. The DeepTeam node is retained for migration
+> context only and is not deployed by the active product.
+
 ```mermaid
 flowchart TD
     UI["Framework Manager UI"] --> API["FastAPI"]
@@ -17,4 +20,3 @@ flowchart TD
     Proxy --> Adapter["Target Adapter"]
     Adapter --> Target["Authorized AI Target"]
 ```
-

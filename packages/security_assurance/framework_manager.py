@@ -34,7 +34,6 @@ class FrameworkManager:
             "native": FrameworkDefinition(id="native", name="native", worker_url=os.getenv("NATIVE_WORKER_URL", "http://native-worker:8091"), enabled=True),
             "garak": FrameworkDefinition(id="garak", name="garak", worker_url=os.getenv("GARAK_WORKER_URL", "http://garak-worker:8092"), enabled=os.getenv("FRAMEWORK_GARAK_ENABLED", "true").lower() == "true"),
             "pyrit": FrameworkDefinition(id="pyrit", name="pyrit", worker_url=os.getenv("PYRIT_WORKER_URL", "http://pyrit-worker:8093"), enabled=os.getenv("FRAMEWORK_PYRIT_ENABLED", "true").lower() == "true"),
-            "deepteam": FrameworkDefinition(id="deepteam", name="deepteam", worker_url=os.getenv("DEEPTEAM_WORKER_URL", "http://deepteam-worker:8094"), enabled=os.getenv("FRAMEWORK_DEEPTEAM_ENABLED", "false").lower() == "true"),
             "promptfoo": FrameworkDefinition(id="promptfoo", name="promptfoo", worker_url=os.getenv("PROMPTFOO_WORKER_URL", "http://promptfoo-worker:8095"), enabled=os.getenv("FRAMEWORK_PROMPTFOO_ENABLED", "true").lower() == "true"),
         }
         self.planner = AdaptiveAttackPlanner(root, self.frameworks)
@@ -147,8 +146,6 @@ class FrameworkManager:
             "promptfoo_plugins": selected_promptfoo_plugins,
             "promptfoo_strategies": selected_promptfoo_strategies,
             "pyrit_converters": planner_decision.get("selected_converters", []),
-            "deepteam_vulnerabilities": planner_decision.get("selected_vulnerabilities", []),
-            "deepteam_attacks": planner_decision.get("selected_attacks", []),
             "planner_action_type": planner_decision.get("action_type"),
             "planner_expected_confirmation_condition": planner_decision.get("expected_confirmation_condition"),
             "handoff_payload": handoff_payload,

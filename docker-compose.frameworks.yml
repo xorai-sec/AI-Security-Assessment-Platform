@@ -95,38 +95,6 @@ services:
       timeout: 10s
       retries: 5
 
-  deepteam-worker:
-    build:
-      context: .
-      dockerfile: workers/deepteam-worker/Dockerfile
-    environment:
-      API_BASE_URL: http://api:8080
-      TARGET_PROXY_SECRET: ${TARGET_PROXY_SECRET:-development-target-proxy-secret}
-      FRAMEWORK_RAW_ARTIFACT_PATH: /artifacts
-      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
-      OLLAMA_TARGET_MODEL: ${OLLAMA_TARGET_MODEL:-qwen3:4b}
-      OLLAMA_ATTACKER_MODEL: ${OLLAMA_ATTACKER_MODEL:-qwen3:14b}
-      OLLAMA_JUDGE_MODEL: ${OLLAMA_JUDGE_MODEL:-gpt-oss:20b}
-      OLLAMA_PLANNER_MODEL: ${OLLAMA_PLANNER_MODEL:-qwen3:8b}
-      OLLAMA_EMBEDDING_MODEL: ${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
-      DEEPEVAL_TELEMETRY_OPT_OUT: ${DEEPEVAL_TELEMETRY_OPT_OUT:-YES}
-    volumes:
-      - ./data/framework-artifacts/deepteam:/artifacts/deepteam
-    ports:
-      - "8094:8094"
-    depends_on:
-      api:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8094/health')"]
-      interval: 20s
-      timeout: 10s
-      retries: 5
-
   promptfoo-worker:
     build:
       context: .

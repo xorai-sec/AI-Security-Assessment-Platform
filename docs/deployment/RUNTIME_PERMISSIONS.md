@@ -7,7 +7,6 @@ The Docker framework profile mounts each worker to its own artifact directory:
 - `native-worker` -> `data/framework-artifacts/native`
 - `garak-worker` -> `data/framework-artifacts/garak`
 - `pyrit-worker` -> `data/framework-artifacts/pyrit`
-- `deepteam-worker` -> `data/framework-artifacts/deepteam`
 - `promptfoo-worker` -> `data/framework-artifacts/promptfoo`
 
 Do not run `chown -R` on the whole `data/framework-artifacts` directory for one worker. That can make the other workers unable to write their artifacts.

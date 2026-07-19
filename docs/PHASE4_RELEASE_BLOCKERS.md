@@ -1,5 +1,8 @@
 # Phase 4 Release Blockers
 
+> Historical release record. DeepTeam references are superseded and do not
+> describe current support.
+
 Release decision: NOT READY
 
 The current patch implements framework worker architecture and execution wrappers, but the platform is not ready for authorized multi-framework client testing until:
@@ -12,4 +15,3 @@ The current patch implements framework worker architecture and execution wrapper
 - Cross-framework finding correlation is completed.
 - PDF reports are upgraded beyond minimal generated PDFs.
 - Evidence package export policy is reviewed.
-

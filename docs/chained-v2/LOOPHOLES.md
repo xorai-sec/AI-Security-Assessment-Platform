@@ -76,9 +76,10 @@ runtime assertion was found in the worker, Compose files, or `.env.example`.
   it does not require a separate attacker LLM.
 - Capability filtering reduces unsupported RAG/tool/memory candidates, but it
   does not solve the chain, provenance, or global-budget gaps above.
-- DeepTeam remains in the Makefile, environment configuration, Compose overlay,
-  API registry, worker source, scripts, tests, and documentation. Removal is
-  intentionally deferred to a later task.
+- The baseline review found DeepTeam across the Makefile, environment
+  configuration, Compose overlay, API registry, worker source, scripts, tests,
+  and documentation. Those active references were removed in the follow-up
+  DeepTeam-removal commit; historical documents remain explicitly marked.
 
 ## Baseline conclusion
 

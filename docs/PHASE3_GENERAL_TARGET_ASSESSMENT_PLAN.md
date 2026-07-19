@@ -1,5 +1,8 @@
 # Phase 3 General Target Assessment Plan
 
+> Historical plan. DeepTeam references are retained for audit context only and
+> do not describe the active product.
+
 ## Current working capabilities
 
 - EnterpriseAssist vulnerable and hardened laboratory target.
@@ -117,4 +120,3 @@ Native campaigns now execute through the target adapter abstraction. External fr
 - Run native campaigns through a target adapter.
 - Persist evidence and reports.
 - View findings/evidence/mapping/report links in the frontend.
-

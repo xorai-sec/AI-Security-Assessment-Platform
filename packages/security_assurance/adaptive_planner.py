@@ -532,8 +532,6 @@ class AdaptiveAttackPlanner:
             return bool(decision.selected_converters) or decision.action_type == "multi_turn_exploitation"
         if decision.next_framework == "promptfoo":
             return bool(decision.selected_plugins or decision.selected_strategies)
-        if decision.next_framework == "deepteam":
-            return bool(decision.selected_vulnerabilities)
         return True
 
     def _evidence_references(self, context: PlanningContext, rule_id: str | None = None) -> list[str]:
