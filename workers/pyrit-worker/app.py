@@ -25,9 +25,25 @@ PYRIT_ATTACK = "pyrit.executor.attack.single_turn.prompt_sending.PromptSendingAt
 # Verified against the pinned PyRIT 0.13.0 package.  The historical
 # red_teaming/crescendo/tap paths do not exist in this release; keeping them
 # here would create fictional support and risk a silent downgrade.
-PYRIT_OFFICIAL_ATTACKS: dict[str, tuple[str, ...]] = {
-    "prompt_sending": (PYRIT_ATTACK,),
+PYRIT_PUBLIC_ATTACK_EXPORTS = {
+    "prompt_sending": "PromptSendingAttack",
+    "red_teaming": "RedTeamingAttack",
+    "crescendo": "CrescendoAttack",
+    "tap": "TAPAttack",
 }
+PYRIT_PUBLIC_ATTACK_MODULE = "pyrit.executor.attack"
+
+
+def _resolve_public_attack(name: str) -> tuple[Any, str]:
+    """Resolve only PyRIT's documented public attack exports."""
+    export = PYRIT_PUBLIC_ATTACK_EXPORTS.get(name)
+    if export is None:
+        raise RuntimeError(f"unsupported PyRIT attack: {name}")
+    try:
+        module = importlib.import_module(PYRIT_PUBLIC_ATTACK_MODULE)
+        return getattr(module, export), f"{PYRIT_PUBLIC_ATTACK_MODULE}.{export}"
+    except (ImportError, AttributeError) as exc:
+        raise RuntimeError(f"PyRIT 0.13.0 public attack export unavailable: {export}: {exc}") from exc
 PYRIT_EXECUTOR = "pyrit.executor.attack.core.attack_executor.AttackExecutor"
 PYRIT_MEMORY = "pyrit.memory.sqlite_memory.SQLiteMemory"
 PYRIT_CENTRAL_MEMORY = "pyrit.memory.central_memory.CentralMemory"
@@ -240,6 +256,17 @@ class PyRITRunner(BaseFrameworkRunner):
                 )
             )[:300]
             targets = {}
+            public_attacks = {}
+            for selection in PYRIT_PUBLIC_ATTACK_EXPORTS:
+                try:
+                    cls, export = _resolve_public_attack(selection)
+                    public_attacks[selection] = {
+                        "export": export,
+                        "signature": str(inspect.signature(cls)),
+                        "module_file": inspect.getsourcefile(cls),
+                    }
+                except Exception as exc:
+                    public_attacks[selection] = {"error": str(exc)}
             for path in (
                 PYRIT_PROMPT_TARGET,
                 PYRIT_ATTACK,
@@ -257,7 +284,13 @@ class PyRITRunner(BaseFrameworkRunner):
                     }
                 except Exception as exc:
                     targets[path] = {"error": str(exc)}
-            return {"version": self.detected_version(), "modules": modules, "targets": targets, "status": "available"}
+            return {
+                "version": self.detected_version(),
+                "modules": modules,
+                "targets": targets,
+                "public_attacks": public_attacks,
+                "status": "available",
+            }
         except Exception as exc:
             return {
                 "version": self.detected_version(),
@@ -269,8 +302,8 @@ class PyRITRunner(BaseFrameworkRunner):
 
     async def capabilities(self) -> list[WorkerCapability]:
         discovery = self._discovery()
-        native_ready = discovery["status"] == "available" and not discovery["targets"].get(PYRIT_ATTACK, {}).get(
-            "error"
+        native_ready = discovery["status"] == "available" and all(
+            "error" not in item for item in discovery.get("public_attacks", {}).values()
         )
         return [
             WorkerCapability(
@@ -349,12 +382,7 @@ class PyRITRunner(BaseFrameworkRunner):
 
     async def _execute_native(self, request: FrameworkExecutionRequest, target: TargetProxyPromptTarget) -> Any:
         requested_attack = str(request.configuration.get("pyrit_attack") or "prompt_sending")
-        if requested_attack not in PYRIT_OFFICIAL_ATTACKS:
-            raise RuntimeError(
-                f"requested PyRIT attack unavailable in pinned PyRIT 0.13.0: {requested_attack}; "
-                "supported attack: prompt_sending"
-            )
-        PromptSendingAttack = _load_symbol(PYRIT_OFFICIAL_ATTACKS[requested_attack][0])
+        PromptSendingAttack, public_export = _resolve_public_attack(requested_attack)
         AttackExecutor = _load_symbol(PYRIT_EXECUTOR)
         scoring_config, scorer_meta = self._build_scoring_config(request, target)
         attack_kwargs: dict[str, Any] = {"objective_target": target}
@@ -623,7 +651,11 @@ class PyRITRunner(BaseFrameworkRunner):
             metrics={
                 "requested_attack": requested_attack,
                 "executed_attack": requested_attack if native_result is not None else None,
-                "official_pyrit_class": PYRIT_OFFICIAL_ATTACKS.get(requested_attack, (None,))[0],
+                "official_public_export": (
+                    f"{PYRIT_PUBLIC_ATTACK_MODULE}.{PYRIT_PUBLIC_ATTACK_EXPORTS.get(requested_attack)}"
+                    if native_result is not None and requested_attack in PYRIT_PUBLIC_ATTACK_EXPORTS
+                    else None
+                ),
                 "attack_mode": attack_mode,
                 "attacker_invocations": len(attacker_invocations),
                 "target_turns": len(target.rows),
