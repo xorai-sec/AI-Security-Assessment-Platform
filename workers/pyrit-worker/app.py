@@ -447,7 +447,6 @@ class PyRITRunner(BaseFrameworkRunner):
     async def _execute_native(self, request: FrameworkExecutionRequest, target: TargetProxyPromptTarget) -> Any:
         requested_attack = str(request.configuration.get("pyrit_attack") or "prompt_sending")
         PromptSendingAttack, public_export = _resolve_public_attack(requested_attack)
-        AttackExecutor = _load_symbol(PYRIT_EXECUTOR)
         scoring_config, scorer_meta = self._build_scoring_config(request, target)
         attack_kwargs: dict[str, Any] = {"objective_target": target}
         if requested_attack != "prompt_sending":
@@ -470,13 +469,16 @@ class PyRITRunner(BaseFrameworkRunner):
         if scoring_config is not None:
             attack_kwargs["attack_scoring_config"] = scoring_config
         attack = PromptSendingAttack(**attack_kwargs)
-        executor = AttackExecutor(max_concurrency=max(1, min(request.limits.maximum_concurrency, 4)))
         self._last_scorer_meta = scorer_meta
-        return await executor.execute_attack_async(
-            attack=attack,
-            objectives=self._objectives_for_request(request),
-            return_partial_on_failure=True,
-        )
+        objectives = self._objectives_for_request(request)
+        if not objectives:
+            raise RuntimeError("PyRIT requires at least one objective")
+        # PyRIT 0.13 attack strategies execute directly.  Calling the
+        # executor wrapper here would hide whether the selected strategy ran.
+        result = None
+        for objective in objectives[: request.limits.maximum_requests]:
+            result = await attack.execute_async(objective=objective)
+        return result
 
     def _build_scoring_config(
         self, request: FrameworkExecutionRequest, target: TargetProxyPromptTarget
@@ -543,6 +545,9 @@ class PyRITRunner(BaseFrameworkRunner):
             CentralMemory = _load_symbol(PYRIT_CENTRAL_MEMORY)
             memory = SQLiteMemory(db_path=db_path)
             CentralMemory.set_memory_instance(memory)
+            initialize = getattr(memory, "initialize_pyrit", None)
+            if callable(initialize):
+                initialize()
             plugin_ids.extend([PYRIT_MEMORY, PYRIT_CENTRAL_MEMORY])
             return memory, plugin_ids
         except Exception:
