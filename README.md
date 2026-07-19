@@ -216,3 +216,12 @@ To clean up without deleting source data:
 docker compose down
 docker compose down --volumes   # removes local service volumes
 ```
+
+### Chained red-team v2 validation
+
+The versioned garak → PyRIT → Promptfoo → native evidence contract, attacker
+roles, deterministic final verification, and current validation status are
+documented in `docs/chained-v2/`. The current release decision is **NOT READY**
+until Docker-backed end-to-end vulnerable/hardened validation is reproduced;
+see `FINAL_VALIDATION.md`, `CHAIN_AMPLIFICATION_REPORT.md`, and
+`RELEASE_DECISION.md`.
