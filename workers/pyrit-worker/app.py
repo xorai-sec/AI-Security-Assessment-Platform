@@ -359,6 +359,8 @@ class PyRITRunner(BaseFrameworkRunner):
                     break
                 except (ImportError, AttributeError):
                     continue
+        if requested_attack != "prompt_sending" and attack_class is None:
+            raise RuntimeError(f"requested PyRIT attack unavailable: {requested_attack}")
         PromptSendingAttack = attack_class or _load_symbol(PYRIT_ATTACK)
         AttackExecutor = _load_symbol(PYRIT_EXECUTOR)
         scoring_config, scorer_meta = self._build_scoring_config(request, target)
@@ -440,6 +442,7 @@ class PyRITRunner(BaseFrameworkRunner):
         traffic_path = artifacts.path("target-proxy-traffic.jsonl")
         native_result_path = artifacts.path("native-result.json")
         plugin_ids = [PYRIT_PROMPT_TARGET, PYRIT_ATTACK, PYRIT_EXECUTOR]
+        requested_attack = str(request.configuration.get("pyrit_attack") or "prompt_sending")
         errors: list[str] = []
         native_result: Any = None
         memory, memory_plugins = self._set_memory(memory_path)
@@ -447,7 +450,7 @@ class PyRITRunner(BaseFrameworkRunner):
         target = TargetProxyPromptTarget(runner=self, request=request, traffic_path=traffic_path)
         native_api = (
             f"{PYRIT_EXECUTOR}.execute_attack_async("
-            f"attack={PYRIT_ATTACK}, objective_target={target.__class__.__module__}.{target.__class__.__name__})"
+            f"attack={requested_attack}, objective_target={target.__class__.__module__}.{target.__class__.__name__})"
         )
         try:
             native_result = await asyncio.wait_for(
@@ -625,6 +628,17 @@ class PyRITRunner(BaseFrameworkRunner):
             native_plugin_identifiers=plugin_ids,
             fallback_used=False,
             metrics={
+                "requested_attack": requested_attack,
+                "executed_attack": requested_attack if native_result is not None else None,
+                "official_pyrit_class": (
+                    type(_load_symbol(PYRIT_OFFICIAL_ATTACKS[requested_attack][0])).__name__
+                    if False
+                    else (
+                        PYRIT_OFFICIAL_ATTACKS.get(requested_attack, (PYRIT_ATTACK,))[0]
+                        if requested_attack != "prompt_sending"
+                        else PYRIT_ATTACK
+                    )
+                ),
                 "attack_mode": attack_mode,
                 "attacker_invocations": len(attacker_invocations),
                 "target_turns": len(target.rows),

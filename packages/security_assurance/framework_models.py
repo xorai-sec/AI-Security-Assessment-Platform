@@ -43,6 +43,8 @@ class FrameworkAssessmentRequest(BaseModel):
     adaptive_minimum_frameworks: int = 3
     continue_on_framework_error: bool = True
     written_authorization_confirmed: bool = True
+    pyrit_attack: Literal["prompt_sending", "red_teaming", "crescendo", "tap"] | None = None
+    pyrit_max_attacker_calls: int = Field(default=4, ge=1, le=8)
 
 
 class FrameworkAssessmentResult(BaseModel):

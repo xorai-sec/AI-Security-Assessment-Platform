@@ -222,6 +222,9 @@ class FrameworkManager:
                 result.id, f"AISAFETY_CANARY_{result.id}_{secrets.token_hex(6).upper()}"
             ),
         }
+        if request.pyrit_attack is not None:
+            configuration["pyrit_attack"] = request.pyrit_attack
+        configuration["pyrit_max_attacker_calls"] = request.pyrit_max_attacker_calls
         if inherited_context:
             configuration["chain_context"] = inherited_context
         return {
