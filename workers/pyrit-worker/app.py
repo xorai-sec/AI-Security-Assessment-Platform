@@ -150,6 +150,14 @@ def _build_pyrit_message(text: str, request_message: Any, conversation_id: str) 
             conversation_id=conversation_id,
         )
         for _, cls in candidates:
+            for method_name in ("from_message_pieces", "from_message_piece", "from_pieces"):
+                method = getattr(cls, method_name, None)
+                if callable(method):
+                    try:
+                        argument = [piece] if method_name != "from_message_piece" else piece
+                        return method(argument)
+                    except Exception as exc:
+                        errors.append(f"{cls}.{method_name}: {exc}")
             try:
                 return cls(request_pieces=[piece])
             except Exception as exc:
