@@ -1026,11 +1026,12 @@ class FrameworkManager:
                 break
             framework_id = decision.next_framework
             if complete_chain:
+                remaining = ledger.remaining()
                 ledger.reserve(
-                    requests=decision.request_budget,
-                    turns=decision.turn_budget,
-                    tokens=decision.token_budget,
-                    seconds=decision.time_budget_seconds,
+                    requests=min(decision.request_budget, remaining["requests"]),
+                    turns=min(decision.turn_budget, remaining["turns"]),
+                    tokens=min(decision.token_budget, remaining["tokens"]),
+                    seconds=min(decision.time_budget_seconds, remaining["duration_seconds"]),
                 )
                 ledger_path = self.root / "data" / "framework-results" / f"{result.id}-budget-ledger.json"
                 ledger_path.parent.mkdir(parents=True, exist_ok=True)
