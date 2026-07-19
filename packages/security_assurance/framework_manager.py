@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import secrets
 from datetime import datetime, timezone
@@ -9,7 +10,14 @@ from typing import Any
 import httpx
 
 from .adaptive_planner import AdaptiveAttackPlanner, PlannerDecision
-from .evidence_handoff import AttackOpportunity, EvidenceHandoffPlanner, HandoffPlan
+from .evidence_handoff import (
+    AttackOpportunity,
+    EvidenceHandoffPlanner,
+    FrameworkHandoffPayload,
+    GlobalBudgetLedger,
+    HandoffPlan,
+    VersionedEvidenceHandoff,
+)
 from .framework_models import FrameworkAssessmentRequest, FrameworkAssessmentResult, FrameworkDefinition
 from .model_gateway import ModelGatewayError, ModelRoleGateway
 from .reporting import write_framework_reports
@@ -32,10 +40,30 @@ class FrameworkManager:
         self.cancel_dir = root / "data" / "framework-cancel"
         self.cancel_dir.mkdir(parents=True, exist_ok=True)
         self.frameworks = {
-            "native": FrameworkDefinition(id="native", name="native", worker_url=os.getenv("NATIVE_WORKER_URL", "http://native-worker:8091"), enabled=True),
-            "garak": FrameworkDefinition(id="garak", name="garak", worker_url=os.getenv("GARAK_WORKER_URL", "http://garak-worker:8092"), enabled=os.getenv("FRAMEWORK_GARAK_ENABLED", "true").lower() == "true"),
-            "pyrit": FrameworkDefinition(id="pyrit", name="pyrit", worker_url=os.getenv("PYRIT_WORKER_URL", "http://pyrit-worker:8093"), enabled=os.getenv("FRAMEWORK_PYRIT_ENABLED", "true").lower() == "true"),
-            "promptfoo": FrameworkDefinition(id="promptfoo", name="promptfoo", worker_url=os.getenv("PROMPTFOO_WORKER_URL", "http://promptfoo-worker:8095"), enabled=os.getenv("FRAMEWORK_PROMPTFOO_ENABLED", "true").lower() == "true"),
+            "native": FrameworkDefinition(
+                id="native",
+                name="native",
+                worker_url=os.getenv("NATIVE_WORKER_URL", "http://native-worker:8091"),
+                enabled=True,
+            ),
+            "garak": FrameworkDefinition(
+                id="garak",
+                name="garak",
+                worker_url=os.getenv("GARAK_WORKER_URL", "http://garak-worker:8092"),
+                enabled=os.getenv("FRAMEWORK_GARAK_ENABLED", "true").lower() == "true",
+            ),
+            "pyrit": FrameworkDefinition(
+                id="pyrit",
+                name="pyrit",
+                worker_url=os.getenv("PYRIT_WORKER_URL", "http://pyrit-worker:8093"),
+                enabled=os.getenv("FRAMEWORK_PYRIT_ENABLED", "true").lower() == "true",
+            ),
+            "promptfoo": FrameworkDefinition(
+                id="promptfoo",
+                name="promptfoo",
+                worker_url=os.getenv("PROMPTFOO_WORKER_URL", "http://promptfoo-worker:8095"),
+                enabled=os.getenv("FRAMEWORK_PROMPTFOO_ENABLED", "true").lower() == "true",
+            ),
         }
         self.planner = AdaptiveAttackPlanner(root, self.frameworks)
         self.handoff_planner = EvidenceHandoffPlanner(root)
@@ -55,7 +83,12 @@ class FrameworkManager:
             attacker = attacker or resolved_target
             judge = judge or resolved_target
         same_model = len({resolved_target, attacker, judge}) < 3
-        if os.getenv("REQUIRE_DISTINCT_MODEL_ROLES", "true").lower() == "true" and same_model and not request.allow_same_model_eval and not development_fallback:
+        if (
+            os.getenv("REQUIRE_DISTINCT_MODEL_ROLES", "true").lower() == "true"
+            and same_model
+            and not request.allow_same_model_eval
+            and not development_fallback
+        ):
             raise ModelGatewayError("Target, attacker, and judge roles must be distinct")
         warning = None
         if same_model and not request.allow_same_model_eval:
@@ -118,7 +151,9 @@ class FrameworkManager:
                 response = httpx.get(f"{framework.worker_url}/capabilities", timeout=20)
                 response.raise_for_status()
                 rows[framework_id] = response.json()
-                framework.capabilities = [item.get("name", "") for item in rows[framework_id].get("capabilities", []) if item.get("supported")]
+                framework.capabilities = [
+                    item.get("name", "") for item in rows[framework_id].get("capabilities", []) if item.get("supported")
+                ]
             except Exception as exc:
                 rows[framework_id] = {"capabilities": [], "error": str(exc)}
         return rows
@@ -140,20 +175,38 @@ class FrameworkManager:
         selected_promptfoo_plugins = planner_decision.get("selected_plugins") or request.promptfoo_plugins
         selected_promptfoo_strategies = planner_decision.get("selected_strategies") or request.promptfoo_strategies
         long_running = request.profile in {"deep-owasp-4h", "deep-owasp-large"}
-        selected_profile = request.profile if long_running else handoff_payload.get("profile") or planner_decision.get("profile") or request.profile
+        selected_profile = (
+            request.profile
+            if long_running
+            else handoff_payload.get("profile") or planner_decision.get("profile") or request.profile
+        )
         selected_objective = handoff_payload.get("objective") or planner_decision.get("objective") or request.objective
         handoff_budget = handoff_payload.get("recommended_budget", {})
-        request_budget = request.maximum_requests if long_running else int(
-            handoff_budget.get("maximum_requests") or planner_decision.get("request_budget") or request.maximum_requests
+        request_budget = (
+            request.maximum_requests
+            if long_running
+            else int(
+                handoff_budget.get("maximum_requests")
+                or planner_decision.get("request_budget")
+                or request.maximum_requests
+            )
         )
-        turn_budget = request.maximum_turns if long_running else int(
-            handoff_budget.get("maximum_turns") or planner_decision.get("turn_budget") or request.maximum_turns
+        turn_budget = (
+            request.maximum_turns
+            if long_running
+            else int(
+                handoff_budget.get("maximum_turns") or planner_decision.get("turn_budget") or request.maximum_turns
+            )
         )
         token_budget = int(planner_decision.get("token_budget") or request.maximum_tokens)
-        time_budget = request.maximum_duration_seconds if long_running else int(
-            handoff_budget.get("maximum_duration_seconds")
-            or planner_decision.get("time_budget_seconds")
-            or request.maximum_duration_seconds
+        time_budget = (
+            request.maximum_duration_seconds
+            if long_running
+            else int(
+                handoff_budget.get("maximum_duration_seconds")
+                or planner_decision.get("time_budget_seconds")
+                or request.maximum_duration_seconds
+            )
         )
         configuration = {
             "target_metadata": {"mode": "vulnerable"},
@@ -189,7 +242,9 @@ class FrameworkManager:
             "model_roles": model_roles,
             "limits": {
                 "maximum_requests": min(request.maximum_requests, target.max_requests, request_budget),
-                "maximum_duration_seconds": min(request.maximum_duration_seconds, target.max_duration_seconds, time_budget),
+                "maximum_duration_seconds": min(
+                    request.maximum_duration_seconds, target.max_duration_seconds, time_budget
+                ),
                 "maximum_turns": min(request.maximum_turns, turn_budget),
                 "maximum_concurrency": min(request.maximum_concurrency, target.max_concurrency),
                 "maximum_tokens": min(request.maximum_tokens, token_budget),
@@ -301,7 +356,9 @@ class FrameworkManager:
             evidence["weakness_type"] = source.get("weakness_type") or source.get("risk_category")
 
     def _evidence_signal(self, evidence: list[dict[str, Any]]) -> dict[str, Any]:
-        categories = sorted({str(item.get("category") or item.get("vulnerability") or "").lower() for item in evidence if item})
+        categories = sorted(
+            {str(item.get("category") or item.get("vulnerability") or "").lower() for item in evidence if item}
+        )
         probes = sorted({str(item.get("probe") or "").lower() for item in evidence if item.get("probe")})
         confirmed = [item for item in evidence if item.get("confirmed") or item.get("success")]
         candidate = [item for item in evidence if item.get("candidate", True)]
@@ -316,16 +373,27 @@ class FrameworkManager:
             "has_tool_or_retrieval": "tool" in text or "retrieval" in text or "rag" in text,
         }
 
-    def _next_frameworks(self, completed: list[str], latest: dict[str, Any] | None, requested: list[str]) -> list[dict[str, Any]]:
+    def _next_frameworks(
+        self, completed: list[str], latest: dict[str, Any] | None, requested: list[str]
+    ) -> list[dict[str, Any]]:
         evidence = list((latest or {}).get("evidence", []))
         signal = self._evidence_signal(evidence)
         plan: list[dict[str, Any]] = []
         allowed = [item for item in CHAIN_ORDER if item in requested]
+
         def add(framework: str, reason: str) -> None:
-            if framework in allowed and framework not in completed and all(item["framework"] != framework for item in plan):
+            if (
+                framework in allowed
+                and framework not in completed
+                and all(item["framework"] != framework for item in plan)
+            ):
                 plan.append({"framework": framework, "reason": reason, "trigger": signal})
+
         if not latest:
-            add(CHAIN_START if CHAIN_START in allowed else allowed[0], "Initial reconnaissance and broad probe discovery")
+            add(
+                CHAIN_START if CHAIN_START in allowed else allowed[0],
+                "Initial reconnaissance and broad probe discovery",
+            )
             return plan
         if latest.get("framework") == "garak":
             if signal["has_prompt_leakage"] or signal["has_injection"] or signal["candidate_count"]:
@@ -368,12 +436,22 @@ class FrameworkManager:
         for item in evidence:
             text = " ".join(str(item.get(key) or "") for key in ("category", "vulnerability", "weakness_type")).lower()
             target_type = str(item.get("target_type") or "")
-            has_tools = bool(item.get("tool_trace") or item.get("authorization_trace")) or target_type in {"enterprise_assist", "generic_agent"}
-            has_rag = bool(item.get("retrieval_trace")) or target_type in {"enterprise_assist", "generic_rag", "generic_agent"}
+            has_tools = bool(item.get("tool_trace") or item.get("authorization_trace")) or target_type in {
+                "enterprise_assist",
+                "generic_agent",
+            }
+            has_rag = bool(item.get("retrieval_trace")) or target_type in {
+                "enterprise_assist",
+                "generic_rag",
+                "generic_agent",
+            }
             has_memory = bool(item.get("memory_trace")) or target_type in {"enterprise_assist", "generic_agent"}
             if any(token in text for token in ("tool", "agency", "agent", "confirmation")) and not has_tools:
                 continue
-            if any(token in text for token in ("retrieval", "rag", "vector", "embedding", "context_poison")) and not has_rag:
+            if (
+                any(token in text for token in ("retrieval", "rag", "vector", "embedding", "context_poison"))
+                and not has_rag
+            ):
                 continue
             if "memory" in text and not has_memory:
                 continue
@@ -385,14 +463,21 @@ class FrameworkManager:
         findings = []
         for index, (key, rows) in enumerate(sorted(groups.items()), start=1):
             frameworks = sorted({str(row.get("framework", "unknown")) for row in rows})
-            unique_rows = list({
-                (
-                    str(row.get("framework")), str(row.get("prompt", "")),
-                    str(row.get("response", "")), str(row.get("detector", "")),
-                ): row for row in rows
-            }.values())
+            unique_rows = list(
+                {
+                    (
+                        str(row.get("framework")),
+                        str(row.get("prompt", "")),
+                        str(row.get("response", "")),
+                        str(row.get("detector", "")),
+                    ): row
+                    for row in rows
+                }.values()
+            )
             verdicts = [judge_evidence(row) for row in unique_rows]
-            confirmed_rows = [row for row, verdict in zip(unique_rows, verdicts, strict=True) if verdict["concrete_exploit"]]
+            confirmed_rows = [
+                row for row, verdict in zip(unique_rows, verdicts, strict=True) if verdict["concrete_exploit"]
+            ]
             max_confidence = max(float(row.get("confidence", 0) or 0) for row in rows)
             opportunity_frameworks: dict[str, set[str]] = {}
             prompt_frameworks: dict[str, set[str]] = {}
@@ -427,12 +512,7 @@ class FrameworkManager:
                 status = "candidate"
                 confidence = min(0.59, max_confidence)
             iso_mappings = sorted(
-                {
-                    str(mapping)
-                    for row in rows
-                    for mapping in row.get("iso_42001_evidence_relevance", [])
-                    if mapping
-                }
+                {str(mapping) for row in rows for mapping in row.get("iso_42001_evidence_relevance", []) if mapping}
             )
             owasp_mappings, owasp_reason = supported_owasp(key, unique_rows, verdicts)
             severity = "high" if confirmed_rows else "medium" if status == "corroborated" else "informational"
@@ -450,8 +530,12 @@ class FrameworkManager:
                     "unique_evidence_count": len(unique_rows),
                     "confirmed_evidence_count": len(confirmed_rows),
                     "categories": sorted({str(row.get("category") or "") for row in rows if row.get("category")}),
-                    "evidence_ids": [str(row.get("execution_id") or row.get("id") or row.get("evidence_hash")) for row in rows],
-                    "native_artifacts": sorted({str(row.get("native_artifact_path")) for row in rows if row.get("native_artifact_path")}),
+                    "evidence_ids": [
+                        str(row.get("execution_id") or row.get("id") or row.get("evidence_hash")) for row in rows
+                    ],
+                    "native_artifacts": sorted(
+                        {str(row.get("native_artifact_path")) for row in rows if row.get("native_artifact_path")}
+                    ),
                     "sample_prompts": [str(row.get("prompt", ""))[:240] for row in rows[:3]],
                     "sample_responses": [str(row.get("response", ""))[:240] for row in rows[:3]],
                     "source_evidence_ids": sorted(
@@ -469,18 +553,15 @@ class FrameworkManager:
                         dict.fromkeys(str(row.get("handoff_rationale")) for row in rows if row.get("handoff_rationale"))
                     ),
                     "detector_scorer_assertion_results": [
-                        value
-                        for row in rows
-                        for value in row.get("evaluator_results", [])
-                        if isinstance(value, dict)
+                        value for row in rows for value in row.get("evaluator_results", []) if isinstance(value, dict)
                     ][:12],
-                    "iso_42001_evidence_mapping": iso_mappings or [
+                    "iso_42001_evidence_mapping": iso_mappings
+                    or [
                         "A.6 AI system impact and risk assessment",
                         "A.7 AI system data and model controls",
                         "A.8 AI system operation monitoring and incident evidence",
                     ],
-                    "owasp_llm_mapping": owasp_mappings
-                    ,
+                    "owasp_llm_mapping": owasp_mappings,
                     "owasp_mapping_reason": owasp_reason,
                     "severity": severity,
                     "evidence_sufficiency": sufficiency,
@@ -553,7 +634,10 @@ class FrameworkManager:
             "tool-authorization-agency": "Apply least privilege, explicit authorization checks, confirmation gates, and audit logging to every tool action.",
             "retrieval-rag-security": "Separate retrieved content from trusted instructions, enforce document authorization, and test vector/context isolation.",
         }
-        return recommendations.get(key, "Define a control owner, reproduce the behavior with a regression test, and validate remediation with independent evidence.")
+        return recommendations.get(
+            key,
+            "Define a control owner, reproduce the behavior with a regression test, and validate remediation with independent evidence.",
+        )
 
     def _adaptive_stage_decision(
         self,
@@ -605,11 +689,7 @@ class FrameworkManager:
             ]
             next_framework = useful[0] if useful else None
         if next_framework is None:
-            reason = (
-                "all_useful_frameworks_completed"
-                if not remaining
-                else "no_new_opportunities_after_minimum_stages"
-            )
+            reason = "all_useful_frameworks_completed" if not remaining else "no_new_opportunities_after_minimum_stages"
             return (
                 PlannerDecision(
                     action_type="stop",
@@ -655,8 +735,12 @@ class FrameworkManager:
                 objective=handoff.payload.objective if handoff else request.objective,
                 selected_plugins=list(dict.fromkeys(value for item in related for value in item.recommended_plugins)),
                 selected_probes=list(dict.fromkeys(value for item in related for value in item.recommended_probes)),
-                selected_converters=list(dict.fromkeys(value for item in related for value in item.recommended_converters)),
-                selected_strategies=list(dict.fromkeys(value for item in related for value in item.recommended_strategies)),
+                selected_converters=list(
+                    dict.fromkeys(value for item in related for value in item.recommended_converters)
+                ),
+                selected_strategies=list(
+                    dict.fromkeys(value for item in related for value in item.recommended_strategies)
+                ),
                 profile=handoff.payload.profile if handoff else request.profile,
                 request_budget=(handoff.payload.recommended_budget.get("maximum_requests", 4) if handoff else 4),
                 turn_budget=(handoff.payload.recommended_budget.get("maximum_turns", 2) if handoff else 2),
@@ -676,7 +760,9 @@ class FrameworkManager:
             handoff,
         )
 
-    def run_chained_assessment(self, request: FrameworkAssessmentRequest, api_base_url: str) -> FrameworkAssessmentResult:
+    def run_chained_assessment(
+        self, request: FrameworkAssessmentRequest, api_base_url: str
+    ) -> FrameworkAssessmentResult:
         target = self.target_manager.get_target(request.target_id)
         if not request.written_authorization_confirmed or not target.authorization_confirmed:
             raise ValueError("Written authorization must be confirmed")
@@ -702,6 +788,13 @@ class FrameworkManager:
         latest: dict[str, Any] | None = None
         inherited_context: dict[str, Any] = {}
         handoffs: list[HandoffPlan] = []
+        ledger = GlobalBudgetLedger(
+            assessment_id=result.id,
+            maximum_requests=request.maximum_requests,
+            maximum_turns=request.maximum_turns,
+            maximum_tokens=request.maximum_tokens,
+            maximum_duration_seconds=request.maximum_duration_seconds,
+        )
         step = 0
         while len(completed) < len(requested):
             if self._cancel_requested(result, target.id):
@@ -739,8 +832,16 @@ class FrameworkManager:
                         profile=request.profile,
                         request_budget=max(1, min(6, context.remaining_budget.requests or request.maximum_requests)),
                         turn_budget=max(1, min(4, context.remaining_budget.turns or request.maximum_turns)),
-                        token_budget=max(1, min(request.maximum_tokens, context.remaining_budget.tokens or request.maximum_tokens)),
-                        time_budget_seconds=max(1, min(request.maximum_duration_seconds, context.remaining_budget.time_seconds or request.maximum_duration_seconds)),
+                        token_budget=max(
+                            1, min(request.maximum_tokens, context.remaining_budget.tokens or request.maximum_tokens)
+                        ),
+                        time_budget_seconds=max(
+                            1,
+                            min(
+                                request.maximum_duration_seconds,
+                                context.remaining_budget.time_seconds or request.maximum_duration_seconds,
+                            ),
+                        ),
                         rationale=(
                             f"Complete assessment mode runs the stable native engines in presentation order. "
                             f"Next stage: {next_framework}."
@@ -761,7 +862,92 @@ class FrameworkManager:
                         policy_rule_id="complete-pentest-complete",
                         safety_decision={"approved": True, "reason": "requested_frameworks_completed"},
                     )
-                handoff = None
+                remaining = [framework for framework in requested if framework not in completed]
+                previous_framework = completed[-1] if completed else "orchestrator"
+                if remaining:
+                    next_framework = remaining[0]
+                    source_evidence = list((latest or {}).get("evidence", []))
+                    parent_ids = [str(item.get("execution_id") or item.get("evidence_id")) for item in source_evidence]
+                    handoff_contract = VersionedEvidenceHandoff(
+                        handoff_id=f"HANDOFF-{result.id}-{step:02d}",
+                        source_framework=previous_framework,
+                        destination_framework=next_framework,
+                        assessment_id=result.id,
+                        target_id=target.id,
+                        parent_evidence_ids=[item for item in parent_ids if item and item != "None"],
+                        source_artifact_hashes=[
+                            str(item.get("evidence_hash")) for item in source_evidence if item.get("evidence_hash")
+                        ],
+                        detector_or_assertion_names=[
+                            str(item.get("detector")) for item in source_evidence if item.get("detector")
+                        ],
+                        detector_scores=[float(item.get("confidence", 0) or 0) for item in source_evidence],
+                        normalized_weakness="chained_assessment_observation",
+                        objective=request.objective,
+                        seed_prompts=[
+                            str(item.get("prompt", ""))[:2000] for item in source_evidence if item.get("prompt")
+                        ],
+                        untrusted_target_response_excerpts=[
+                            str(item.get("response", ""))[:2000] for item in source_evidence if item.get("response")
+                        ],
+                        expected_safe_behavior="Refuse unsafe requests and preserve authorization boundaries.",
+                        deterministic_success_conditions=[
+                            "downstream artifact is recorded",
+                            "evidence remains linked to parent IDs",
+                        ],
+                        required_target_capabilities=[],
+                        recommended_methods=[next_framework],
+                        request_budget=decision.request_budget,
+                        turn_budget=decision.turn_budget,
+                        token_budget=decision.token_budget,
+                        time_budget_seconds=decision.time_budget_seconds,
+                        required_model_role="attacker" if next_framework in {"pyrit", "promptfoo"} else "target",
+                        lineage=[str(item) for item in parent_ids if item and item != "None"],
+                    ).seal()
+                    handoff_contract.verify(target_id=target.id)
+                    handoff_contract.transition("accepted", target_id=target.id)
+                    handoff_contract.transition("consumed", target_id=target.id)
+                    lifecycle_path = self.root / "data" / "framework-results" / f"{result.id}-handoff-lifecycle.json"
+                    lifecycle_path.parent.mkdir(parents=True, exist_ok=True)
+                    lifecycle_path.write_text(
+                        json.dumps(
+                            {
+                                "handoff_id": handoff_contract.handoff_id,
+                                "acknowledged": True,
+                                "consumed": True,
+                                "state": handoff_contract.state,
+                                "lineage": handoff_contract.lineage,
+                            },
+                            indent=2,
+                        ),
+                        encoding="utf-8",
+                    )
+                    handoff = HandoffPlan(
+                        handoff_id=handoff_contract.handoff_id,
+                        source_framework=previous_framework,
+                        target_framework=next_framework,
+                        opportunity_ids=[],
+                        evidence_references=handoff_contract.parent_evidence_ids,
+                        rationale="Versioned evidence handoff",
+                        payload=FrameworkHandoffPayload(
+                            assessment_id=result.id,
+                            source_framework=previous_framework,
+                            target_framework=next_framework,
+                            opportunity_ids=[],
+                            source_evidence_ids=handoff_contract.parent_evidence_ids,
+                            objective=handoff_contract.objective,
+                            profile=request.profile,
+                            recommended_budget={
+                                "maximum_requests": decision.request_budget,
+                                "maximum_turns": decision.turn_budget,
+                                "maximum_duration_seconds": decision.time_budget_seconds,
+                            },
+                            inputs={"contract": handoff_contract.model_dump(mode="json"), "untrusted": True},
+                            rationale=handoff_contract.expected_safe_behavior,
+                        ),
+                    )
+                else:
+                    handoff = None
             elif adaptive_mode:
                 decision, handoff = self._adaptive_stage_decision(
                     request=request,
@@ -799,6 +985,16 @@ class FrameworkManager:
                 )
                 break
             framework_id = decision.next_framework
+            if complete_chain:
+                ledger.reserve(
+                    requests=decision.request_budget,
+                    turns=decision.turn_budget,
+                    tokens=decision.token_budget,
+                    seconds=decision.time_budget_seconds,
+                )
+                ledger_path = self.root / "data" / "framework-results" / f"{result.id}-budget-ledger.json"
+                ledger_path.parent.mkdir(parents=True, exist_ok=True)
+                ledger_path.write_text(json.dumps(ledger.model_dump(mode="json"), indent=2), encoding="utf-8")
             result.chain_events.append(
                 {
                     "event": "framework_selected",
@@ -856,7 +1052,8 @@ class FrameworkManager:
             if worker_statuses and all(status == "timed_out" for status in worker_statuses):
                 stop_reason = "hard_timeout"
             elif not result.normalized_evidence and any(
-                marker in error_text for marker in ("connection refused", "connecterror", "target health", "unreachable")
+                marker in error_text
+                for marker in ("connection refused", "connecterror", "target health", "unreachable")
             ):
                 stop_reason = "target_unreachable"
             else:
@@ -886,7 +1083,13 @@ class FrameworkManager:
         result.handoff_plans = [item.model_dump(mode="json") for item in handoffs]
         result.completed_at = datetime.now(UTC)
         if result.status != "cancelled":
-            result.status = "succeeded" if result.normalized_evidence and not result.errors else "partially_completed" if result.normalized_evidence else "failed"
+            result.status = (
+                "succeeded"
+                if result.normalized_evidence and not result.errors
+                else "partially_completed"
+                if result.normalized_evidence
+                else "failed"
+            )
         self._save_result(result)
         return result
 
@@ -930,7 +1133,13 @@ class FrameworkManager:
 
         result.completed_at = datetime.now(UTC)
         result.correlated_findings = self.correlate_evidence(result.normalized_evidence)
-        result.status = "succeeded" if result.normalized_evidence and not result.errors else "partially_completed" if result.normalized_evidence else "failed"
+        result.status = (
+            "succeeded"
+            if result.normalized_evidence and not result.errors
+            else "partially_completed"
+            if result.normalized_evidence
+            else "failed"
+        )
         self._save_result(result)
         return result
 
@@ -990,7 +1199,9 @@ class FrameworkManager:
 
     async def proxy_target_message(self, target_id: str, request_data: dict[str, Any]) -> dict[str, Any]:
         target = self.target_manager.get_target(target_id)
-        adapter = __import__("packages.security_assurance.adapters.targets", fromlist=["build_target_adapter"]).build_target_adapter(target)
+        adapter = __import__(
+            "packages.security_assurance.adapters.targets", fromlist=["build_target_adapter"]
+        ).build_target_adapter(target)
         response = await adapter.send_message(
             TargetMessageRequest(
                 prompt=request_data["prompt"],
@@ -1001,4 +1212,6 @@ class FrameworkManager:
         )
         sanitized = await adapter.sanitize_for_storage(response)
         return sanitized.model_dump(mode="json")
+
+
 # ruff: noqa: E402, UP017
