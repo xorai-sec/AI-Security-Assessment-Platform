@@ -41,10 +41,13 @@ services:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       ENTERPRISE_ASSIST_LOCAL_URL: http://enterprise-assist:8090
       AISEC_ALLOW_LOCAL_TARGETS: "true"
-      AISEC_ALLOWED_LOCAL_HOSTS: 127.0.0.1,localhost,enterprise-assist,ollama,vllm
+      AISEC_ALLOWED_LOCAL_HOSTS: 127.0.0.1,localhost,host.docker.internal,enterprise-assist,ollama,vllm
+      AISEC_ALLOWED_TARGET_PORTS: 80,443,8000,8001,8003,8080,8090,11434
       TARGET_PROXY_SECRET: ${TARGET_PROXY_SECRET:-development-target-proxy-secret}
       FRAMEWORK_NATIVE_ENABLED: "true"
       FRAMEWORK_GARAK_ENABLED: "true"
@@ -61,12 +64,12 @@ services:
       OLLAMA_JUDGE_MODEL: ${OLLAMA_JUDGE_MODEL:-gpt-oss:20b}
       OLLAMA_PLANNER_MODEL: ${OLLAMA_PLANNER_MODEL:-qwen3:8b}
       OLLAMA_EMBEDDING_MODEL: ${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text}
-      ATTACKER_MODEL: ${ATTACKER_MODEL:-}
-      ATTACKER_BASE_URL: ${ATTACKER_BASE_URL:-}
-      JUDGE_MODEL: ${JUDGE_MODEL:-}
-      JUDGE_BASE_URL: ${JUDGE_BASE_URL:-}
-      PLANNER_MODEL: ${PLANNER_MODEL:-}
-      PLANNER_BASE_URL: ${PLANNER_BASE_URL:-}
+      ATTACKER_MODEL: ${ATTACKER_MODEL:-red-agent:12b-q4km}
+      ATTACKER_BASE_URL: ${ATTACKER_BASE_URL:-http://ollama:11434}
+      JUDGE_MODEL: ${JUDGE_MODEL:-qwen3guard-judge:4b-q4km}
+      JUDGE_BASE_URL: ${JUDGE_BASE_URL:-http://ollama:11434}
+      PLANNER_MODEL: ${PLANNER_MODEL:-redsage-planner:8b-q4km}
+      PLANNER_BASE_URL: ${PLANNER_BASE_URL:-http://ollama:11434}
       PLANNER_LLM_ENABLED: ${PLANNER_LLM_ENABLED:-false}
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-nomic-embed-text}
       EMBEDDING_BASE_URL: ${EMBEDDING_BASE_URL:-http://ollama:11434}
