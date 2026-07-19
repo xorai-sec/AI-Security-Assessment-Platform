@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+UTC = timezone.utc
 
 from sqlalchemy import JSON, Boolean, DateTime, Float, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -73,3 +75,4 @@ class NormalizedEvidenceRow(Base):
     evidence_hash: Mapped[str] = mapped_column(String(128))
     payload: Mapped[dict] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+# ruff: noqa: E402, UP017

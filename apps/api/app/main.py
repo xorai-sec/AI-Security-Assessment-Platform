@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import os
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+UTC = timezone.utc
 from pathlib import Path
 from typing import Any
 
@@ -176,16 +178,20 @@ def get_framework_assessment(assessment_id: str) -> dict[str, Any]:
     payload["iso_mappings"] = [
         {
             "id": f"{result.id}-iso-42001-{index + 1}",
-            "finding_id": evidence.get("correlated_finding_id") or evidence.get("finding_id") or evidence.get("id") or evidence.get("evidence_id") or f"framework-evidence-{index + 1}",
-            "evidence_id": evidence.get("id") or evidence.get("evidence_id") or f"evidence-{index + 1}",
-            "clause_or_control_id": evidence.get("iso_42001_control", "ISO/IEC 42001 governance evidence"),
-            "requirement_title": evidence.get("risk_category", evidence.get("category", "AI security control evidence")),
-            "evidence_sufficiency": "candidate",
-            "human_review_status": "requires_human_review",
+            "finding_id": finding.get("id"),
+            "evidence_id": (finding.get("evidence_ids") or [f"evidence-{index + 1}"])[0],
+            "clause_or_control_id": finding.get("iso_42001_clause_control_candidate", {}).get("control_id", "A.8.4"),
+            "requirement_title": finding.get("iso_42001_clause_control_candidate", {}).get("area", "AI security evidence candidate"),
+            "mapping_rationale": finding.get("compliance_rationale", "Candidate mapping requires human auditor validation."),
+            "auditor_question": finding.get("auditor_question"),
+            "evidence_sufficiency": finding.get("evidence_sufficiency", "candidate"),
+            "human_review_status": finding.get("human_review_status", "requires_human_review"),
         }
-        for index, evidence in enumerate(result.normalized_evidence)
+        for index, finding in enumerate(result.correlated_findings)
     ]
-    payload["report_links"] = {}
+    payload["report_links"] = {
+        kind: f"/api/reports/{result.id}/{kind}" for kind in ("html", "markdown", "json", "csv")
+    }
     payload["raw_artifact_references"] = [
         summary["raw_artifacts"] for summary in framework_summaries if summary.get("raw_artifacts")
     ]
@@ -516,8 +522,12 @@ def report_markdown(assessment_id: str) -> str:
 def list_reports() -> dict[str, Any]:
     native = STORE.list_results()
     framework = FRAMEWORKS.list_results()
-    return {
-        "reports": [
+    def framework_target_name(row: dict[str, Any]) -> str:
+        try:
+            return TARGETS.get_target(row.get("target_id", "")).target_name
+        except (FileNotFoundError, TypeError):
+            return str(row.get("target_id") or "Target")
+    reports = [
             {
                 "id": row["id"],
                 "target": row.get("target"),
@@ -527,18 +537,43 @@ def list_reports() -> dict[str, Any]:
                 "formats": ["html", "markdown", "json", "csv"],
             }
             for row in native
-        ]
-        + [
+        ] + [
             {
                 "id": row["id"],
-                "target": row.get("target_id"),
-                "mode": "multi_framework",
+                "target": framework_target_name(row),
+                "mode": row.get("strategy") or "multi_framework",
                 "findings": row.get("findings", 0),
+                "evidence": row.get("evidence", 0),
+                "status": row.get("status"),
                 "completed_at": row.get("completed_at"),
                 "formats": ["html", "markdown", "json", "csv"],
             }
             for row in framework
         ]
+    reports.sort(key=lambda row: str(row.get("completed_at") or ""), reverse=True)
+    return {"reports": reports}
+
+
+@app.delete("/api/reports/{assessment_id}")
+def delete_report(assessment_id: str) -> dict[str, Any]:
+    if not assessment_id.startswith(("MFASM-", "ASM-")):
+        raise HTTPException(status_code=400, detail="Invalid assessment report id")
+    deleted: list[str] = []
+    for suffix in (".html", ".md", ".json", "-findings.csv"):
+        path = STORE.report_dir / f"{assessment_id}{suffix}"
+        if path.exists():
+            path.unlink()
+            deleted.append(str(path))
+    if not deleted:
+        raise HTTPException(status_code=404, detail="No generated report artifacts found")
+    return {
+        "assessment_id": assessment_id,
+        "deleted": deleted,
+        "preserved": [
+            f"data/framework-results/{assessment_id}.json",
+            f"data/adaptive-artifacts/{assessment_id}/",
+            "data/framework-artifacts/",
+        ],
     }
 
 
@@ -577,3 +612,4 @@ def report_file(assessment_id: str, kind: str):
     if not path.exists():
         raise HTTPException(status_code=404, detail="Report not found")
     return FileResponse(path)
+# ruff: noqa: E402, UP017

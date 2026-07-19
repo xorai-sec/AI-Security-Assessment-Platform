@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+UTC = timezone.utc
 from pathlib import Path
 
 from .adapters.targets import build_target_adapter
@@ -200,3 +202,4 @@ class AssessmentOrchestrator:
 
 def default_orchestrator(root: Path) -> AssessmentOrchestrator:
     return AssessmentOrchestrator(EvidenceStore(root))
+# ruff: noqa: E402, UP017

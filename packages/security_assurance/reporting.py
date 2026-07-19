@@ -279,13 +279,17 @@ def render_framework_markdown_report(result: FrameworkAssessmentResult) -> str:
         f"**Assessment:** {result.id}",
         f"**Target ID:** {result.target_id}",
         f"**Status:** {result.status}",
+        f"**Strategy:** {result.strategy}",
         f"**Frameworks:** {', '.join(result.frameworks) or 'not selected'}",
         f"**Completed:** {result.completed_at}",
         "",
         "## Executive Summary",
         "",
         f"- Evidence records: {len(result.normalized_evidence)}",
+        f"- Unique technical signals: {sum(int(item.get('unique_evidence_count', item.get('evidence_count', 0)) or 0) for item in result.correlated_findings)}",
         f"- Correlated finding candidates: {len(result.correlated_findings)}",
+        "- Confirmed / corroborated / candidate / inconclusive / not vulnerable / false positive: "
+        + " / ".join(str(sum(item.get('status') == status for item in result.correlated_findings)) for status in ("confirmed", "corroborated", "candidate", "inconclusive", "not_vulnerable", "false_positive")),
         f"- Framework errors: {len(result.errors)}",
         f"- Planner decisions: {len(result.execution_plan)}",
         "",
@@ -309,17 +313,63 @@ def render_framework_markdown_report(result: FrameworkAssessmentResult) -> str:
             f"{artifact_text} |"
         )
 
+    lines.extend(["", "## Adaptive Evidence Handoffs", ""])
+    if not result.handoff_plans:
+        lines.append("No adaptive handoff was used for this assessment mode.")
+    for handoff in result.handoff_plans:
+        payload = handoff.get("payload", {})
+        lines.extend(
+            [
+                f"### {handoff.get('source_framework')} → {handoff.get('target_framework')}",
+                "",
+                f"- Objective: {payload.get('objective', '')}",
+                f"- Rationale: {handoff.get('rationale', '')}",
+                f"- Source evidence: {', '.join(map(str, handoff.get('evidence_references', [])))}",
+                f"- Artifact: `{handoff.get('artifact_path', '')}`",
+                "",
+            ]
+        )
+
     lines.extend(["", "## Correlated Findings", ""])
-    lines.append("| ID | Status | Confidence | Frameworks | Evidence |")
-    lines.append("|---|---|---:|---|---:|")
+    lines.append("| ID | Status | Severity | Confidence | Frameworks | Evidence | OWASP | ISO candidate |")
+    lines.append("|---|---|---|---:|---|---:|---|---|")
     for finding in result.correlated_findings:
         lines.append(
             "| "
             f"`{finding.get('id')}` | "
             f"{finding.get('status')} | "
+            f"{finding.get('severity', 'candidate')} | "
             f"{finding.get('confidence')} | "
             f"{', '.join(map(str, finding.get('frameworks', [])))} | "
-            f"{finding.get('evidence_count', 0)} |"
+            f"{finding.get('unique_evidence_count', finding.get('evidence_count', 0))} | "
+            f"{', '.join(map(str, finding.get('owasp_llm_mapping', [])))} | "
+            f"{finding.get('iso_42001_clause_control_candidate', {}).get('control_id', 'candidate')} |"
+        )
+
+    lines.extend(["", "## Compliance Mapping Rationale", ""])
+    lines.append("All mappings below are evidence supporting review and require human auditor validation; they do not claim ISO/IEC 42001 certification or conformity.")
+    for finding in result.correlated_findings:
+        control = finding.get("iso_42001_clause_control_candidate", {})
+        lines.extend(
+            [
+                f"### {finding.get('id')} — {finding.get('title')}",
+                "",
+                f"- Technical evidence: {finding.get('technical_evidence_summary', '')}",
+                f"- OWASP LLM mapping: {', '.join(map(str, finding.get('owasp_llm_mapping', [])))}",
+                f"- OWASP mapping reason: {finding.get('owasp_mapping_reason', '')}",
+                f"- Final status justification: {finding.get('vulnerability_justification', '')}",
+                f"- Exact prompt/response references: {', '.join(map(str, finding.get('prompt_response_references', [])))}",
+                f"- Framework evidence references: {', '.join(map(str, finding.get('evidence_ids', [])))}",
+                f"- Detector/scorer/assertion results: `{json.dumps(finding.get('detector_scorer_assertion_results', []), default=str)[:1000]}`",
+                f"- Canary matched: {finding.get('canary_matched', False)}",
+                f"- Framework contribution: {json.dumps(finding.get('framework_contributions', {}), sort_keys=True)}",
+                f"- ISO/IEC 42001 candidate control: {control.get('control_id', 'candidate')} — {control.get('area', '')}",
+                f"- Compliance rationale: {finding.get('compliance_rationale', '')}",
+                f"- Auditor question: {finding.get('auditor_question', '')}",
+                f"- Remediation recommendation: {finding.get('remediation_recommendation', '')}",
+                f"- Evidence sufficiency: {finding.get('evidence_sufficiency', 'candidate')}; human review: {finding.get('human_review_status', 'requires_human_review')}",
+                "",
+            ]
         )
 
     lines.extend(["", "## Prompt and Response Evidence", ""])
@@ -332,6 +382,10 @@ def render_framework_markdown_report(result: FrameworkAssessmentResult) -> str:
                 f"- Framework: {record.get('framework') or record.get('source') or 'unknown'}",
                 f"- Category: {record.get('category') or record.get('vulnerability') or 'uncategorized'}",
                 f"- Confidence: {record.get('confidence', 'n/a')}",
+                f"- Handoff rationale: {record.get('handoff_rationale', 'not applicable')}",
+                f"- OWASP LLM mapping: {', '.join(map(str, record.get('owasp_llm_mapping', [])))}",
+                f"- ISO/IEC 42001 relevance: {', '.join(map(str, record.get('iso_42001_evidence_relevance', [])))}",
+                f"- Detector/scorer/assertion: `{json.dumps(record.get('evaluator_results', []), default=str)[:800]}`",
                 f"- Native artifact: `{record.get('native_artifact_path', '')}`",
                 "",
                 "**Prompt**",
@@ -382,18 +436,44 @@ def render_framework_html_report(result: FrameworkAssessmentResult) -> str:
             "</tr>"
         )
 
+    handoff_rows = []
+    for handoff in result.handoff_plans:
+        payload = handoff.get("payload", {})
+        handoff_rows.append(
+            "<tr>"
+            f"<td>{_escape(handoff.get('source_framework'))} → {_escape(handoff.get('target_framework'))}</td>"
+            f"<td>{_escape(payload.get('objective', ''))}</td>"
+            f"<td>{_escape(handoff.get('rationale', ''))}</td>"
+            f"<td>{len(handoff.get('evidence_references', []))}</td>"
+            "</tr>"
+        )
+
     iso_rows = []
     for finding in result.correlated_findings:
         evidence_id = str((finding.get("evidence_ids") or [""])[0])
+        evidence_link = f"<a href='#{_escape(evidence_id)}'>Prompt/response</a>" if evidence_id else "No linked evidence"
         for mapping in finding.get("iso_42001_evidence_mapping", []) or ["ISO/IEC 42001 AI risk and operational evidence"]:
             iso_rows.append(
                 "<tr>"
                 f"<td><a href='#{_escape(finding.get('id'))}'>{_escape(finding.get('id'))}</a></td>"
                 f"<td>{_escape(mapping)}</td>"
                 f"<td>candidate<small>Requires human review against the organization's AI management system.</small></td>"
-                f"<td>{f'<a href=\"#{_escape(evidence_id)}\">Prompt/response</a>' if evidence_id else 'No linked evidence'}</td>"
+                f"<td>{evidence_link}</td>"
                 "</tr>"
             )
+
+    compliance_rows = []
+    for finding in result.correlated_findings:
+        control = finding.get("iso_42001_clause_control_candidate", {})
+        compliance_rows.append(
+            "<tr>"
+            f"<td>{_escape(finding.get('id'))}</td>"
+            f"<td>{_escape(', '.join(map(str, finding.get('owasp_llm_mapping', []))) or 'Analyst classification required')}</td>"
+            f"<td>{_escape(control.get('control_id', 'candidate'))} · {_escape(control.get('area', ''))}</td>"
+            f"<td>{_escape(finding.get('compliance_rationale', ''))}<br><strong>Auditor question:</strong> {_escape(finding.get('auditor_question', ''))}</td>"
+            f"<td>{_escape(finding.get('evidence_sufficiency', 'candidate'))}<br>{_escape(finding.get('human_review_status', 'requires_human_review'))}</td>"
+            "</tr>"
+        )
 
     evidence_cards = []
     for index, record in enumerate(result.normalized_evidence, start=1):
@@ -401,7 +481,7 @@ def render_framework_html_report(result: FrameworkAssessmentResult) -> str:
         evidence_cards.append(
             f"<article class='evidence-card' id='{_escape(evidence_id)}'>"
             f"<div class='evidence-head'><h3>{_escape(record.get('framework') or record.get('source') or 'Framework')} evidence {index}</h3><span>{_escape(record.get('category') or record.get('vulnerability') or 'uncategorized')}</span></div>"
-            f"<dl><dt>Evidence ID</dt><dd>{_escape(evidence_id)}</dd><dt>Confidence</dt><dd>{_escape(record.get('confidence', 'n/a'))}</dd><dt>Native artifact</dt><dd>{_escape(record.get('native_artifact_path', ''))}</dd></dl>"
+            f"<dl><dt>Evidence ID</dt><dd>{_escape(evidence_id)}</dd><dt>Confidence</dt><dd>{_escape(record.get('confidence', 'n/a'))}</dd><dt>Handoff rationale</dt><dd>{_escape(record.get('handoff_rationale', 'not applicable'))}</dd><dt>OWASP LLM</dt><dd>{_escape(', '.join(map(str, record.get('owasp_llm_mapping', []))))}</dd><dt>ISO/IEC 42001</dt><dd>{_escape(', '.join(map(str, record.get('iso_42001_evidence_relevance', []))))}</dd><dt>Native artifact</dt><dd>{_escape(record.get('native_artifact_path', ''))}</dd></dl>"
             "<div class='prompt-grid'>"
             f"<section><h4>Prompt Sent</h4><pre>{_escape(_short(_framework_prompt(record)))}</pre></section>"
             f"<section><h4>Model Response</h4><pre>{_escape(_short(_framework_response(record)))}</pre></section>"
@@ -453,13 +533,15 @@ def render_framework_html_report(result: FrameworkAssessmentResult) -> str:
   <main class="wrap">
     <section class="grid">
       <article class="metric"><strong>{_escape(result.id)}</strong><span>Assessment ID</span></article>
-      <article class="metric"><strong>{len(result.normalized_evidence)}</strong><span>Evidence records</span></article>
-      <article class="metric"><strong>{len(result.correlated_findings)}</strong><span>Correlated findings</span></article>
+      <article class="metric"><strong>{len(result.normalized_evidence)}</strong><span>Raw evidence records</span></article>
+      <article class="metric"><strong>{sum(item.get('status') == 'confirmed' for item in result.correlated_findings)} / {sum(item.get('status') == 'corroborated' for item in result.correlated_findings)} / {sum(item.get('status') == 'candidate' for item in result.correlated_findings)}</strong><span>Confirmed / corroborated / candidate</span></article>
       <article class="metric"><strong>{_escape(result.status)}</strong><span>Run status</span></article>
     </section>
     <section class="panel"><h2>Framework Execution</h2><table><thead><tr><th>Framework</th><th>Status</th><th>Evidence</th><th>Native Engine</th><th>Artifacts</th></tr></thead><tbody>{''.join(framework_rows) or "<tr><td colspan='5'>No framework worker results were recorded.</td></tr>"}</tbody></table></section>
+    <section class="panel"><h2>Adaptive Evidence Handoffs</h2><table><thead><tr><th>Chain</th><th>Objective</th><th>Rationale</th><th>Source evidence</th></tr></thead><tbody>{''.join(handoff_rows) or "<tr><td colspan='4'>No adaptive handoff was used for this assessment mode.</td></tr>"}</tbody></table></section>
     <section class="panel"><h2>Correlated Findings</h2><table><thead><tr><th>ID</th><th>Finding</th><th>Status</th><th>Confidence</th><th>Evidence</th></tr></thead><tbody>{''.join(finding_rows) or "<tr><td colspan='5'>No correlated findings were generated.</td></tr>"}</tbody></table></section>
     <section class="panel"><h2>ISO/IEC 42001:2023 Evidence Mapping</h2><p class="note">Candidate mappings require human review against the organization's AI management system.</p><table><thead><tr><th>Finding</th><th>ISO 42001 Area</th><th>Sufficiency</th><th>Prompt/Response</th></tr></thead><tbody>{''.join(iso_rows) or "<tr><td colspan='4'>No ISO mappings were generated.</td></tr>"}</tbody></table></section>
+    <section class="panel"><h2>Compliance Mapping Rationale</h2><p class="note">This table explains how technical evidence supports review of AI management controls. It does not claim certification or conformity.</p><table><thead><tr><th>Finding</th><th>OWASP LLM</th><th>ISO candidate</th><th>Why it matters / auditor question</th><th>Review</th></tr></thead><tbody>{''.join(compliance_rows) or "<tr><td colspan='5'>No compliance mappings were generated.</td></tr>"}</tbody></table></section>
     <section class="panel"><h2>Prompt and Response Evidence</h2>{''.join(evidence_cards) or "<p>No prompt/response evidence was recorded.</p>"}</section>
   </main>
 </body>
@@ -469,17 +551,23 @@ def render_framework_html_report(result: FrameworkAssessmentResult) -> str:
 def render_framework_findings_csv(result: FrameworkAssessmentResult) -> str:
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["id", "title", "status", "confidence", "frameworks", "evidence_count", "evidence_ids"])
+    writer.writerow(["id", "title", "status", "severity", "confidence", "frameworks", "evidence_count", "unique_evidence_count", "owasp_llm_mapping", "ISO/IEC 42001 candidate control", "evidence_sufficiency", "human_review_status", "remediation"])
     for finding in result.correlated_findings:
         writer.writerow(
             [
                 finding.get("id"),
                 finding.get("title"),
                 finding.get("status"),
+                finding.get("severity", "candidate"),
                 finding.get("confidence"),
                 ", ".join(map(str, finding.get("frameworks", []))),
                 finding.get("evidence_count", 0),
-                ", ".join(map(str, finding.get("evidence_ids", []))),
+                finding.get("unique_evidence_count", finding.get("evidence_count", 0)),
+                ", ".join(map(str, finding.get("owasp_llm_mapping", []))),
+                finding.get("iso_42001_clause_control_candidate", {}).get("control_id", "candidate"),
+                finding.get("evidence_sufficiency", "candidate"),
+                finding.get("human_review_status", "requires_human_review"),
+                finding.get("remediation_recommendation", ""),
             ]
         )
     return output.getvalue()

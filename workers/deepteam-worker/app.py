@@ -6,7 +6,9 @@ import inspect
 import json
 import os
 import pkgutil
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+UTC = timezone.utc
 from typing import Any
 
 import httpx
@@ -610,3 +612,4 @@ class DeepTeamRunner(BaseFrameworkRunner):
 
 
 app = create_worker_app(DeepTeamRunner())
+# ruff: noqa: E402, UP017

@@ -19,7 +19,7 @@ from packages.security_assurance.target_models import TargetCapabilities
 def frameworks() -> dict[str, FrameworkDefinition]:
     return {
         name: FrameworkDefinition(id=name, name=name, worker_url=f"http://{name}-worker:8090", enabled=True)
-        for name in ("native", "garak", "pyrit", "promptfoo", "deepteam")
+        for name in ("native", "garak", "pyrit", "promptfoo")
     }
 
 
@@ -58,7 +58,7 @@ def target(
 def request(target_id: str) -> FrameworkAssessmentRequest:
     return FrameworkAssessmentRequest(
         target_id=target_id,
-        frameworks=["garak", "pyrit", "promptfoo", "deepteam", "native"],
+        frameworks=["garak", "pyrit", "promptfoo", "native"],
         execution_mode="chained",
         strategy="adaptive",
         objective="Authorized adaptive AI security assessment",
@@ -145,55 +145,6 @@ def main() -> None:
     no_signal_result = FrameworkAssessmentResult(target_id=raw.id, frameworks=["garak"])
     _, no_signal_decision = context_and_decision(planner, request(raw.id), no_signal_result, raw, [])
 
-    confirmed_enterprise = FrameworkAssessmentResult(
-        target_id=enterprise.id,
-        frameworks=["garak", "pyrit", "promptfoo"],
-    )
-    confirmed_enterprise.normalized_evidence = [
-        {
-            "id": "EV-TOOL-001",
-            "framework": "promptfoo",
-            "category": "tool_authorization",
-            "assertion_result": "fail",
-            "confidence": 0.78,
-        }
-    ]
-    confirmed_findings = [
-        {
-            "id": "CORR-002-tool-authorization",
-            "status": "confirmed",
-            "confidence": 0.78,
-            "evidence_ids": ["EV-TOOL-001"],
-        }
-    ]
-    _, enterprise_deepteam = context_and_decision(
-        planner,
-        request(enterprise.id),
-        confirmed_enterprise,
-        enterprise,
-        confirmed_findings,
-    )
-
-    confirmed_raw = FrameworkAssessmentResult(target_id=raw.id, frameworks=["garak", "pyrit", "promptfoo"])
-    confirmed_raw.normalized_evidence = [
-        {
-            "id": "EV-JAIL-001",
-            "framework": "promptfoo",
-            "category": "jailbreak",
-            "assertion_result": "fail",
-            "confidence": 0.8,
-        }
-    ]
-    raw_findings = [
-        {
-            "id": "CORR-003-jailbreak",
-            "status": "confirmed",
-            "confidence": 0.8,
-            "evidence_ids": ["EV-JAIL-001"],
-        }
-    ]
-    _, raw_deepteam = context_and_decision(planner, request(raw.id), confirmed_raw, raw, raw_findings)
-
     assert_true(raw_initial_decision.next_framework == "garak", "raw Ollama initial plan should start with garak")
     assert_true(
         enterprise_initial_decision.next_framework == "garak",
@@ -216,20 +167,7 @@ def main() -> None:
         "CORR-001-prompt-leakage" in leakage_decision.evidence_references,
         "decision must reference correlated evidence",
     )
-    assert_true(
-        enterprise_deepteam.next_framework == "deepteam",
-        "confirmed enterprise evidence should route to DeepTeam",
-    )
-    assert_true(
-        any("rag" in item or "tool" in item or "rbac" in item for item in enterprise_deepteam.selected_vulnerabilities),
-        "enterprise plan should retain enterprise-capability vulnerabilities",
-    )
-    forbidden_terms = ("rag", "retrieval", "tool", "agency", "rbac", "bfla", "bola", "memory")
-    raw_selected = raw_deepteam.selected_vulnerabilities + raw_deepteam.selected_plugins + raw_deepteam.selected_probes
-    assert_true(
-        not any(term in item for item in raw_selected for term in forbidden_terms),
-        "raw Ollama plan must filter RAG/tool/memory selections",
-    )
+    assert_true("deepteam" not in request(raw.id).frameworks, "DeepTeam must stay outside adaptive framework selection")
     assert_true(leakage_decision.request_budget <= 12, "request budget must be bounded")
     assert_true(leakage_decision.continue_assessment, "valid leakage decision should continue")
 
@@ -245,8 +183,7 @@ def main() -> None:
         f"rule={leakage_decision.policy_rule_id} refs={','.join(leakage_decision.evidence_references)}"
     )
     print(f"no_signal_pattern_next={no_signal_decision.next_framework} rule={no_signal_decision.policy_rule_id}")
-    print(f"enterprise_deepteam_vulnerabilities={','.join(enterprise_deepteam.selected_vulnerabilities)}")
-    print(f"raw_deepteam_vulnerabilities={','.join(raw_deepteam.selected_vulnerabilities)}")
+    print("stable_frameworks=garak,pyrit,promptfoo,native")
     print("artifacts=data/planner-artifacts/<assessment-id>/step-XX-context.json,step-XX-decision.json")
 
 

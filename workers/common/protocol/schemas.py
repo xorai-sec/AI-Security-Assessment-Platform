@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+
+UTC = timezone.utc
 from typing import Any, Literal
 from uuid import uuid4
 
@@ -8,7 +10,7 @@ from pydantic import BaseModel, Field
 
 
 def utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def new_id(prefix: str) -> str:
@@ -26,7 +28,7 @@ class FrameworkTarget(BaseModel):
     model_name: str = "unknown"
 
 
-AssessmentProfile = Literal["quick", "standard", "comprehensive"]
+AssessmentProfile = Literal["quick", "standard", "comprehensive", "deep-owasp", "deep-owasp-4h", "deep-owasp-large"]
 
 
 class ModelRoles(BaseModel):
@@ -135,6 +137,15 @@ class NormalizedFrameworkEvidence(BaseModel):
     stop_reason: str = "completed"
     raw_artifact_reference: str | None = None
     evidence_hash: str
+    opportunity_id: str | None = None
+    source_evidence_ids: list[str] = Field(default_factory=list)
+    handoff_rationale: str | None = None
+    owasp_llm_mapping: list[str] = Field(default_factory=list)
+    iso_42001_evidence_relevance: list[str] = Field(default_factory=list)
+    expected_safe_behavior: str | None = None
+    attack_category: str | None = None
+    weakness_type: str | None = None
+    assessment_canary: str | None = None
 
 
 class FrameworkExecutionResult(BaseModel):
@@ -153,3 +164,4 @@ class FrameworkExecutionResult(BaseModel):
     native_plugin_identifiers: list[str] = Field(default_factory=list)
     fallback_used: bool = False
     fallback_reason: str | None = None
+# ruff: noqa: E402, UP017

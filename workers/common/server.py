@@ -5,7 +5,12 @@ from typing import Protocol
 
 from fastapi import FastAPI, HTTPException
 
-from workers.common.protocol.schemas import FrameworkExecutionRequest, FrameworkExecutionResult, WorkerCapability, WorkerHealth
+from workers.common.protocol.schemas import (
+    FrameworkExecutionRequest,
+    FrameworkExecutionResult,
+    WorkerCapability,
+    WorkerHealth,
+)
 
 
 class FrameworkRunner(Protocol):

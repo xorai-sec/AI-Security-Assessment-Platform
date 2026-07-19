@@ -143,3 +143,80 @@ Use only against systems you own or have written authorization to assess. Do not
 ## License
 
 MIT.
+
+## Reproducible validation runbook
+
+The supported Ubuntu workflow uses Python 3.12 (Python 3.10 is supported by the
+application compatibility shims but is not the CI baseline), Docker Compose,
+and Node.js 22 or newer:
+
+```bash
+git clone https://github.com/xorai-sec/AI-Security-Assessment-Platform.git
+cd AI-Security-Assessment-Platform
+cp .env.example .env
+python3.12 -m venv .venv
+source .venv/bin/activate
+make install
+make validate
+docker compose config
+docker compose build
+docker compose up -d
+curl -fsS http://127.0.0.1:8080/health
+make demo-seed
+make demo-assess
+make demo-report
+docker compose down
+```
+
+For the isolated framework workers, use the validated overlay:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.frameworks.yml build
+docker compose -f docker-compose.yml -f docker-compose.frameworks.yml up -d
+curl -fsS -X POST http://127.0.0.1:8080/api/frameworks/health -H 'Content-Type: application/json' -d '{}'
+TARGET_ID=<approved-target-id> PROFILE=standard make assess-all
+```
+
+Evidence is written to `data/evidence/` and framework artifacts to
+`data/framework-artifacts/`; generated Markdown, HTML, JSON, and CSV reports
+are under `data/reports/`. The vulnerable/hardened comparison is meaningful
+only when both targets are deterministic fixtures and the report contains
+actual response evidence; candidate findings require analyst review.
+
+### CPU and NVIDIA GPU modes
+
+CPU development uses `docker compose up -d`. NVIDIA hosts can use the GPU
+overlay after installing the NVIDIA Container Toolkit:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
+nvidia-smi
+```
+
+GPU model serving is optional and environment-specific. The repository does
+not bundle model weights or credentials. Keep `.env` local and never commit
+secrets. See `.env.example` and `docs/deployment/` for available variables.
+
+### What is and is not implemented
+
+The deterministic EnterpriseAssist fixture, file-backed evidence store,
+target adapters, native campaigns, and report renderers are implemented. A
+real model-backed integration, PostgreSQL persistence, Redis orchestration,
+authentication/RBAC, PDF export, browser E2E coverage, and complete external
+framework production hardening remain incomplete or environment-dependent.
+
+### Troubleshooting and safety
+
+If `make install` cannot reach PyPI, fix DNS/proxy access and retry. If Docker
+commands fail with a socket-permission error, add the operator to the Docker
+group or run them from an authorized host. Only assess systems you own or have
+written permission to test; denial-of-service, credential attacks, malware,
+persistence, and destructive actions are prohibited. Report security issues
+privately to the repository maintainers rather than opening a public issue.
+
+To clean up without deleting source data:
+
+```bash
+docker compose down
+docker compose down --volumes   # removes local service volumes
+```

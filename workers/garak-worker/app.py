@@ -28,6 +28,8 @@ DEFAULT_PROBES = {
     "quick": "dan.AutoDANCached,goodside.Tag,promptinject.HijackLongPrompt",
     "standard": "dan.AutoDANCached,dan.DanInTheWild,goodside.Tag,promptinject.HijackLongPrompt,encoding.InjectBase64",
     "comprehensive": "dan.AutoDANCached,dan.DanInTheWild,goodside.Tag,promptinject.HijackLongPrompt,encoding.InjectBase64,leakreplay.GuardianCloze,realtoxicityprompts.RTPBlank,malwaregen.TopLevel",
+    "deep-owasp-4h": "dan.AutoDANCached,dan.DanInTheWild,goodside.Tag,promptinject.HijackLongPrompt,encoding.InjectBase64,leakreplay.GuardianCloze",
+    "deep-owasp-large": "dan.AutoDANCached,dan.DanInTheWild,goodside.Tag,promptinject.HijackLongPrompt,encoding.InjectBase64,leakreplay.GuardianCloze,realtoxicityprompts.RTPBlank,malwaregen.TopLevel",
 }
 
 
@@ -100,9 +102,25 @@ class GarakRunner(BaseFrameworkRunner):
 
     def _probe_spec(self, request: FrameworkExecutionRequest) -> str:
         configured = request.configuration.get("probe_families") or []
-        if configured:
-            return ",".join(configured)
-        return DEFAULT_PROBES.get(request.profile, DEFAULT_PROBES["quick"])
+        probes = list(configured) if configured else DEFAULT_PROBES.get(request.profile, DEFAULT_PROBES["quick"]).split(",")
+        # The API accepts high-level probe-family labels (for example
+        # ``prompt_injection``), but Garak's CLI requires concrete module
+        # names such as ``promptinject.HijackLongPrompt``.  Never pass labels
+        # through to Garak: they are treated as unknown probes and produce an
+        # empty report, which incorrectly makes the whole assessment partial.
+        concrete = [str(probe).strip() for probe in probes if "." in str(probe).strip()]
+        if not concrete:
+            concrete = DEFAULT_PROBES.get(request.profile, DEFAULT_PROBES["quick"]).split(",")
+        probes = concrete
+        # HijackLongPrompt expands to hundreds of requests and is unsuitable for
+        # short adaptive stages. Select it only when the stage has enough wall
+        # time and request budget; this keeps profile/mode changes safe without
+        # requiring operators to know Garak's internal probe cardinalities.
+        long_probe = "promptinject.HijackLongPrompt"
+        enough_budget = request.limits.maximum_duration_seconds >= 1200 and request.limits.maximum_requests >= 16
+        if long_probe in probes and not enough_budget:
+            probes.remove(long_probe)
+        return ",".join(probes)
 
     def _write_generator_options(self, request: FrameworkExecutionRequest, traffic_path: Path, run_dir: Path) -> Path:
         options = {
@@ -122,6 +140,12 @@ class GarakRunner(BaseFrameworkRunner):
         return write_json(run_dir / "generator-options.json", options)
 
     def _run_garak(self, request: FrameworkExecutionRequest, options_path: Path, report_prefix: Path) -> dict[str, Any]:
+        probe_spec = self._probe_spec(request)
+        probe_count = max(1, len([item for item in probe_spec.split(",") if item]))
+        # Use the assessment request budget instead of silently sampling one
+        # generation per probe. Keep concurrency bounded, but spend the deep
+        # profile budget on independent generations for reproducibility.
+        generations = max(1, min(8, request.limits.maximum_requests // probe_count))
         command = [
             "python",
             "-m",
@@ -133,7 +157,7 @@ class GarakRunner(BaseFrameworkRunner):
             "--generator_option_file",
             str(options_path),
             "--probes",
-            self._probe_spec(request),
+            probe_spec,
             "--report_prefix",
             str(report_prefix),
             "--parallel_requests",
@@ -141,7 +165,7 @@ class GarakRunner(BaseFrameworkRunner):
             "--parallel_attempts",
             "1",
             "--generations",
-            "1",
+            str(generations),
             "--skip_unknown",
         ]
         started = datetime.now(timezone.utc)
