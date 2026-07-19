@@ -272,6 +272,8 @@ def _build_gateway_scorer(*, gateway: ModelRoleGateway, category: str) -> Any:
             return None
 
     GatewayTrueFalseScorer.__name__ = "GatewayTrueFalseScorer"
+    # Expose the concrete runtime class for health/inspection and evidence.
+    globals()["GatewayTrueFalseScorer"] = GatewayTrueFalseScorer
     return GatewayTrueFalseScorer()
 
 
@@ -450,7 +452,9 @@ class PyRITRunner(BaseFrameworkRunner):
         attack_kwargs: dict[str, Any] = {"objective_target": target}
         if requested_attack != "prompt_sending":
             attack_base = _load_symbol("pyrit.executor.attack.AttackAdversarialConfig")
-            attacker = GatewayPromptChatTarget(role="attacker", runner=self, request=request, traffic_path=self.artifact_root / request.execution_id / "attacker-traffic.jsonl")
+            attacker_path = self.artifact_root / request.execution_id / "attacker-traffic.jsonl"
+            attacker_path.parent.mkdir(parents=True, exist_ok=True)
+            attacker = GatewayPromptChatTarget(role="attacker", runner=self, request=request, traffic_path=attacker_path)
             attack_sig = inspect.signature(attack_base)
             attack_kwargs["attack_adversarial_config"] = attack_base(**({"target": attacker} if "target" in attack_sig.parameters else {}))
         attack_sig = inspect.signature(PromptSendingAttack)
