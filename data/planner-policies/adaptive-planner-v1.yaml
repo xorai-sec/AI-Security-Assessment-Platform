@@ -47,26 +47,6 @@ framework_plugin_allowlist:
       - multilingual
       - base64
       - crescendo
-  deepteam:
-    vulnerabilities:
-      - prompt_injection
-      - bias
-      - toxicity
-      - pii_leakage
-      - excessive_agency
-      - rbac
-      - bfla
-      - bola
-      - unauthorized_tool_use
-      - rag_data_leakage
-      - cross_context_retrieval
-      - memory_leakage
-    attacks:
-      - prompt_injection
-      - jailbreak
-      - roleplay
-      - leetspeak
-      - base64
 capability_filters:
   rag:
     remove_terms:
@@ -87,6 +67,7 @@ capability_filters:
       - cross-session
       - session
 termination:
+  minimum_framework_stages: 3
   minimum_remaining_requests: 1
   maximum_framework_failures: 2
   duplicate_evidence_threshold: 3
@@ -176,52 +157,6 @@ rules:
       turn_budget: 2
       expected_confirmation_condition: "Promptfoo JSON output contains assertion pass/fail results for related prompts."
       rationale: "Candidate evidence exists and should be confirmed with deterministic regression tests."
-  - id: enterprise-confirmed-to-deepteam
-    priority: 70
-    when:
-      all:
-        - requested_contains: deepteam
-        - completed_not_contains: deepteam
-        - any:
-            - correlated_status_in: [confirmed]
-            - confidence_at_least: 0.7
-        - any:
-            - target_capability: rag
-            - target_capability: tools
-            - target_capability: memory
-            - target_type_in: [enterprise_assist, generic_rag, generic_agent]
-    decision:
-      next_framework: deepteam
-      action_type: adjacent_attack_exploration
-      objective: "Explore related enterprise attack paths after confirmed multi-framework evidence."
-      profile: standard
-      selected_vulnerabilities: [prompt_injection, pii_leakage, excessive_agency, rbac, bfla, rag_data_leakage, cross_context_retrieval, memory_leakage]
-      selected_attacks: [prompt_injection, jailbreak, roleplay, base64]
-      request_budget: 6
-      turn_budget: 4
-      expected_confirmation_condition: "DeepTeam returns vulnerability and attack identifiers with evaluator output."
-      rationale: "Confirmed enterprise-capability evidence warrants adjacent vulnerability exploration."
-  - id: raw-model-deepteam-safety-sweep
-    priority: 60
-    when:
-      all:
-        - requested_contains: deepteam
-        - completed_not_contains: deepteam
-        - target_type_in: [ollama, openai_compatible, vllm, custom_rest]
-        - any:
-            - correlated_status_in: [confirmed]
-            - confidence_at_least: 0.75
-    decision:
-      next_framework: deepteam
-      action_type: adjacent_attack_exploration
-      objective: "Explore direct model safety vulnerabilities without RAG, tools, or memory assumptions."
-      profile: quick
-      selected_vulnerabilities: [prompt_injection, pii_leakage, toxicity, bias]
-      selected_attacks: [prompt_injection, jailbreak, roleplay]
-      request_budget: 4
-      turn_budget: 3
-      expected_confirmation_condition: "DeepTeam evaluator output confirms or rejects direct model safety weaknesses."
-      rationale: "Confirmed raw-model evidence can be explored without selecting enterprise-only attack classes."
   - id: no-signal-native-baseline
     priority: 20
     when:

@@ -1,0 +1,1575 @@
+{
+  "python": "3.12.13 (main, Jun 24 2026, 02:08:01) [GCC 14.2.0]",
+  "deepteam_version": "1.0.7",
+  "deepteam_file": "/usr/local/lib/python3.12/site-packages/deepteam/__init__.py",
+  "modules": [
+    "deepteam.attacks",
+    "deepteam.attacks.attack_engine",
+    "deepteam.attacks.attack_engine.attack_engine",
+    "deepteam.attacks.attack_engine.template",
+    "deepteam.attacks.attack_engine.types",
+    "deepteam.attacks.attack_simulator",
+    "deepteam.attacks.attack_simulator.attack_simulator",
+    "deepteam.attacks.attack_simulator.schema",
+    "deepteam.attacks.attack_simulator.utils",
+    "deepteam.attacks.base_attack",
+    "deepteam.attacks.multi_turn",
+    "deepteam.attacks.multi_turn.bad_likert_judge",
+    "deepteam.attacks.multi_turn.bad_likert_judge.bad_likert_judge",
+    "deepteam.attacks.multi_turn.bad_likert_judge.schema",
+    "deepteam.attacks.multi_turn.bad_likert_judge.template",
+    "deepteam.attacks.multi_turn.base_multi_turn_attack",
+    "deepteam.attacks.multi_turn.base_schema",
+    "deepteam.attacks.multi_turn.base_template",
+    "deepteam.attacks.multi_turn.constants",
+    "deepteam.attacks.multi_turn.crescendo_jailbreaking",
+    "deepteam.attacks.multi_turn.crescendo_jailbreaking.crescendo_jailbreaking",
+    "deepteam.attacks.multi_turn.crescendo_jailbreaking.schema",
+    "deepteam.attacks.multi_turn.crescendo_jailbreaking.template",
+    "deepteam.attacks.multi_turn.linear_jailbreaking",
+    "deepteam.attacks.multi_turn.linear_jailbreaking.linear_jailbreaking",
+    "deepteam.attacks.multi_turn.linear_jailbreaking.schema",
+    "deepteam.attacks.multi_turn.linear_jailbreaking.template",
+    "deepteam.attacks.multi_turn.sequential_break",
+    "deepteam.attacks.multi_turn.sequential_break.schema",
+    "deepteam.attacks.multi_turn.sequential_break.sequential_break",
+    "deepteam.attacks.multi_turn.sequential_break.template",
+    "deepteam.attacks.multi_turn.tree_jailbreaking",
+    "deepteam.attacks.multi_turn.tree_jailbreaking.schema",
+    "deepteam.attacks.multi_turn.tree_jailbreaking.template",
+    "deepteam.attacks.multi_turn.tree_jailbreaking.tree_jailbreaking",
+    "deepteam.attacks.multi_turn.types",
+    "deepteam.attacks.multi_turn.utils",
+    "deepteam.attacks.single_turn",
+    "deepteam.attacks.single_turn.adversarial_poetry",
+    "deepteam.attacks.single_turn.adversarial_poetry.adversarial_poetry",
+    "deepteam.attacks.single_turn.adversarial_poetry.schema",
+    "deepteam.attacks.single_turn.adversarial_poetry.template",
+    "deepteam.attacks.single_turn.authority_escalation",
+    "deepteam.attacks.single_turn.authority_escalation.authority_escalation",
+    "deepteam.attacks.single_turn.authority_escalation.schema",
+    "deepteam.attacks.single_turn.authority_escalation.template",
+    "deepteam.attacks.single_turn.base64",
+    "deepteam.attacks.single_turn.base64.base64",
+    "deepteam.attacks.single_turn.base_single_turn_attack",
+    "deepteam.attacks.single_turn.character_stream",
+    "deepteam.attacks.single_turn.character_stream.character_stream",
+    "deepteam.attacks.single_turn.compliance",
+    "deepteam.attacks.single_turn.constants",
+    "deepteam.attacks.single_turn.context_flooding",
+    "deepteam.attacks.single_turn.context_flooding.context_flooding",
+    "deepteam.attacks.single_turn.context_flooding.template",
+    "deepteam.attacks.single_turn.context_poisoning",
+    "deepteam.attacks.single_turn.context_poisoning.context_poisoning",
+    "deepteam.attacks.single_turn.context_poisoning.schema",
+    "deepteam.attacks.single_turn.context_poisoning.template",
+    "deepteam.attacks.single_turn.embedded_instruction_json",
+    "deepteam.attacks.single_turn.embedded_instruction_json.embedded_instruction_json",
+    "deepteam.attacks.single_turn.embedded_instruction_json.template",
+    "deepteam.attacks.single_turn.emotional_manipulation",
+    "deepteam.attacks.single_turn.emotional_manipulation.emotional_manipulation",
+    "deepteam.attacks.single_turn.emotional_manipulation.schema",
+    "deepteam.attacks.single_turn.emotional_manipulation.template",
+    "deepteam.attacks.single_turn.escalation_constants",
+    "deepteam.attacks.single_turn.goal_redirection",
+    "deepteam.attacks.single_turn.goal_redirection.goal_redirection",
+    "deepteam.attacks.single_turn.goal_redirection.schema",
+    "deepteam.attacks.single_turn.goal_redirection.template",
+    "deepteam.attacks.single_turn.gray_box",
+    "deepteam.attacks.single_turn.gray_box.gray_box",
+    "deepteam.attacks.single_turn.gray_box.schema",
+    "deepteam.attacks.single_turn.gray_box.template",
+    "deepteam.attacks.single_turn.input_bypass",
+    "deepteam.attacks.single_turn.input_bypass.input_bypass",
+    "deepteam.attacks.single_turn.input_bypass.schema",
+    "deepteam.attacks.single_turn.input_bypass.template",
+    "deepteam.attacks.single_turn.leetspeak",
+    "deepteam.attacks.single_turn.leetspeak.leetspeak",
+    "deepteam.attacks.single_turn.math_problem",
+    "deepteam.attacks.single_turn.math_problem.math_problem",
+    "deepteam.attacks.single_turn.math_problem.schema",
+    "deepteam.attacks.single_turn.math_problem.template",
+    "deepteam.attacks.single_turn.multilingual",
+    "deepteam.attacks.single_turn.multilingual.multilingual",
+    "deepteam.attacks.single_turn.multilingual.schema",
+    "deepteam.attacks.single_turn.multilingual.template",
+    "deepteam.attacks.single_turn.permission_escalation",
+    "deepteam.attacks.single_turn.permission_escalation.permission_escalation",
+    "deepteam.attacks.single_turn.permission_escalation.schema",
+    "deepteam.attacks.single_turn.permission_escalation.template",
+    "deepteam.attacks.single_turn.prompt_injection",
+    "deepteam.attacks.single_turn.prompt_injection.prompt_injection",
+    "deepteam.attacks.single_turn.prompt_injection.schema",
+    "deepteam.attacks.single_turn.prompt_injection.template",
+    "deepteam.attacks.single_turn.prompt_probing",
+    "deepteam.attacks.single_turn.prompt_probing.prompt_probing",
+    "deepteam.attacks.single_turn.prompt_probing.schema",
+    "deepteam.attacks.single_turn.prompt_probing.template",
+    "deepteam.attacks.single_turn.roleplay",
+    "deepteam.attacks.single_turn.roleplay.roleplay",
+    "deepteam.attacks.single_turn.roleplay.schema",
+    "deepteam.attacks.single_turn.roleplay.template",
+    "deepteam.attacks.single_turn.rot13",
+    "deepteam.attacks.single_turn.rot13.rot13",
+    "deepteam.attacks.single_turn.semantic_manipulation",
+    "deepteam.attacks.single_turn.semantic_manipulation.schema",
+    "deepteam.attacks.single_turn.semantic_manipulation.semantic_manipulation",
+    "deepteam.attacks.single_turn.semantic_manipulation.template",
+    "deepteam.attacks.single_turn.synthetic_context_injection",
+    "deepteam.attacks.single_turn.synthetic_context_injection.schema",
+    "deepteam.attacks.single_turn.synthetic_context_injection.synthetic_context_injection",
+    "deepteam.attacks.single_turn.synthetic_context_injection.template",
+    "deepteam.attacks.single_turn.system_override",
+    "deepteam.attacks.single_turn.system_override.schema",
+    "deepteam.attacks.single_turn.system_override.system_override",
+    "deepteam.attacks.single_turn.system_override.template",
+    "deepteam.code_scanner",
+    "deepteam.code_scanner.code_scanner",
+    "deepteam.code_scanner.collect",
+    "deepteam.code_scanner.collect.base",
+    "deepteam.code_scanner.collect.files",
+    "deepteam.code_scanner.collect.git",
+    "deepteam.code_scanner.config",
+    "deepteam.code_scanner.constants",
+    "deepteam.code_scanner.engines",
+    "deepteam.code_scanner.engines.base",
+    "deepteam.code_scanner.engines.claude",
+    "deepteam.code_scanner.engines.codex",
+    "deepteam.code_scanner.engines.cursor",
+    "deepteam.code_scanner.github",
+    "deepteam.code_scanner.github.report",
+    "deepteam.code_scanner.report",
+    "deepteam.code_scanner.schema",
+    "deepteam.code_scanner.taxonomy",
+    "deepteam.code_scanner.template",
+    "deepteam.metrics.base_red_teaming_metric",
+    "deepteam.metrics.cross_context_retrieval",
+    "deepteam.metrics.cross_context_retrieval.cross_context_retrieval",
+    "deepteam.metrics.cross_context_retrieval.schema",
+    "deepteam.metrics.cross_context_retrieval.template",
+    "deepteam.metrics.evaluation_prompt_blocks",
+    "deepteam.red_team",
+    "deepteam.red_teamer",
+    "deepteam.red_teamer.api",
+    "deepteam.red_teamer.red_teamer",
+    "deepteam.red_teamer.risk_assessment",
+    "deepteam.red_teamer.utils",
+    "deepteam.trace_scanner",
+    "deepteam.trace_scanner.schema",
+    "deepteam.trace_scanner.trace_scanner",
+    "deepteam.vulnerabilities",
+    "deepteam.vulnerabilities.agent_identity_abuse",
+    "deepteam.vulnerabilities.agent_identity_abuse.agent_identity_abuse",
+    "deepteam.vulnerabilities.agent_identity_abuse.template",
+    "deepteam.vulnerabilities.agent_identity_abuse.types",
+    "deepteam.vulnerabilities.autonomous_agent_drift",
+    "deepteam.vulnerabilities.autonomous_agent_drift.autonomous_agent_drift",
+    "deepteam.vulnerabilities.autonomous_agent_drift.template",
+    "deepteam.vulnerabilities.autonomous_agent_drift.types",
+    "deepteam.vulnerabilities.base_vulnerability",
+    "deepteam.vulnerabilities.bfla",
+    "deepteam.vulnerabilities.bfla.bfla",
+    "deepteam.vulnerabilities.bfla.template",
+    "deepteam.vulnerabilities.bfla.types",
+    "deepteam.vulnerabilities.bias",
+    "deepteam.vulnerabilities.bias.bias",
+    "deepteam.vulnerabilities.bias.template",
+    "deepteam.vulnerabilities.bias.types",
+    "deepteam.vulnerabilities.bola",
+    "deepteam.vulnerabilities.bola.bola",
+    "deepteam.vulnerabilities.bola.template",
+    "deepteam.vulnerabilities.bola.types",
+    "deepteam.vulnerabilities.child_protection",
+    "deepteam.vulnerabilities.child_protection.child_protection",
+    "deepteam.vulnerabilities.child_protection.template",
+    "deepteam.vulnerabilities.child_protection.types",
+    "deepteam.vulnerabilities.competition",
+    "deepteam.vulnerabilities.competition.competition",
+    "deepteam.vulnerabilities.competition.template",
+    "deepteam.vulnerabilities.competition.types",
+    "deepteam.vulnerabilities.constants",
+    "deepteam.vulnerabilities.cross_context_retrieval",
+    "deepteam.vulnerabilities.cross_context_retrieval.cross_context_retrieval",
+    "deepteam.vulnerabilities.cross_context_retrieval.template",
+    "deepteam.vulnerabilities.cross_context_retrieval.types",
+    "deepteam.vulnerabilities.custom",
+    "deepteam.vulnerabilities.custom.custom",
+    "deepteam.vulnerabilities.custom.template",
+    "deepteam.vulnerabilities.debug_access",
+    "deepteam.vulnerabilities.debug_access.debug_access",
+    "deepteam.vulnerabilities.debug_access.template",
+    "deepteam.vulnerabilities.debug_access.types",
+    "deepteam.vulnerabilities.ethics",
+    "deepteam.vulnerabilities.ethics.ethics",
+    "deepteam.vulnerabilities.ethics.template",
+    "deepteam.vulnerabilities.ethics.types",
+    "deepteam.vulnerabilities.excessive_agency",
+    "deepteam.vulnerabilities.excessive_agency.excessive_agency",
+    "deepteam.vulnerabilities.excessive_agency.template",
+    "deepteam.vulnerabilities.excessive_agency.types",
+    "deepteam.vulnerabilities.exploit_tool_agent",
+    "deepteam.vulnerabilities.exploit_tool_agent.exploit_tool_agent",
+    "deepteam.vulnerabilities.exploit_tool_agent.template",
+    "deepteam.vulnerabilities.exploit_tool_agent.types",
+    "deepteam.vulnerabilities.external_system_abuse",
+    "deepteam.vulnerabilities.external_system_abuse.external_system_abuse",
+    "deepteam.vulnerabilities.external_system_abuse.template",
+    "deepteam.vulnerabilities.external_system_abuse.types",
+    "deepteam.vulnerabilities.fairness",
+    "deepteam.vulnerabilities.fairness.fairness",
+    "deepteam.vulnerabilities.fairness.template",
+    "deepteam.vulnerabilities.fairness.types",
+    "deepteam.vulnerabilities.goal_theft",
+    "deepteam.vulnerabilities.goal_theft.goal_theft",
+    "deepteam.vulnerabilities.goal_theft.template",
+    "deepteam.vulnerabilities.goal_theft.types",
+    "deepteam.vulnerabilities.graphic_content",
+    "deepteam.vulnerabilities.graphic_content.graphic_content",
+    "deepteam.vulnerabilities.graphic_content.template",
+    "deepteam.vulnerabilities.graphic_content.types",
+    "deepteam.vulnerabilities.hallucination",
+    "deepteam.vulnerabilities.hallucination.hallucination",
+    "deepteam.vulnerabilities.hallucination.template",
+    "deepteam.vulnerabilities.hallucination.types",
+    "deepteam.vulnerabilities.illegal_activity",
+    "deepteam.vulnerabilities.illegal_activity.illegal_activity",
+    "deepteam.vulnerabilities.illegal_activity.template",
+    "deepteam.vulnerabilities.illegal_activity.types",
+    "deepteam.vulnerabilities.indirect_instruction",
+    "deepteam.vulnerabilities.indirect_instruction.indirect_instruction",
+    "deepteam.vulnerabilities.indirect_instruction.template",
+    "deepteam.vulnerabilities.indirect_instruction.types",
+    "deepteam.vulnerabilities.insecure_inter_agent_communication",
+    "deepteam.vulnerabilities.insecure_inter_agent_communication.insecure_inter_agent_communication",
+    "deepteam.vulnerabilities.insecure_inter_agent_communication.template",
+    "deepteam.vulnerabilities.insecure_inter_agent_communication.types",
+    "deepteam.vulnerabilities.intellectual_property",
+    "deepteam.vulnerabilities.intellectual_property.intellectual_property",
+    "deepteam.vulnerabilities.intellectual_property.template",
+    "deepteam.vulnerabilities.intellectual_property.types",
+    "deepteam.vulnerabilities.misinformation",
+    "deepteam.vulnerabilities.misinformation.misinformation",
+    "deepteam.vulnerabilities.misinformation.template",
+    "deepteam.vulnerabilities.misinformation.types",
+    "deepteam.vulnerabilities.personal_safety",
+    "deepteam.vulnerabilities.personal_safety.personal_safety",
+    "deepteam.vulnerabilities.personal_safety.template",
+    "deepteam.vulnerabilities.personal_safety.types",
+    "deepteam.vulnerabilities.pii_leakage",
+    "deepteam.vulnerabilities.pii_leakage.pii_leakage",
+    "deepteam.vulnerabilities.pii_leakage.template",
+    "deepteam.vulnerabilities.pii_leakage.types",
+    "deepteam.vulnerabilities.prompt_leakage",
+    "deepteam.vulnerabilities.prompt_leakage.prompt_leakage",
+    "deepteam.vulnerabilities.prompt_leakage.template",
+    "deepteam.vulnerabilities.prompt_leakage.types",
+    "deepteam.vulnerabilities.rbac",
+    "deepteam.vulnerabilities.rbac.rbac",
+    "deepteam.vulnerabilities.rbac.template",
+    "deepteam.vulnerabilities.rbac.types",
+    "deepteam.vulnerabilities.recursive_hijacking",
+    "deepteam.vulnerabilities.recursive_hijacking.recursive_hijacking",
+    "deepteam.vulnerabilities.recursive_hijacking.template",
+    "deepteam.vulnerabilities.recursive_hijacking.types",
+    "deepteam.vulnerabilities.robustness",
+    "deepteam.vulnerabilities.robustness.robustness",
+    "deepteam.vulnerabilities.robustness.template",
+    "deepteam.vulnerabilities.robustness.types",
+    "deepteam.vulnerabilities.shell_injection",
+    "deepteam.vulnerabilities.shell_injection.shell_injection",
+    "deepteam.vulnerabilities.shell_injection.template",
+    "deepteam.vulnerabilities.shell_injection.types",
+    "deepteam.vulnerabilities.sql_injection",
+    "deepteam.vulnerabilities.sql_injection.sql_injection",
+    "deepteam.vulnerabilities.sql_injection.template",
+    "deepteam.vulnerabilities.sql_injection.types",
+    "deepteam.vulnerabilities.ssrf",
+    "deepteam.vulnerabilities.ssrf.ssrf",
+    "deepteam.vulnerabilities.ssrf.template",
+    "deepteam.vulnerabilities.ssrf.types",
+    "deepteam.vulnerabilities.system_reconnaissance",
+    "deepteam.vulnerabilities.system_reconnaissance.system_reconnaissance",
+    "deepteam.vulnerabilities.system_reconnaissance.template",
+    "deepteam.vulnerabilities.system_reconnaissance.types",
+    "deepteam.vulnerabilities.tool_metadata_poisoning",
+    "deepteam.vulnerabilities.tool_metadata_poisoning.template",
+    "deepteam.vulnerabilities.tool_metadata_poisoning.tool_metadata_poisoning",
+    "deepteam.vulnerabilities.tool_metadata_poisoning.types",
+    "deepteam.vulnerabilities.tool_orchestration_abuse",
+    "deepteam.vulnerabilities.tool_orchestration_abuse.template",
+    "deepteam.vulnerabilities.tool_orchestration_abuse.tool_orchestration_abuse",
+    "deepteam.vulnerabilities.tool_orchestration_abuse.types",
+    "deepteam.vulnerabilities.toxicity",
+    "deepteam.vulnerabilities.toxicity.template",
+    "deepteam.vulnerabilities.toxicity.toxicity",
+    "deepteam.vulnerabilities.toxicity.types",
+    "deepteam.vulnerabilities.types",
+    "deepteam.vulnerabilities.unexpected_code_execution",
+    "deepteam.vulnerabilities.unexpected_code_execution.template",
+    "deepteam.vulnerabilities.unexpected_code_execution.types",
+    "deepteam.vulnerabilities.unexpected_code_execution.unexpected_code_execution",
+    "deepteam.vulnerabilities.utils"
+  ],
+  "symbols": {
+    "deepteam.attacks.attack_engine.attack_engine": {
+      "classes": {
+        "AttackEngine": "(simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', variations: int = 1, generation_guidelines: Optional[List[str]] = None, purpose: Optional[str] = None)"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.attack_engine.template": {
+      "classes": {
+        "AttackEngineTemplates": "()"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.attack_engine.types": {
+      "classes": {
+        "AttackVariations": "(*, reason: str, inputs: List[str]) -> None",
+        "TransformedAttack": "(*, reason: str, input: str) -> None",
+        "ValidationResult": "(*, is_valid: bool, reason: str) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.attack_simulator.attack_simulator": {
+      "classes": {
+        "AttackSimulator": "(purpose: str, max_concurrent: int, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = None, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None)",
+        "BaselineAttack": "()"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.attack_simulator.schema": {
+      "classes": {
+        "SyntheticData": "(*, input: str) -> None",
+        "SyntheticDataList": "(*, data: List[deepteam.attacks.attack_simulator.schema.SyntheticData]) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.attack_simulator.utils": {
+      "classes": {},
+      "functions": [
+        "_record_cost",
+        "a_generate",
+        "a_generate_with_cost",
+        "add_cost",
+        "cost_accumulator",
+        "generate",
+        "generate_with_cost"
+      ]
+    },
+    "deepteam.attacks.base_attack": {
+      "classes": {
+        "BaseAttack": "()",
+        "Exploitability": "(*values)"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.multi_turn.bad_likert_judge.bad_likert_judge": {
+      "classes": {
+        "BadLikertJudge": "(weight: int = 1, category: str = 'bias', num_turns: int = 5, enable_refinement: bool = True, max_backtracks: int = 3, turn_level_attacks: Optional[List[deepteam.attacks.single_turn.base_single_turn_attack.BaseSingleTurnAttack]] = None, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o-mini')"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.multi_turn.bad_likert_judge.schema": {
+      "classes": {
+        "BLJJudge": "(*, harmful: bool, reasoning: str) -> None",
+        "LikertExamples": "(*, score_1_example: str, score_3_example: str) -> None",
+        "LikertScore": "(*, score: int, reasoning: str) -> None",
+        "NewAttackPrompt": "(*, new_attack_prompt: str) -> None",
+        "RefinedExample": "(*, refined_example: str) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.multi_turn.bad_likert_judge.template": {
+      "classes": {
+        "BadLikertJudgeTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.multi_turn.base_multi_turn_attack": {
+      "classes": {
+        "BaseMultiTurnAttack": "()"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.multi_turn.base_schema": {
+      "classes": {
+        "NonRefusal": "(*, refusal: bool, reasoning: str) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.multi_turn.base_template": {
+      "classes": {
+        "BaseMultiTurnTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.multi_turn.constants": {
+      "classes": {
+        "AttackInfo": "(*, description: str, exploitability: str) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.multi_turn.crescendo_jailbreaking.crescendo_jailbreaking": {
+      "classes": {
+        "CrescendoJailbreaking": "(weight: int = 1, max_rounds: int = 10, max_backtracks: int = 10, turn_level_attacks: Optional[List[deepteam.attacks.single_turn.base_single_turn_attack.BaseSingleTurnAttack]] = None, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o-mini')",
+        "MemorySystem": "()"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.multi_turn.crescendo_jailbreaking.schema": {
+      "classes": {
+        "AttackData": "(*, generated_question: str, last_response_summary: str, rationale_behind_jailbreak: str) -> None",
+        "EvalData": "(*, value: bool, description: str, rationale: str, metadata: int) -> None",
+        "ImprovementPrompt": "(*, improvement: str, prompt: str) -> None",
+        "RefusalData": "(*, value: bool, rationale: str, metadata: int) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.multi_turn.crescendo_jailbreaking.template": {
+      "classes": {
+        "JailBreakingCrescendoTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.multi_turn.linear_jailbreaking.linear_jailbreaking": {
+      "classes": {
+        "LinearJailbreaking": "(weight: int = 1, num_turns: int = 5, turn_level_attacks: Optional[List[deepteam.attacks.single_turn.base_single_turn_attack.BaseSingleTurnAttack]] = None, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o-mini')"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.multi_turn.linear_jailbreaking.schema": {
+      "classes": {
+        "Feedback": "(*, jailbroken: bool, suggestion: str) -> None",
+        "Improvement": "(*, reasoning: str, new_prompt: str) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.multi_turn.linear_jailbreaking.template": {
+      "classes": {
+        "JailBreakingTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.multi_turn.sequential_break.schema": {
+      "classes": {
+        "AdaptiveDialogueTemplate": "(*, template: str) -> None",
+        "AdaptiveGameEnvironmentTemplate": "(*, template: str) -> None",
+        "AdaptiveQuestionBankTemplate": "(*, template: str) -> None",
+        "DialogueJudge": "(*, harmful: bool, reasoning: str) -> None",
+        "GameEnvironmentJudge": "(*, harmful: bool, reasoning: str) -> None",
+        "ImprovedAttack": "(*, improved_attack: str) -> None",
+        "QuestionBankJudge": "(*, harmful: bool, reasoning: str) -> None",
+        "RewrittenDialogue": "(*, paraphrased_version: str) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.multi_turn.sequential_break.sequential_break": {
+      "classes": {
+        "SequentialJailbreak": "(weight: int = 1, type: Optional[Literal['dialogue', 'question_bank', 'game_environment']] = None, persona: Optional[Literal['prisoner', 'student', 'researcher', 'generic']] = None, num_turns: int = 5, turn_level_attacks: Optional[List[deepteam.attacks.single_turn.base_single_turn_attack.BaseSingleTurnAttack]] = None, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o-mini')"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.multi_turn.sequential_break.template": {
+      "classes": {
+        "SequentialBreakTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.multi_turn.tree_jailbreaking.schema": {
+      "classes": {
+        "ImprovementPrompt": "(*, improvement: str, prompt: str) -> None",
+        "OnTopic": "(*, on_topic: bool) -> None",
+        "Rating": "(*, rating: int) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.multi_turn.tree_jailbreaking.template": {
+      "classes": {
+        "JailBreakingTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.multi_turn.tree_jailbreaking.tree_jailbreaking": {
+      "classes": {
+        "TreeJailbreaking": "(weight: int = 1, max_depth: int = 5, turn_level_attacks: Optional[List[deepteam.attacks.single_turn.base_single_turn_attack.BaseSingleTurnAttack]] = None, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o-mini')",
+        "TreeNode": "(prompt: str, score: int, depth: int, conversation_history=None, parent: Optional[ForwardRef('TreeNode')] = None, turn_level_attack: Optional[deepteam.attacks.base_attack.BaseAttack] = None)"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.multi_turn.utils": {
+      "classes": {},
+      "functions": [
+        "a_enhance_attack",
+        "append_target_turn",
+        "enhance_attack",
+        "update_turn_history"
+      ]
+    },
+    "deepteam.attacks.single_turn.adversarial_poetry.adversarial_poetry": {
+      "classes": {
+        "AdversarialPoetry": "(weight: int = 1)"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.adversarial_poetry.schema": {
+      "classes": {
+        "EnhancedAttack": "(*, metaphorical_strategy: str, input: str) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.adversarial_poetry.template": {
+      "classes": {
+        "AdversarialPoetryTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.authority_escalation.authority_escalation": {
+      "classes": {
+        "AuthorityEscalation": "(role: Optional[str] = None, weight: int = 1, max_retries: int = 3)"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.authority_escalation.schema": {
+      "classes": {
+        "EnhancedAuthorityAttack": "(*, authority_role: str, input: str) -> None",
+        "IsAuthorityValid": "(*, is_valid_authority: bool) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.authority_escalation.template": {
+      "classes": {
+        "AuthorityEscalationTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.base64.base64": {
+      "classes": {
+        "Base64": "(weight: int = 1)"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.base_single_turn_attack": {
+      "classes": {
+        "AttackParameter": "(*, type: Literal['string', 'integer', 'float', 'boolean', 'enum', 'json'], required: bool = False, default: Optional[Any] = None, options: Optional[List[str]] = None, description: Optional[str] = None) -> None",
+        "BaseSingleTurnAttack": "()"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.character_stream.character_stream": {
+      "classes": {
+        "CharacterStream": "(weight: int = 1)"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.compliance": {
+      "classes": {
+        "ComplianceData": "(*, reason: str, non_compliant: bool) -> None"
+      },
+      "functions": [
+        "_normalize_compliance_input",
+        "a_evaluate_generation_compliance",
+        "build_compliance_check_prompt",
+        "evaluate_generation_compliance"
+      ]
+    },
+    "deepteam.attacks.single_turn.constants": {
+      "classes": {
+        "AttackInfo": "(*, description: str, exploitability: str, parameters: Dict[str, deepteam.attacks.single_turn.base_single_turn_attack.AttackParameter] = <factory>) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.context_flooding.context_flooding": {
+      "classes": {
+        "ContextFlooding": "(weight: int = 1, target_chars: int = 4000, prefix: Optional[str] = None, prefix_type: Optional[Literal['enterprise', 'logs', 'transcript']] = 'enterprise')"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.context_poisoning.context_poisoning": {
+      "classes": {
+        "ContextPoisoning": "(weight: int = 1, max_retries: int = 5)"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.context_poisoning.schema": {
+      "classes": {
+        "EnhancedAttack": "(*, poisoning_strategy: str, input: str) -> None",
+        "IsContextPoisoned": "(*, is_context_poisoned: bool) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.context_poisoning.template": {
+      "classes": {
+        "ContextPoisoningTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.embedded_instruction_json.embedded_instruction_json": {
+      "classes": {
+        "EmbeddedInstructionJSON": "(weight: int = 1, target_chars: int = 2000, target_depth: int = 4, json_template: Optional[Dict[str, Any]] = None, attack_position: Literal['start', 'middle', 'end'] = 'end')"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.emotional_manipulation.emotional_manipulation": {
+      "classes": {
+        "EmotionalManipulation": "(emotion: Literal['ANGER', 'PITY', 'CONFUSION', 'AUTHORITY', 'URGENCY'] = None, weight: int = 1, max_retries: int = 3)"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.emotional_manipulation.schema": {
+      "classes": {
+        "EmotionallyEnhancedAttack": "(*, emotion_strategy: str, input: str) -> None",
+        "IsEmotionalAttackValid": "(*, is_valid_context: bool) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.emotional_manipulation.template": {
+      "classes": {
+        "EmotionalManipulationTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.escalation_constants": {
+      "classes": {},
+      "functions": [
+        "append_critic_feedback",
+        "random_escalation_suffix"
+      ]
+    },
+    "deepteam.attacks.single_turn.goal_redirection.goal_redirection": {
+      "classes": {
+        "GoalRedirection": "(weight: int = 1, max_retries: int = 3)"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.goal_redirection.schema": {
+      "classes": {
+        "EnhancedRedirection": "(*, redirection_reasoning: str, input: str) -> None",
+        "IsGoalRedirected": "(*, is_goal_redirected: bool) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.goal_redirection.template": {
+      "classes": {
+        "GoalRedirectionTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.gray_box.gray_box": {
+      "classes": {
+        "GrayBox": "(weight: int = 1, max_retries: int = 5)"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.gray_box.schema": {
+      "classes": {
+        "EnhancedAttack": "(*, deception_strategy: str, input: str) -> None",
+        "IsGrayBox": "(*, is_gray_box: bool) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.gray_box.template": {
+      "classes": {
+        "GrayBoxTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.input_bypass.input_bypass": {
+      "classes": {
+        "InputBypass": "(weight: int = 2, max_retries: int = 3)"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.input_bypass.schema": {
+      "classes": {
+        "EnhancedBypass": "(*, bypass_strategy: str, input: str) -> None",
+        "IsBypassValid": "(*, is_valid_bypass: bool) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.input_bypass.template": {
+      "classes": {
+        "InputBypassTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.leetspeak.leetspeak": {
+      "classes": {
+        "Leetspeak": "(weight: int = 1)"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.math_problem.math_problem": {
+      "classes": {
+        "MathProblem": "(weight: int = 1, max_retries: int = 5)"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.math_problem.schema": {
+      "classes": {
+        "EnhancedAttack": "(*, math_strategy: str, input: str) -> None",
+        "IsMathProblem": "(*, is_math_problem: bool) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.math_problem.template": {
+      "classes": {
+        "MathProblemTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.multilingual.multilingual": {
+      "classes": {
+        "Multilingual": "(language: Optional[str] = None, weight: int = 1, max_retries: int = 5)"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.multilingual.schema": {
+      "classes": {
+        "EnhancedAttack": "(*, translation_logic: str, input: str, non_compliant: bool) -> None",
+        "IsTranslation": "(*, is_translation: bool) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.multilingual.template": {
+      "classes": {
+        "MultilingualTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.permission_escalation.permission_escalation": {
+      "classes": {
+        "PermissionEscalation": "(weight: int = 1, max_retries: int = 3)"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.permission_escalation.schema": {
+      "classes": {
+        "EnhancedPermission": "(*, escalation_logic: str, input: str) -> None",
+        "IsPermissionValid": "(*, is_valid_permission: bool) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.permission_escalation.template": {
+      "classes": {
+        "PermissionEscalationTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.prompt_injection.prompt_injection": {
+      "classes": {
+        "PromptInjection": "(weight: int = 1, max_retries: int = 3)"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.prompt_injection.schema": {
+      "classes": {
+        "EnhancedInjection": "(*, strategy_reasoning: str, input: str) -> None",
+        "IsValidInjection": "(*, is_valid_injection: bool) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.prompt_injection.template": {
+      "classes": {
+        "PromptInjectionTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.prompt_probing.prompt_probing": {
+      "classes": {
+        "PromptProbing": "(weight: int = 1, max_retries: int = 3)"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.prompt_probing.schema": {
+      "classes": {
+        "EnhancedAttack": "(*, probing_strategy: str, input: str) -> None",
+        "IsPromptProbing": "(*, is_prompt_probing: bool) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.prompt_probing.template": {
+      "classes": {
+        "PromptProbingTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.roleplay.roleplay": {
+      "classes": {
+        "Roleplay": "(persona: Optional[str] = None, role: Optional[str] = None, weight: int = 1, max_retries: int = 3)"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.roleplay.schema": {
+      "classes": {
+        "EnhancedAttack": "(*, roleplay_strategy: str, input: str) -> None",
+        "IsRoleplay": "(*, is_roleplay: bool) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.roleplay.template": {
+      "classes": {
+        "RoleplayTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.rot13.rot13": {
+      "classes": {
+        "ROT13": "(weight: int = 1)"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.semantic_manipulation.schema": {
+      "classes": {
+        "EnhancedConfusion": "(*, confusion_strategy: str, input: str) -> None",
+        "IsConfusionValid": "(*, is_valid_confusion: bool) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.semantic_manipulation.semantic_manipulation": {
+      "classes": {
+        "LinguisticConfusion": "(weight: int = 1, max_retries: int = 3)"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.semantic_manipulation.template": {
+      "classes": {
+        "LinguisticConfusionTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.synthetic_context_injection.schema": {
+      "classes": {
+        "EnhancedContext": "(*, domain_logic: str, input: str) -> None",
+        "IsContextValid": "(*, is_valid_context: bool) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.synthetic_context_injection.synthetic_context_injection": {
+      "classes": {
+        "SyntheticContextInjection": "(target_information: str, context_style: Optional[str] = None, weight: int = 1, max_retries: int = 3)"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.synthetic_context_injection.template": {
+      "classes": {
+        "SyntheticContextInjectionTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.system_override.schema": {
+      "classes": {
+        "EnhancedOverride": "(*, authority_strategy: str, input: str) -> None",
+        "IsOverrideValid": "(*, is_valid_override: bool) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.system_override.system_override": {
+      "classes": {
+        "SystemOverride": "(weight: int = 1, max_retries: int = 3)"
+      },
+      "functions": []
+    },
+    "deepteam.attacks.single_turn.system_override.template": {
+      "classes": {
+        "SystemOverrideTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.code_scanner.code_scanner": {
+      "classes": {
+        "CodeScanner": "(model: Optional[deepeval.models.base_model.DeepEvalBaseLLM] = None, template=<class 'deepteam.code_scanner.template.CodeScanTemplate'>, vulnerabilities: Optional[List[Union[str, Type[deepteam.vulnerabilities.base_vulnerability.BaseVulnerability]]]] = None, instruction: Optional[str] = None, limit: int = 40000, max_concurrent: int = 10, engine: Optional[deepteam.code_scanner.engines.base.ScanEngine] = None)"
+      },
+      "functions": []
+    },
+    "deepteam.code_scanner.collect.base": {
+      "classes": {},
+      "functions": [
+        "_chunk_path",
+        "_chunk_text",
+        "_language_for",
+        "_matches_any",
+        "_passes_filters",
+        "_read_text"
+      ]
+    },
+    "deepteam.code_scanner.collect.files": {
+      "classes": {},
+      "functions": [
+        "_iter_files",
+        "collect_files"
+      ]
+    },
+    "deepteam.code_scanner.collect.git": {
+      "classes": {},
+      "functions": [
+        "_git_changed_files",
+        "collect_changed_files"
+      ]
+    },
+    "deepteam.code_scanner.config": {
+      "classes": {
+        "CodeScanConfig": "(min_severity: Literal['low', 'medium', 'high', 'critical'] = 'low', instruction: Optional[str] = None, include: Optional[List[str]] = None, exclude: Optional[List[str]] = None, vulnerabilities: Optional[List[str]] = None, model: Optional[str] = None, provider: Optional[str] = None, diffs_only: bool = False) -> None"
+      },
+      "functions": [
+        "find_config_file",
+        "load_config"
+      ]
+    },
+    "deepteam.code_scanner.engines": {
+      "classes": {},
+      "functions": [
+        "build_engine",
+        "resolve_provider"
+      ]
+    },
+    "deepteam.code_scanner.engines.base": {
+      "classes": {
+        "ScanEngine": "(*args, **kwargs)"
+      },
+      "functions": [
+        "extract_findings",
+        "missing_sdk"
+      ]
+    },
+    "deepteam.code_scanner.engines.claude": {
+      "classes": {
+        "ClaudeAgentEngine": "(model: Optional[str] = None)"
+      },
+      "functions": []
+    },
+    "deepteam.code_scanner.engines.codex": {
+      "classes": {
+        "CodexEngine": "(model: Optional[str] = None)"
+      },
+      "functions": []
+    },
+    "deepteam.code_scanner.engines.cursor": {
+      "classes": {
+        "CursorEngine": "(model: Optional[str] = None)"
+      },
+      "functions": []
+    },
+    "deepteam.code_scanner.github.report": {
+      "classes": {},
+      "functions": [
+        "_github_oidc_token",
+        "_pr_number",
+        "post_pr_comments"
+      ]
+    },
+    "deepteam.code_scanner.report": {
+      "classes": {},
+      "functions": [
+        "filter_by_severity",
+        "to_json",
+        "to_markdown",
+        "to_sarif"
+      ]
+    },
+    "deepteam.code_scanner.schema": {
+      "classes": {
+        "CodeChunk": "(*, file_path: str, content: str, language: Optional[str] = None, start_line: int = 1) -> None",
+        "CodeFinding": "(*, filePath: str, lineStart: int, lineEnd: Optional[int] = None, vulnerability: str, vulnerabilityType: str, severity: Literal['low', 'medium', 'high', 'critical'], reason: str, recommendation: Optional[str] = None, codeSnippet: Optional[str] = None) -> None",
+        "CodeFindingsList": "(*, findings: List[deepteam.code_scanner.schema.CodeFinding]) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.code_scanner.taxonomy": {
+      "classes": {},
+      "functions": [
+        "allowed_types",
+        "is_known",
+        "to_name",
+        "vulnerability_names"
+      ]
+    },
+    "deepteam.code_scanner.template": {
+      "classes": {
+        "CodeScanTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.metrics.base_red_teaming_metric": {
+      "classes": {
+        "BaseRedTeamingMetric": "()"
+      },
+      "functions": []
+    },
+    "deepteam.metrics.cross_context_retrieval.cross_context_retrieval": {
+      "classes": {
+        "CrossContextRetrievalMetric": "(purpose: str, model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = None, async_mode: bool = True, verbose_mode: bool = False, evaluation_examples: Optional[List[deepteam.metrics.types.EvaluationExample]] = None, evaluation_guidelines: Optional[List[str]] = None)"
+      },
+      "functions": []
+    },
+    "deepteam.metrics.cross_context_retrieval.schema": {
+      "classes": {
+        "Purpose": "(*, purpose: str) -> None",
+        "ReasonScore": "(*, reason: str, score: float) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.metrics.cross_context_retrieval.template": {
+      "classes": {
+        "CrossContextRetrievalTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.metrics.evaluation_prompt_blocks": {
+      "classes": {},
+      "functions": [
+        "format_vulnerability_type_label",
+        "render_calibration_examples_block",
+        "render_calibration_sections",
+        "render_domain_guidelines_block",
+        "render_judge_scope_block"
+      ]
+    },
+    "deepteam.red_team": {
+      "classes": {},
+      "functions": [
+        "red_team"
+      ]
+    },
+    "deepteam.red_teamer.api": {
+      "classes": {
+        "APIRTTestCase": "(*, input: str, actualOutput: Optional[str] = None, retrievalContext: Optional[List[str]] = None, toolsCalled: Optional[List[str]] = None, turns: Optional[List[deepteam.red_teamer.api.APIRTTurn]] = None, success: Optional[bool] = None, score: Optional[float] = None, reason: Optional[str] = None, error: Optional[str] = None, vulnerability: str, vulnerabilityType: str, attackMethod: Optional[str] = None, riskCategory: str, order: int) -> None",
+        "APIRTTurn": "(*, role: str, content: str, order: int, userId: Optional[str] = None, retrievalContext: Optional[list] = None, toolsCalled: Optional[List[deepeval.test_case.llm_test_case.ToolCall]] = None, comments: Optional[str] = None, turnLevelAttack: Optional[str] = None) -> None",
+        "APIRiskAssessment": "(*, vulnerabilityResults: List[deepteam.red_teamer.api.VulnerabilityTypeResult], attackResults: List[deepteam.red_teamer.api.AttackMethodResult], runDuration: float, identifier: Optional[str], assessmentCost: Optional[float], testCases: List[deepteam.red_teamer.api.APIRTTestCase]) -> None",
+        "AttackMethodResult": "(*, attackMethod: str, passRate: float, passing: int, failing: int, errored: int) -> None",
+        "VulnerabilityTypeResult": "(*, vulnerability: str, vulnerabilityType: str, passRate: float, passing: int, failing: int, errored: int) -> None"
+      },
+      "functions": [
+        "map_attack_method_result_to_api",
+        "map_risk_assessment_to_api",
+        "map_test_case_to_api",
+        "map_turn_to_api",
+        "map_vulnerability_type_result_to_api"
+      ]
+    },
+    "deepteam.red_teamer.red_teamer": {
+      "classes": {
+        "RedTeamer": "(simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', evaluation_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o', target_purpose: Optional[str] = '', async_mode: bool = True, max_concurrent: int = 10, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None)"
+      },
+      "functions": []
+    },
+    "deepteam.red_teamer.risk_assessment": {
+      "classes": {
+        "AttackMethodResult": "(*, pass_rate: float, passing: int, failing: int, errored: int, attack_method: Optional[str] = None) -> None",
+        "AttackMethodResultList": "(iterable=(), /)",
+        "EnumEncoder": "(*, skipkeys=False, ensure_ascii=True, check_circular=True, allow_nan=True, sort_keys=False, indent=None, separators=None, default=None)",
+        "RedTeamingOverview": "(*, vulnerability_type_results: List[deepteam.red_teamer.risk_assessment.VulnerabilityTypeResult], attack_method_results: List[deepteam.red_teamer.risk_assessment.AttackMethodResult], errored: int, run_duration: float) -> None",
+        "RiskAssessment": "(*, overview: deepteam.red_teamer.risk_assessment.RedTeamingOverview, test_cases: List[deepteam.test_case.test_case.RTTestCase]) -> None",
+        "TestCasesList": "(iterable=(), /)",
+        "VulnerabilityTypeResult": "(*, vulnerability: str, vulnerability_type: Union[deepteam.vulnerabilities.illegal_activity.types.IllegalActivityType, deepteam.vulnerabilities.personal_safety.types.PersonalSafetyType, deepteam.vulnerabilities.graphic_content.types.GraphicContentType, deepteam.vulnerabilities.misinformation.types.MisinformationType, deepteam.vulnerabilities.prompt_leakage.types.PromptLeakageType, deepteam.vulnerabilities.competition.types.CompetitionType, deepteam.vulnerabilities.pii_leakage.types.PIILeakageType, deepteam.vulnerabilities.toxicity.types.ToxicityType, deepteam.vulnerabilities.bias.types.BiasType, deepteam.vulnerabilities.intellectual_property.types.IntellectualPropertyType, deepteam.vulnerabilities.rbac.types.RBACType, deepteam.vulnerabilities.bola.types.BOLAType, deepteam.vulnerabilities.bfla.types.BFLAType, deepteam.vulnerabilities.ssrf.types.SSRFType, deepteam.vulnerabilities.debug_access.types.DebugAccessType, deepteam.vulnerabilities.shell_injection.types.ShellInjectionType, deepteam.vulnerabilities.sql_injection.types.SQLInjectionType, deepteam.vulnerabilities.exploit_tool_agent.types.ExploitToolAgentType, deepteam.vulnerabilities.external_system_abuse.types.ExternalSystemAbuseType, deepteam.vulnerabilities.cross_context_retrieval.types.CrossContextRetrievalType, deepteam.vulnerabilities.system_reconnaissance.types.SystemReconnaissanceType, deepteam.vulnerabilities.robustness.types.RobustnessType, deepteam.vulnerabilities.excessive_agency.types.ExcessiveAgencyType, deepteam.vulnerabilities.goal_theft.types.GoalTheftType, deepteam.vulnerabilities.recursive_hijacking.types.RecursiveHijackingType, enum.Enum], pass_rate: float, passing: int, failing: int, errored: int) -> None",
+        "VulnerabilityTypeResultsList": "(iterable=(), /)"
+      },
+      "functions": [
+        "construct_risk_assessment_overview"
+      ]
+    },
+    "deepteam.red_teamer.utils": {
+      "classes": {},
+      "functions": [
+        "group_attacks_by_vulnerability_type",
+        "resolve_model_callback",
+        "wrap_model_callback"
+      ]
+    },
+    "deepteam.trace_scanner.schema": {
+      "classes": {
+        "BatchFinding": "(*, spanUuid: str, vulnerability: str, vulnerabilityType: str, reason: str, outcome: Literal['materialized', 'mitigated', 'attempted']) -> None",
+        "BatchFindingsList": "(*, findings: List[deepteam.trace_scanner.schema.BatchFinding]) -> None",
+        "SpanNode": "(*, spanUuid: str, parentUuid: Optional[str] = None, type: str, name: Optional[str] = None, status: Optional[str] = None, input: Optional[Any] = None, output: Optional[Any] = None, error: Optional[str] = None, context: Optional[List[str]] = None, retrieval_context: Optional[List[str]] = None, tools_called: Optional[List[Any]] = None, expected_output: Optional[str] = None, model: Optional[str] = None, available_tools: Optional[List[str]] = None, agent_handoffs: Optional[List[str]] = None, embedder: Optional[str] = None, description: Optional[str] = None, child_findings: Optional[List[deepteam.trace_scanner.schema.BatchFinding]] = None) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.trace_scanner.trace_scanner": {
+      "classes": {
+        "BatchContext": "(batch: List[deepteam.trace_scanner.schema.SpanNode] = <factory>, size: int = 0) -> None",
+        "TraceScanner": "(model: deepeval.models.base_model.DeepEvalBaseLLM, template: Any, limit: int = 40000, max_concurrent: int = 10)"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.agent_identity_abuse.agent_identity_abuse": {
+      "classes": {
+        "AgentIdentityAbuse": "(async_mode: bool = True, verbose_mode: bool = False, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', evaluation_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o', types: Optional[List[Literal['agent_impersonation', 'identity_inheritance', 'cross_agent_trust_abuse']]] = ['agent_impersonation', 'identity_inheritance', 'cross_agent_trust_abuse'], purpose: Optional[str] = None, evaluation_examples: Optional[List[deepteam.metrics.types.EvaluationExample]] = None, evaluation_guidelines: Optional[List[str]] = None, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None)"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.agent_identity_abuse.template": {
+      "classes": {
+        "AgentIdentityAbuseTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.agent_identity_abuse.types": {
+      "classes": {
+        "AgentIdentityAbuseType": "(*values)"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.autonomous_agent_drift.autonomous_agent_drift": {
+      "classes": {
+        "AutonomousAgentDrift": "(async_mode: bool = True, verbose_mode: bool = False, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', evaluation_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o', types: Optional[List[Literal['goal_drift', 'reward_hacking', 'agent_collusion', 'runaway_autonomy']]] = ['goal_drift', 'reward_hacking', 'agent_collusion', 'runaway_autonomy'], purpose: Optional[str] = None, evaluation_examples: Optional[List[deepteam.metrics.types.EvaluationExample]] = None, evaluation_guidelines: Optional[List[str]] = None, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None)"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.autonomous_agent_drift.template": {
+      "classes": {
+        "AutonomousAgentDriftTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.autonomous_agent_drift.types": {
+      "classes": {
+        "AutonomousAgentDriftType": "(*values)"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.base_vulnerability": {
+      "classes": {
+        "BaseVulnerability": "(types: List[enum.Enum])"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.bfla.bfla": {
+      "classes": {
+        "BFLA": "(async_mode: bool = True, verbose_mode: bool = False, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', evaluation_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o', types: Optional[List[Literal['privilege_escalation', 'function_bypass', 'authorization_bypass']]] = ['privilege_escalation', 'function_bypass', 'authorization_bypass'], purpose: Optional[str] = None, evaluation_examples: Optional[List[deepteam.metrics.types.EvaluationExample]] = None, evaluation_guidelines: Optional[List[str]] = None, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None)"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.bfla.template": {
+      "classes": {
+        "BFLATemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.bfla.types": {
+      "classes": {
+        "BFLAType": "(*values)"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.bias.bias": {
+      "classes": {
+        "Bias": "(async_mode: bool = True, verbose_mode: bool = False, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', evaluation_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o', types: Optional[List[Literal['religion', 'politics', 'gender', 'race']]] = ['religion', 'politics', 'gender', 'race'], purpose: Optional[str] = None, evaluation_examples: Optional[List[deepteam.metrics.types.EvaluationExample]] = None, evaluation_guidelines: Optional[List[str]] = None, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None)"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.bias.template": {
+      "classes": {
+        "BiasTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.bias.types": {
+      "classes": {
+        "BiasType": "(*values)"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.bola.bola": {
+      "classes": {
+        "BOLA": "(async_mode: bool = True, verbose_mode: bool = False, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', evaluation_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o', types: Optional[List[Literal['object_access_bypass', 'cross_customer_access', 'unauthorized_object_manipulation']]] = ['object_access_bypass', 'cross_customer_access', 'unauthorized_object_manipulation'], purpose: Optional[str] = None, evaluation_examples: Optional[List[deepteam.metrics.types.EvaluationExample]] = None, evaluation_guidelines: Optional[List[str]] = None, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None)"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.bola.template": {
+      "classes": {
+        "BOLATemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.bola.types": {
+      "classes": {
+        "BOLAType": "(*values)"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.child_protection.child_protection": {
+      "classes": {
+        "ChildProtection": "(async_mode: bool = True, verbose_mode: bool = False, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', evaluation_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o', types: Optional[List[Literal['age_verification', 'data_privacy', 'exposure_interaction']]] = ['age_verification', 'data_privacy', 'exposure_interaction'], purpose: Optional[str] = None, evaluation_examples: Optional[List[deepteam.metrics.types.EvaluationExample]] = None, evaluation_guidelines: Optional[List[str]] = None, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None)"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.child_protection.template": {
+      "classes": {
+        "ChildProtectionTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.child_protection.types": {
+      "classes": {
+        "ChildProtectionType": "(*values)"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.competition.competition": {
+      "classes": {
+        "Competition": "(async_mode: bool = True, verbose_mode: bool = False, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', evaluation_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o', types: Optional[List[Literal['competitor_mention', 'market_manipulation', 'discreditation', 'confidential_strategies']]] = ['competitor_mention', 'market_manipulation', 'discreditation', 'confidential_strategies'], purpose: Optional[str] = None, evaluation_examples: Optional[List[deepteam.metrics.types.EvaluationExample]] = None, evaluation_guidelines: Optional[List[str]] = None, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None)"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.competition.template": {
+      "classes": {
+        "CompetitionTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.competition.types": {
+      "classes": {
+        "CompetitionType": "(*values)"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.constants": {
+      "classes": {
+        "VulnerabilityInfo": "(*, description: str, allowed_types: List[str], category: str) -> None"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.cross_context_retrieval.cross_context_retrieval": {
+      "classes": {
+        "CrossContextRetrieval": "(async_mode: bool = True, verbose_mode: bool = False, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', evaluation_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o', types: Optional[List[Literal['tenant', 'user', 'role']]] = ['tenant', 'user', 'role'], purpose: Optional[str] = None, evaluation_examples: Optional[List[deepteam.metrics.types.EvaluationExample]] = None, evaluation_guidelines: Optional[List[str]] = None, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None)"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.cross_context_retrieval.template": {
+      "classes": {
+        "CrossContextRetrievalTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.cross_context_retrieval.types": {
+      "classes": {
+        "CrossContextRetrievalType": "(*values)"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.custom.custom": {
+      "classes": {
+        "CustomVulnerability": "(name: str, criteria: str, types: Optional[List[str]] = None, custom_prompt: Optional[str] = None, async_mode: bool = True, verbose_mode: bool = False, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', evaluation_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o', evaluation_examples: Optional[List[deepteam.metrics.types.EvaluationExample]] = None, evaluation_guidelines: Optional[List[str]] = None, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None)"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.custom.template": {
+      "classes": {
+        "CustomVulnerabilityTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.debug_access.debug_access": {
+      "classes": {
+        "DebugAccess": "(async_mode: bool = True, verbose_mode: bool = False, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', evaluation_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o', types: Optional[List[Literal['debug_mode_bypass', 'development_endpoint_access', 'administrative_interface_exposure']]] = ['debug_mode_bypass', 'development_endpoint_access', 'administrative_interface_exposure'], purpose: Optional[str] = None, evaluation_examples: Optional[List[deepteam.metrics.types.EvaluationExample]] = None, evaluation_guidelines: Optional[List[str]] = None, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None)"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.debug_access.template": {
+      "classes": {
+        "DebugAccessTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.debug_access.types": {
+      "classes": {
+        "DebugAccessType": "(*values)"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.ethics.ethics": {
+      "classes": {
+        "Ethics": "(async_mode: bool = True, verbose_mode: bool = False, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', evaluation_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o', types: Optional[List[Literal['moral_integrity', 'responsible_transparency', 'harm_prevention']]] = ['moral_integrity', 'responsible_transparency', 'harm_prevention'], purpose: Optional[str] = None, evaluation_examples: Optional[List[deepteam.metrics.types.EvaluationExample]] = None, evaluation_guidelines: Optional[List[str]] = None, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None)"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.ethics.template": {
+      "classes": {
+        "EthicsTemplate": "()"
+      },
+      "functions": []
+    },
+    "deepteam.vulnerabilities.ethics.types": {
+      "classes": {
+        "EthicsType": "(*values)"
+      },
+      "functions": []
+    }
+  }
+}
+
+===== targeted native adapter APIs =====
+[
+  {
+    "path": "deepteam.red_team.red_team",
+    "module_file": "/usr/local/lib/python3.12/site-packages/deepteam/red_team.py",
+    "signature": "(model_callback: Callable[[str, Optional[List[deepteam.test_case.test_case.RTTurn]]], deepteam.test_case.test_case.RTTurn], vulnerabilities: Optional[List[deepteam.vulnerabilities.base_vulnerability.BaseVulnerability]] = None, attacks: Optional[List[deepteam.attacks.base_attack.BaseAttack]] = None, framework: Optional[deepteam.frameworks.frameworks.AISafetyFramework] = None, simulator_model: deepeval.models.base_model.DeepEvalBaseLLM = 'gpt-4o-mini', evaluation_model: deepeval.models.base_model.DeepEvalBaseLLM = 'gpt-4o-mini', attacks_per_vulnerability_type: int = 1, ignore_errors: bool = True, async_mode: bool = True, max_concurrent: int = 10, target_purpose: Optional[str] = None, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None)",
+    "mro": [],
+    "methods": {},
+    "source_excerpt": "def red_team(\n    model_callback: CallbackType,\n    vulnerabilities: Optional[List[BaseVulnerability]] = None,\n    attacks: Optional[List[BaseAttack]] = None,\n    framework: Optional[AISafetyFramework] = None,\n    simulator_model: DeepEvalBaseLLM = \"gpt-4o-mini\",\n    evaluation_model: DeepEvalBaseLLM = \"gpt-4o-mini\",\n    attacks_per_vulnerability_type: int = 1,\n    ignore_errors: bool = True,\n    async_mode: bool = True,\n    max_concurrent: int = 10,\n    target_purpose: Optional[str] = None,\n    attack_engine: Optional[AttackEngine] = None,\n):\n    red_teamer = RedTeamer(\n        async_mode=async_mode,\n        max_concurrent=max_concurrent,\n        target_purpose=target_purpose,\n        simulator_model=simulator_model,\n        evaluation_model=evaluation_model,\n        attack_engine=attack_engine,\n    )\n    risk_assessment = red_teamer.red_team(\n        model_callback=model_callback,\n        vulnerabilities=vulnerabilities,\n        attacks=attacks,\n        simulator_model=simulator_model,\n        evaluation_model=evaluation_model,\n        framework=framework,\n        attacks_per_vulnerability_type=attacks_per_vulnerability_type,\n        ignore_errors=ignore_errors,\n        attack_engine=attack_engine,\n    )\n    return risk_assessment\n"
+  },
+  {
+    "path": "deepteam.red_teamer.red_teamer.RedTeamer",
+    "module_file": "/usr/local/lib/python3.12/site-packages/deepteam/red_teamer/red_teamer.py",
+    "signature": "(simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', evaluation_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o', target_purpose: Optional[str] = '', async_mode: bool = True, max_concurrent: int = 10, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None)",
+    "mro": [
+      "deepteam.red_teamer.red_teamer.RedTeamer",
+      "builtins.object"
+    ],
+    "methods": {
+      "__init__": "(self, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', evaluation_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o', target_purpose: Optional[str] = '', async_mode: bool = True, max_concurrent: int = 10, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None)",
+      "a_red_team": "(self, model_callback: Callable[[str, Optional[List[deepteam.test_case.test_case.RTTurn]]], deepteam.test_case.test_case.RTTurn], vulnerabilities: Optional[List[deepteam.vulnerabilities.base_vulnerability.BaseVulnerability]] = None, attacks: Optional[List[deepteam.attacks.base_attack.BaseAttack]] = None, simulator_model: deepeval.models.base_model.DeepEvalBaseLLM = None, evaluation_model: deepeval.models.base_model.DeepEvalBaseLLM = None, framework: Optional[deepteam.frameworks.frameworks.AISafetyFramework] = None, attacks_per_vulnerability_type: int = 1, ignore_errors: bool = False, reuse_simulated_test_cases: bool = False, metadata: Optional[dict] = None, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None, _print_assessment: Optional[bool] = True, _upload_to_confident: Optional[bool] = True)",
+      "red_team": "(self, model_callback: Union[Callable[[str, Optional[List[deepteam.test_case.test_case.RTTurn]]], deepteam.test_case.test_case.RTTurn], str, deepeval.models.base_model.DeepEvalBaseLLM], vulnerabilities: Optional[List[deepteam.vulnerabilities.base_vulnerability.BaseVulnerability]] = None, attacks: Optional[List[deepteam.attacks.base_attack.BaseAttack]] = None, simulator_model: deepeval.models.base_model.DeepEvalBaseLLM = None, evaluation_model: deepeval.models.base_model.DeepEvalBaseLLM = None, framework: Optional[deepteam.frameworks.frameworks.AISafetyFramework] = None, attacks_per_vulnerability_type: int = 1, ignore_errors: bool = True, reuse_simulated_test_cases: bool = False, metadata: Optional[dict] = None, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None, _print_assessment: Optional[bool] = True, _upload_to_confident: Optional[bool] = True)"
+    },
+    "source_excerpt": "class RedTeamer:\n    risk_assessment: Optional[RiskAssessment] = None\n    simulated_test_cases: Optional[List[RTTestCase]] = None\n\n    def __init__(\n        self,\n        simulator_model: Optional[\n            Union[str, DeepEvalBaseLLM]\n        ] = \"gpt-3.5-turbo-0125\",\n        evaluation_model: Optional[Union[str, DeepEvalBaseLLM]] = \"gpt-4o\",\n        target_purpose: Optional[str] = \"\",\n        async_mode: bool = True,\n        max_concurrent: int = 10,\n        attack_engine: Optional[AttackEngine] = None,\n    ):\n        self.target_purpose = target_purpose\n        self.simulator_model, _ = initialize_model(simulator_model)\n        self.evaluation_model, _ = initialize_model(evaluation_model)\n        self.async_mode = async_mode\n        self.synthetic_goldens: List[Golden] = []\n        self.max_concurrent = max_concurrent\n        self.user_attack_engine = attack_engine\n        self.attack_simulator = AttackSimulator(\n            simulator_model=self.simulator_model,\n            purpose=self.target_purpose,\n            max_concurrent=max_concurrent,\n        )\n\n    def _resolve_attack_engine(\n        self, attack_engine: Optional[AttackEngine]\n    ) -> AttackEngine:\n        if attack_engine is not None:\n            return attack_engine\n        if self.user_attack_engine is not None:\n            return self.user_attack_engine\n        purpose = self.target_purpose or None\n        if purpose == \"\":\n            purpose = None\n        return AttackEngine(\n            simulator_model=self.simulator_model,\n            purpose=purpose,\n        )\n\n    def red_team(\n        self,\n        model_callback: Union[CallbackType, str, DeepEvalBaseLLM],\n        vulnerabilities: Optional[List[BaseVulnerability]] = None,\n        attacks: Optional[List[BaseAttack]] = None,\n        simulator_model: DeepEvalBaseLLM = None,\n        evaluation_model: DeepEvalBaseLLM = None,\n        framework: Optional[AISafetyFramework] = None,\n        attacks_per_vulnerability_type: int = 1,\n        ignore_errors: bool = True,\n        reuse_simulated_test_cases: bool = False,\n        metadata: Optional[dict] = None,\n        attack_engine: Optional[AttackEngine] = None,\n        _print_assessment: Optional[bool] = True,\n        _upload_to_confident: Optional[bool] = True,\n    ):\n        if not framework and not vulnerabilities:\n            raise ValueError(\n                \"You must either provide a 'framework' or 'vulnerabilities'\"\n            )\n\n        if framework and (vulnerabilities or attacks):\n            raise ValueError(\n                \"You can only pass either 'framework' or 'attacks' and 'vulnerabilities' at the same time\"\n            )\n\n        if isinstance(model_callback, str) or isinstance(\n            model_callback, DeepEvalBaseLLM\n        ):\n            model_callback = resolve_model_callback(\n                model_callback, self.async_mode\n            )\n\n        model_callback = wrap_model_callback(model_callback, self.async_mode)\n\n        if self.async_mode:\n            validate_model_callback_signature(\n                model_callback=model_callback,\n                async_mode=self.async_mode,\n            )\n            loop = get_or_create_event_loop()\n            return loop.run_until_complete(\n                self.a_red_team(\n                    model_callback=model_callback,\n                    attacks_per_vulnerability_type=attacks_per_vulnerability_type,\n                    vulnerabilities=vulnerabilities,\n                    framework=framework,\n                    attacks=attacks,\n                    simulator_model=simulator_model,\n                    evaluation_model=evaluation_model,\n                    ignore_errors=ignore_errors,\n                    reuse_simulated_test_cases=reuse_simulated_test_cases,\n                    metadata=metadata,\n                    attack_engine=attack_engine,\n                    _print_assessment=_print_assessment,\n                )\n            )\n        else:\n            validate_model_callback_signature("
+  },
+  {
+    "path": "deepteam.red_teamer.utils.wrap_model_callback",
+    "module_file": "/usr/local/lib/python3.12/site-packages/deepteam/red_teamer/utils.py",
+    "signature": "(model_callback, async_mode)",
+    "mro": [],
+    "methods": {},
+    "source_excerpt": "def wrap_model_callback(model_callback, async_mode):\n\n    sig = inspect.signature(model_callback)\n    params = list(sig.parameters.values())\n\n    accepts_turns = len(params) > 1 or any(\n        p.kind\n        in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD)\n        for p in params\n    )\n\n    def _validate_response(response):\n        \"\"\"Helper to strictly validate the callback's return value.\"\"\"\n        if isinstance(response, RTTurn):\n            if response.role == \"assistant\":\n                return response\n            else:\n                raise ValueError(\n                    \"The target model must return an 'RTTurn' with role='assistant' only.\"\n                )\n        elif isinstance(response, str):\n            return RTTurn(role=\"assistant\", content=response)\n        else:\n            raise TypeError(\n                f\"The target model callback has returned an invalid response of type {type(response)}. \"\n                \"Please return either a string or an 'RTTurn' with role='assistant'.\"\n            )\n\n    @wraps(model_callback)\n    def get_sync_model_callback(input: str, turns: List[RTTurn] = None):\n        if accepts_turns:\n            response = model_callback(input, turns)\n        else:\n            response = model_callback(input)\n\n        return _validate_response(response)\n\n    @wraps(model_callback)\n    async def get_async_model_callback(input: str, turns: List[RTTurn] = None):\n        if accepts_turns:\n            response = await model_callback(input, turns)\n        else:\n            response = await model_callback(input)\n\n        return _validate_response(response)\n\n    return get_async_model_callback if async_mode else get_sync_model_callback\n"
+  },
+  {
+    "path": "deepteam.red_teamer.utils.resolve_model_callback",
+    "module_file": "/usr/local/lib/python3.12/site-packages/deepteam/red_teamer/utils.py",
+    "signature": "(model_callback: Union[str, deepeval.models.base_model.DeepEvalBaseLLM], async_mode: bool)",
+    "mro": [],
+    "methods": {},
+    "source_excerpt": "def resolve_model_callback(\n    model_callback: Union[str, DeepEvalBaseLLM], async_mode: bool\n):\n    if isinstance(model_callback, str):\n        if \"/\" in model_callback:\n            provider, model = model_callback.split(\"/\", 1)\n            if provider in MODEL_PROVIDER_MAPPING.keys():\n                model_class = MODEL_PROVIDER_MAPPING.get(provider)\n                model_callback = model_class(model)\n            else:\n                raise ValueError(\n                    f\"Invalid provider for model_callback {model_callback}, please pass a string with provider prefix separated by a '/'. Ex: 'openai/gpt-4.1'. Avaliable provider prefixes: {[key for key in MODEL_PROVIDER_MAPPING.keys()]}\"\n                )\n        else:\n            raise ValueError(\n                f\"Invalid string for model_callback {model_callback}, please pass a string with provider prefix separated by a '/'. Ex: 'openai/gpt-4.1'. Avaliable provider prefixes: {[key for key in MODEL_PROVIDER_MAPPING.keys()]}\"\n            )\n\n    model_callback, _ = initialize_model(model_callback)\n\n    if not async_mode:\n\n        def new_model_callback(\n            input: str, turns: Optional[List[RTTurn]] = None\n        ):\n            res = model_callback.generate(input)\n            if isinstance(res, tuple):\n                res, _ = res\n            return RTTurn(role=\"assistant\", content=res)\n\n    else:\n\n        async def new_model_callback(\n            input: str, turns: Optional[List[RTTurn]] = None\n        ):\n            res = await model_callback.a_generate(input)\n            if isinstance(res, tuple):\n                res, _ = res\n            return RTTurn(role=\"assistant\", content=res)\n\n    return new_model_callback\n"
+  },
+  {
+    "path": "deepteam.attacks.attack_engine.attack_engine.AttackEngine",
+    "module_file": "/usr/local/lib/python3.12/site-packages/deepteam/attacks/attack_engine/attack_engine.py",
+    "signature": "(simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', variations: int = 1, generation_guidelines: Optional[List[str]] = None, purpose: Optional[str] = None)",
+    "mro": [
+      "deepteam.attacks.attack_engine.attack_engine.AttackEngine",
+      "builtins.object"
+    ],
+    "methods": {
+      "__init__": "(self, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', variations: int = 1, generation_guidelines: Optional[List[str]] = None, purpose: Optional[str] = None)",
+      "a_refine": "(self, test_cases: List[deepteam.test_case.test_case.RTTestCase], purpose: Optional[str] = None) -> List[deepteam.test_case.test_case.RTTestCase]",
+      "refine": "(self, test_cases: List[deepteam.test_case.test_case.RTTestCase], purpose: Optional[str] = None) -> List[deepteam.test_case.test_case.RTTestCase]"
+    },
+    "source_excerpt": "class AttackEngine:\n    def __init__(\n        self,\n        simulator_model: Optional[\n            Union[str, DeepEvalBaseLLM]\n        ] = \"gpt-3.5-turbo-0125\",\n        variations: int = 1,\n        generation_guidelines: Optional[List[str]] = None,\n        purpose: Optional[str] = None,\n    ):\n        self.simulator_model, _ = initialize_model(simulator_model)\n        self.variations = max(1, min(variations, 5))\n        self.generation_guidelines = generation_guidelines or []\n        self.purpose = purpose\n\n    def refine(\n        self,\n        test_cases: List[RTTestCase],\n        purpose: Optional[str] = None,\n    ) -> List[RTTestCase]:\n        refined_test_cases: List[RTTestCase] = []\n        effective_purpose = purpose if purpose is not None else self.purpose\n\n        for test_case in test_cases:\n            base_input = test_case.input or \"\"\n            vulnerability = test_case.vulnerability\n            vulnerability_type = self._vulnerability_type_label(\n                test_case.vulnerability_type\n            )\n\n            transform_prompt = AttackEngineTemplates.transform_attack_template(\n                original_input=base_input,\n                vulnerability=vulnerability,\n                vulnerability_type=vulnerability_type,\n                generation_guidelines=self.generation_guidelines,\n            )\n            transformed, refine_cost = generate_with_cost(\n                transform_prompt, TransformedAttack, self.simulator_model\n            )\n            transformed_input = transformed.input.strip()\n            if not transformed_input:\n                transformed_input = base_input\n\n            candidates = [transformed_input]\n            if self.variations > 1:\n                variation_prompt = (\n                    AttackEngineTemplates.generate_variations_template(\n                        transformed_input=transformed_input,\n                        num_variations=self.variations,\n                        vulnerability=vulnerability,\n                        vulnerability_type=vulnerability_type,\n                        generation_guidelines=self.generation_guidelines,\n                    )\n                )\n                variations, variation_cost = generate_with_cost(\n                    variation_prompt, AttackVariations, self.simulator_model\n                )\n                refine_cost = add_cost(refine_cost, variation_cost)\n                candidates = [transformed_input] + [\n                    item.strip() for item in variations.inputs\n                ]\n\n            valid_inputs, validation_cost = self._validate_candidates_with_llm(\n                candidates=candidates,\n                vulnerability=vulnerability,\n                vulnerability_type=vulnerability_type,\n                purpose=effective_purpose,\n            )\n            refine_cost = add_cost(refine_cost, validation_cost)\n            if not valid_inputs:\n                valid_inputs = [transformed_input]\n\n            # Carry the baseline simulation_cost forward and add this refine\n            # pass's cost, split evenly across the refined test cases produced.\n            combined_cost = add_cost(test_case.simulation_cost, refine_cost)\n            per_refined_cost = (\n                combined_cost / len(valid_inputs)\n                if combined_cost is not None and valid_inputs\n                else combined_cost\n            )\n            refined_test_cases.extend(\n                [\n                    self._clone_with_new_input(\n                        test_case, refined_input, per_refined_cost\n                    )\n                    for refined_input in valid_inputs\n                ]\n            )\n\n        return refined_test_cases\n\n    async def a_refine(\n        self,\n        test_cases: List[RTTestCase],\n        purpose: Optional[str] = None,\n    ) -> List[RTTestCase]:\n        results = await asyncio.gather(\n            *[\n                self._a_refine_one(test_case, purpose=purpose)\n                for test_case in test_ca"
+  },
+  {
+    "path": "deepteam.vulnerabilities.prompt_leakage.prompt_leakage.PromptLeakage",
+    "module_file": "/usr/local/lib/python3.12/site-packages/deepteam/vulnerabilities/prompt_leakage/prompt_leakage.py",
+    "signature": "(async_mode: bool = True, verbose_mode: bool = False, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', evaluation_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o', types: Optional[List[Literal['secrets_and_credentials', 'instructions', 'guard_exposure', 'permissions_and_roles']]] = ['secrets_and_credentials', 'instructions', 'guard_exposure', 'permissions_and_roles'], purpose: Optional[str] = None, evaluation_examples: Optional[List[deepteam.metrics.types.EvaluationExample]] = None, evaluation_guidelines: Optional[List[str]] = None, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None)",
+    "mro": [
+      "deepteam.vulnerabilities.prompt_leakage.prompt_leakage.PromptLeakage",
+      "deepteam.vulnerabilities.base_vulnerability.BaseVulnerability",
+      "abc.ABC",
+      "builtins.object"
+    ],
+    "methods": {
+      "__init__": "(self, async_mode: bool = True, verbose_mode: bool = False, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', evaluation_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o', types: Optional[List[Literal['secrets_and_credentials', 'instructions', 'guard_exposure', 'permissions_and_roles']]] = ['secrets_and_credentials', 'instructions', 'guard_exposure', 'permissions_and_roles'], purpose: Optional[str] = None, evaluation_examples: Optional[List[deepteam.metrics.types.EvaluationExample]] = None, evaluation_guidelines: Optional[List[str]] = None, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None)",
+      "a_assess": "(self, model_callback: Callable[[str, Optional[List[deepteam.test_case.test_case.RTTurn]]], deepteam.test_case.test_case.RTTurn], purpose: Optional[str] = None) -> Dict[deepteam.vulnerabilities.prompt_leakage.types.PromptLeakageType, List[deepteam.test_case.test_case.RTTestCase]]",
+      "a_simulate_attacks": "(self, purpose: Optional[str] = None, attacks_per_vulnerability_type: int = 1) -> List[deepteam.test_case.test_case.RTTestCase]",
+      "assess": "(self, model_callback: Callable[[str, Optional[List[deepteam.test_case.test_case.RTTurn]]], deepteam.test_case.test_case.RTTurn], purpose: Optional[str] = None) -> Dict[deepteam.vulnerabilities.prompt_leakage.types.PromptLeakageType, List[deepteam.test_case.test_case.RTTestCase]]",
+      "get_name": "(self) -> str",
+      "get_types": "(self) -> List[enum.Enum]",
+      "get_values": "(self) -> List[str]",
+      "is_vulnerable": "(self) -> bool",
+      "simulate_attacks": "(self, purpose: Optional[str] = None, attacks_per_vulnerability_type: int = 1) -> List[deepteam.test_case.test_case.RTTestCase]"
+    },
+    "source_excerpt": "class PromptLeakage(BaseVulnerability):\n    name: str = \"Prompt Leakage\"\n    description = \"Exposure of system prompts, instructions, secrets, credentials, permissions, roles, or internal guard configurations to unauthorized users.\"\n    ALLOWED_TYPES = [type.value for type in PromptLeakageType]\n    category = \"Data Privacy\"\n\n    def __init__(\n        self,\n        async_mode: bool = True,\n        verbose_mode: bool = False,\n        simulator_model: Optional[\n            Union[str, DeepEvalBaseLLM]\n        ] = \"gpt-3.5-turbo-0125\",\n        evaluation_model: Optional[Union[str, DeepEvalBaseLLM]] = \"gpt-4o\",\n        types: Optional[List[PromptLeakageLiteral]] = [\n            type.value for type in PromptLeakageType\n        ],\n        purpose: Optional[str] = None,\n        evaluation_examples: Optional[List[EvaluationExample]] = None,\n        evaluation_guidelines: Optional[List[str]] = None,\n        attack_engine: Optional[AttackEngine] = None,\n    ):\n        enum_types = validate_vulnerability_types(\n            self.get_name(), types=types, allowed_type=PromptLeakageType\n        )\n        self.async_mode = async_mode\n        self.verbose_mode = verbose_mode\n        self.simulator_model = simulator_model\n        self.evaluation_model = evaluation_model\n        self.purpose = purpose\n        self.evaluation_examples = evaluation_examples\n        self.evaluation_guidelines = evaluation_guidelines\n        super().__init__(types=enum_types)\n        self.attack_engine = attack_engine\n\n    def assess(\n        self,\n        model_callback: CallbackType,\n        purpose: Optional[str] = None,\n    ) -> Dict[PromptLeakageType, List[RTTestCase]]:\n\n        validate_model_callback_signature(\n            model_callback=model_callback,\n            async_mode=self.async_mode,\n        )\n\n        if self.async_mode:\n            loop = get_or_create_event_loop()\n            return loop.run_until_complete(\n                self.a_assess(\n                    model_callback=model_callback,\n                    purpose=purpose,\n                )\n            )\n\n        simulated_test_cases = self.simulate_attacks(purpose)\n\n        results: Dict[PromptLeakageType, List[RTTestCase]] = {}\n        res: Dict[PromptLeakageType, PromptExtractionMetric] = {}\n        simulated_attacks: Dict[str, str] = {}\n\n        for simulated_test_case in simulated_test_cases:\n            vulnerability_type = simulated_test_case.vulnerability_type\n            input_text = simulated_test_case.input\n\n            target_output = model_callback(input_text)\n            red_teaming_test_case = RTTestCase(\n                vulnerability=simulated_test_case.vulnerability,\n                vulnerability_type=vulnerability_type,\n                attackMethod=simulated_test_case.attack_method,\n                riskCategory=getRiskCategory(vulnerability_type),\n                input=input_text,\n                actual_output=target_output,\n            )\n\n            metric = self._get_metric(vulnerability_type)\n            metric.measure(red_teaming_test_case)\n\n            red_teaming_test_case.score = metric.score\n            red_teaming_test_case.reason = metric.reason\n\n            res[vulnerability_type] = metric\n            simulated_attacks[vulnerability_type.value] = input_text\n\n            results.setdefault(vulnerability_type, []).append(\n                red_teaming_test_case\n            )\n\n        self.res = res\n        self.simulated_attacks = simulated_attacks\n\n        return results\n\n    async def a_assess(\n        self,\n        model_callback: CallbackType,\n        purpose: Optional[str] = None,\n    ) -> Dict[PromptLeakageType, List[RTTestCase]]:\n\n        validate_model_callback_signature(\n            model_callback=model_callback,\n            async_mode=self.async_mode,\n        )\n\n        simulated_test_cases = await self.a_simulate_attacks(purpose)\n\n        results: Dict[PromptLeakageType, List[RTTestCase]] = {}\n        res: Dict[PromptLeakageType, PromptExtractionMetric] = {}\n   "
+  },
+  {
+    "path": "deepteam.vulnerabilities.pii_leakage.pii_leakage.PIILeakage",
+    "module_file": "/usr/local/lib/python3.12/site-packages/deepteam/vulnerabilities/pii_leakage/pii_leakage.py",
+    "signature": "(async_mode: bool = True, verbose_mode: bool = False, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', evaluation_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o', types: Optional[List[Literal['api_and_database_access', 'direct_disclosure', 'session_leak', 'social_manipulation']]] = ['api_and_database_access', 'direct_disclosure', 'session_leak', 'social_manipulation'], purpose: Optional[str] = None, evaluation_examples: Optional[List[deepteam.metrics.types.EvaluationExample]] = None, evaluation_guidelines: Optional[List[str]] = None, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None)",
+    "mro": [
+      "deepteam.vulnerabilities.pii_leakage.pii_leakage.PIILeakage",
+      "deepteam.vulnerabilities.base_vulnerability.BaseVulnerability",
+      "abc.ABC",
+      "builtins.object"
+    ],
+    "methods": {
+      "__init__": "(self, async_mode: bool = True, verbose_mode: bool = False, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', evaluation_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o', types: Optional[List[Literal['api_and_database_access', 'direct_disclosure', 'session_leak', 'social_manipulation']]] = ['api_and_database_access', 'direct_disclosure', 'session_leak', 'social_manipulation'], purpose: Optional[str] = None, evaluation_examples: Optional[List[deepteam.metrics.types.EvaluationExample]] = None, evaluation_guidelines: Optional[List[str]] = None, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None)",
+      "a_assess": "(self, model_callback: Callable[[str, Optional[List[deepteam.test_case.test_case.RTTurn]]], deepteam.test_case.test_case.RTTurn], purpose: Optional[str] = None) -> Dict[deepteam.vulnerabilities.pii_leakage.types.PIILeakageType, List[deepteam.test_case.test_case.RTTestCase]]",
+      "a_simulate_attacks": "(self, purpose: Optional[str] = None, attacks_per_vulnerability_type: int = 1) -> List[deepteam.test_case.test_case.RTTestCase]",
+      "assess": "(self, model_callback: Callable[[str, Optional[List[deepteam.test_case.test_case.RTTurn]]], deepteam.test_case.test_case.RTTurn], purpose: Optional[str] = None) -> Dict[deepteam.vulnerabilities.pii_leakage.types.PIILeakageType, List[deepteam.test_case.test_case.RTTestCase]]",
+      "get_name": "(self) -> str",
+      "get_types": "(self) -> List[enum.Enum]",
+      "get_values": "(self) -> List[str]",
+      "is_vulnerable": "(self) -> bool",
+      "simulate_attacks": "(self, purpose: Optional[str] = None, attacks_per_vulnerability_type: int = 1) -> List[deepteam.test_case.test_case.RTTestCase]"
+    },
+    "source_excerpt": "class PIILeakage(BaseVulnerability):\n    name: str = \"PII Leakage\"\n    description = \"Disclosure of personally identifiable information through direct disclosure, API/database access, session leaks, or social manipulation.\"\n    ALLOWED_TYPES = [type.value for type in PIILeakageType]\n    category = \"Data Privacy\"\n\n    def __init__(\n        self,\n        async_mode: bool = True,\n        verbose_mode: bool = False,\n        simulator_model: Optional[\n            Union[str, DeepEvalBaseLLM]\n        ] = \"gpt-3.5-turbo-0125\",\n        evaluation_model: Optional[Union[str, DeepEvalBaseLLM]] = \"gpt-4o\",\n        types: Optional[List[PIILeakageLiteral]] = [\n            type.value for type in PIILeakageType\n        ],\n        purpose: Optional[str] = None,\n        evaluation_examples: Optional[List[EvaluationExample]] = None,\n        evaluation_guidelines: Optional[List[str]] = None,\n        attack_engine: Optional[AttackEngine] = None,\n    ):\n        enum_types = validate_vulnerability_types(\n            self.get_name(), types=types, allowed_type=PIILeakageType\n        )\n        self.async_mode = async_mode\n        self.verbose_mode = verbose_mode\n        self.simulator_model = simulator_model\n        self.evaluation_model = evaluation_model\n        self.purpose = purpose\n        self.evaluation_examples = evaluation_examples\n        self.evaluation_guidelines = evaluation_guidelines\n        super().__init__(types=enum_types)\n        self.attack_engine = attack_engine\n\n    def assess(\n        self,\n        model_callback: CallbackType,\n        purpose: Optional[str] = None,\n    ) -> Dict[PIILeakageType, List[RTTestCase]]:\n\n        validate_model_callback_signature(\n            model_callback=model_callback,\n            async_mode=self.async_mode,\n        )\n\n        if self.async_mode:\n            loop = get_or_create_event_loop()\n            return loop.run_until_complete(\n                self.a_assess(\n                    model_callback=model_callback,\n                    purpose=purpose,\n                )\n            )\n\n        simulated_test_cases = self.simulate_attacks(purpose)\n\n        results: Dict[PIILeakageType, List[RTTestCase]] = {}\n        res: Dict[PIILeakageType, PIIMetric] = {}\n        simulated_attacks: Dict[str, str] = {}\n\n        for simulated_test_case in simulated_test_cases:\n            vulnerability_type = simulated_test_case.vulnerability_type\n\n            target_output = model_callback(simulated_test_case.input)\n            red_teaming_test_case = RTTestCase(\n                vulnerability=simulated_test_case.vulnerability,\n                vulnerability_type=vulnerability_type,\n                attackMethod=simulated_test_case.attack_method,\n                riskCategory=getRiskCategory(vulnerability_type),\n                input=simulated_test_case.input,\n                actual_output=target_output,\n            )\n\n            metric = self._get_metric(vulnerability_type)\n            metric.measure(red_teaming_test_case)\n\n            red_teaming_test_case.score = metric.score\n            red_teaming_test_case.reason = metric.reason\n\n            res[vulnerability_type] = metric\n            simulated_attacks[vulnerability_type.value] = (\n                simulated_test_case.input\n            )\n            results.setdefault(vulnerability_type, []).append(\n                red_teaming_test_case\n            )\n\n        self.res = res\n        self.simulated_attacks = simulated_attacks\n\n        return results\n\n    async def a_assess(\n        self,\n        model_callback: CallbackType,\n        purpose: Optional[str] = None,\n    ) -> Dict[PIILeakageType, List[RTTestCase]]:\n\n        validate_model_callback_signature(\n            model_callback=model_callback,\n            async_mode=self.async_mode,\n        )\n\n        simulated_test_cases = await self.a_simulate_attacks(purpose)\n\n        results: Dict[PIILeakageType, List[RTTestCase]] = {}\n        res: Dict[PIILeakageType, PIIMetric] = {}\n        simulated_attacks: Dict[str, str] ="
+  },
+  {
+    "path": "deepteam.vulnerabilities.rbac.rbac.RBAC",
+    "module_file": "/usr/local/lib/python3.12/site-packages/deepteam/vulnerabilities/rbac/rbac.py",
+    "signature": "(async_mode: bool = True, verbose_mode: bool = False, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', evaluation_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o', types: Optional[List[Literal['role_bypass', 'privilege_escalation', 'unauthorized_role_assumption']]] = ['role_bypass', 'privilege_escalation', 'unauthorized_role_assumption'], purpose: Optional[str] = None, evaluation_examples: Optional[List[deepteam.metrics.types.EvaluationExample]] = None, evaluation_guidelines: Optional[List[str]] = None, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None)",
+    "mro": [
+      "deepteam.vulnerabilities.rbac.rbac.RBAC",
+      "deepteam.vulnerabilities.base_vulnerability.BaseVulnerability",
+      "abc.ABC",
+      "builtins.object"
+    ],
+    "methods": {
+      "__init__": "(self, async_mode: bool = True, verbose_mode: bool = False, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', evaluation_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o', types: Optional[List[Literal['role_bypass', 'privilege_escalation', 'unauthorized_role_assumption']]] = ['role_bypass', 'privilege_escalation', 'unauthorized_role_assumption'], purpose: Optional[str] = None, evaluation_examples: Optional[List[deepteam.metrics.types.EvaluationExample]] = None, evaluation_guidelines: Optional[List[str]] = None, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None)",
+      "a_assess": "(self, model_callback: Callable[[str, Optional[List[deepteam.test_case.test_case.RTTurn]]], deepteam.test_case.test_case.RTTurn], purpose: Optional[str] = None) -> Dict[deepteam.vulnerabilities.rbac.types.RBACType, List[deepteam.test_case.test_case.RTTestCase]]",
+      "a_simulate_attacks": "(self, purpose: Optional[str] = None, attacks_per_vulnerability_type: int = 1) -> List[deepteam.test_case.test_case.RTTestCase]",
+      "assess": "(self, model_callback: Callable[[str, Optional[List[deepteam.test_case.test_case.RTTurn]]], deepteam.test_case.test_case.RTTurn], purpose: Optional[str] = None) -> Dict[deepteam.vulnerabilities.rbac.types.RBACType, List[deepteam.test_case.test_case.RTTestCase]]",
+      "get_name": "(self) -> str",
+      "get_types": "(self) -> List[enum.Enum]",
+      "get_values": "(self) -> List[str]",
+      "is_vulnerable": "(self) -> bool",
+      "simulate_attacks": "(self, purpose: Optional[str] = None, attacks_per_vulnerability_type: int = 1) -> List[deepteam.test_case.test_case.RTTestCase]"
+    },
+    "source_excerpt": "class RBAC(BaseVulnerability):\n    name: str = \"RBAC\"\n    description = \"Role-Based Access Control bypass enabling role restriction circumvention, privilege escalation, or unauthorized role assumption without proper validation.\"\n    ALLOWED_TYPES = [type.value for type in RBACType]\n    category = \"Security\"\n\n    def __init__(\n        self,\n        async_mode: bool = True,\n        verbose_mode: bool = False,\n        simulator_model: Optional[\n            Union[str, DeepEvalBaseLLM]\n        ] = \"gpt-3.5-turbo-0125\",\n        evaluation_model: Optional[Union[str, DeepEvalBaseLLM]] = \"gpt-4o\",\n        types: Optional[List[RBACLiteral]] = [type.value for type in RBACType],\n        purpose: Optional[str] = None,\n        evaluation_examples: Optional[List[EvaluationExample]] = None,\n        evaluation_guidelines: Optional[List[str]] = None,\n        attack_engine: Optional[AttackEngine] = None,\n    ):\n        enum_types = validate_vulnerability_types(\n            self.get_name(), types=types, allowed_type=RBACType\n        )\n        self.async_mode = async_mode\n        self.verbose_mode = verbose_mode\n        self.simulator_model = simulator_model\n        self.evaluation_model = evaluation_model\n        self.purpose = purpose\n        self.evaluation_examples = evaluation_examples\n        self.evaluation_guidelines = evaluation_guidelines\n        super().__init__(types=enum_types)\n        self.attack_engine = attack_engine\n\n    def assess(\n        self,\n        model_callback: CallbackType,\n        purpose: Optional[str] = None,\n    ) -> Dict[RBACType, List[RTTestCase]]:\n\n        validate_model_callback_signature(\n            model_callback=model_callback,\n            async_mode=self.async_mode,\n        )\n\n        if self.async_mode:\n            loop = get_or_create_event_loop()\n            return loop.run_until_complete(\n                self.a_assess(\n                    model_callback=model_callback,\n                    purpose=purpose,\n                )\n            )\n\n        simulated_test_cases = self.simulate_attacks(purpose)\n\n        results: Dict[RBACType, List[RTTestCase]] = {}\n        res: Dict[RBACType, RBACMetric] = {}\n        simulated_attacks: Dict[str, str] = {}\n\n        for simulated_test_case in simulated_test_cases:\n            vulnerability_type = simulated_test_case.vulnerability_type\n            input_text = simulated_test_case.input\n\n            target_output = model_callback(input_text)\n            red_teaming_test_case = RTTestCase(\n                vulnerability=simulated_test_case.vulnerability,\n                vulnerability_type=vulnerability_type,\n                attackMethod=simulated_test_case.attack_method,\n                riskCategory=getRiskCategory(vulnerability_type),\n                input=input_text,\n                actual_output=target_output,\n            )\n\n            metric = self._get_metric(vulnerability_type)\n            metric.measure(red_teaming_test_case)\n\n            red_teaming_test_case.score = metric.score\n            red_teaming_test_case.reason = metric.reason\n\n            res[vulnerability_type] = metric\n            simulated_attacks[vulnerability_type.value] = input_text\n\n            results.setdefault(vulnerability_type, []).append(\n                red_teaming_test_case\n            )\n\n        self.res = res\n        self.simulated_attacks = simulated_attacks\n\n        return results\n\n    async def a_assess(\n        self,\n        model_callback: CallbackType,\n        purpose: Optional[str] = None,\n    ) -> Dict[RBACType, List[RTTestCase]]:\n\n        validate_model_callback_signature(\n            model_callback=model_callback,\n            async_mode=self.async_mode,\n        )\n\n        simulated_test_cases = await self.a_simulate_attacks(purpose)\n\n        results: Dict[RBACType, List[RTTestCase]] = {}\n        res: Dict[RBACType, RBACMetric] = {}\n        simulated_attacks: Dict[str, str] = {}\n\n        async def process_attack(simulated_test_case: RTTestCase):\n            vulnerability_type ="
+  },
+  {
+    "path": "deepteam.vulnerabilities.bfla.bfla.BFLA",
+    "module_file": "/usr/local/lib/python3.12/site-packages/deepteam/vulnerabilities/bfla/bfla.py",
+    "signature": "(async_mode: bool = True, verbose_mode: bool = False, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', evaluation_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o', types: Optional[List[Literal['privilege_escalation', 'function_bypass', 'authorization_bypass']]] = ['privilege_escalation', 'function_bypass', 'authorization_bypass'], purpose: Optional[str] = None, evaluation_examples: Optional[List[deepteam.metrics.types.EvaluationExample]] = None, evaluation_guidelines: Optional[List[str]] = None, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None)",
+    "mro": [
+      "deepteam.vulnerabilities.bfla.bfla.BFLA",
+      "deepteam.vulnerabilities.base_vulnerability.BaseVulnerability",
+      "abc.ABC",
+      "builtins.object"
+    ],
+    "methods": {
+      "__init__": "(self, async_mode: bool = True, verbose_mode: bool = False, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', evaluation_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o', types: Optional[List[Literal['privilege_escalation', 'function_bypass', 'authorization_bypass']]] = ['privilege_escalation', 'function_bypass', 'authorization_bypass'], purpose: Optional[str] = None, evaluation_examples: Optional[List[deepteam.metrics.types.EvaluationExample]] = None, evaluation_guidelines: Optional[List[str]] = None, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None)",
+      "a_assess": "(self, model_callback: Callable[[str, Optional[List[deepteam.test_case.test_case.RTTurn]]], deepteam.test_case.test_case.RTTurn], purpose: Optional[str] = None) -> Dict[deepteam.vulnerabilities.bfla.types.BFLAType, List[deepteam.test_case.test_case.RTTestCase]]",
+      "a_simulate_attacks": "(self, purpose: Optional[str] = None, attacks_per_vulnerability_type: int = 1) -> List[deepteam.test_case.test_case.RTTestCase]",
+      "assess": "(self, model_callback: Callable[[str, Optional[List[deepteam.test_case.test_case.RTTurn]]], deepteam.test_case.test_case.RTTurn], purpose: Optional[str] = None) -> Dict[deepteam.vulnerabilities.bfla.types.BFLAType, List[deepteam.test_case.test_case.RTTestCase]]",
+      "get_name": "(self) -> str",
+      "get_types": "(self) -> List[enum.Enum]",
+      "get_values": "(self) -> List[str]",
+      "is_vulnerable": "(self) -> bool",
+      "simulate_attacks": "(self, purpose: Optional[str] = None, attacks_per_vulnerability_type: int = 1) -> List[deepteam.test_case.test_case.RTTestCase]"
+    },
+    "source_excerpt": "class BFLA(BaseVulnerability):\n    name: str = \"BFLA\"\n    description = \"Broken Function Level Authorization enabling privileged function execution, authorization bypass, or permission escalation without proper access controls.\"\n    ALLOWED_TYPES = [type.value for type in BFLAType]\n    category = \"Security\"\n\n    def __init__(\n        self,\n        async_mode: bool = True,\n        verbose_mode: bool = False,\n        simulator_model: Optional[\n            Union[str, DeepEvalBaseLLM]\n        ] = \"gpt-3.5-turbo-0125\",\n        evaluation_model: Optional[Union[str, DeepEvalBaseLLM]] = \"gpt-4o\",\n        types: Optional[List[BFLALiteral]] = [type.value for type in BFLAType],\n        purpose: Optional[str] = None,\n        evaluation_examples: Optional[List[EvaluationExample]] = None,\n        evaluation_guidelines: Optional[List[str]] = None,\n        attack_engine: Optional[AttackEngine] = None,\n    ):\n        enum_types = validate_vulnerability_types(\n            self.get_name(), types=types, allowed_type=BFLAType\n        )\n        self.async_mode = async_mode\n        self.verbose_mode = verbose_mode\n        self.simulator_model = simulator_model\n        self.evaluation_model = evaluation_model\n        self.purpose = purpose\n        self.evaluation_examples = evaluation_examples\n        self.evaluation_guidelines = evaluation_guidelines\n        super().__init__(types=enum_types)\n        self.attack_engine = attack_engine\n\n    def assess(\n        self,\n        model_callback: CallbackType,\n        purpose: Optional[str] = None,\n    ) -> Dict[BFLAType, List[RTTestCase]]:\n\n        validate_model_callback_signature(\n            model_callback=model_callback,\n            async_mode=self.async_mode,\n        )\n\n        if self.async_mode:\n            loop = get_or_create_event_loop()\n            return loop.run_until_complete(\n                self.a_assess(model_callback=model_callback, purpose=purpose)\n            )\n\n        simulated_test_cases = self.simulate_attacks(purpose)\n\n        results: Dict[BFLAType, List[RTTestCase]] = {}\n        res: Dict[BFLAType, BFLAMetric] = {}\n        simulated_attacks: Dict[str, str] = {}\n\n        for test_case in simulated_test_cases:\n            vuln_type = test_case.vulnerability_type\n            input_text = test_case.input\n\n            output = model_callback(input_text)\n\n            rt_test_case = RTTestCase(\n                vulnerability=test_case.vulnerability,\n                vulnerability_type=vuln_type,\n                attackMethod=test_case.attack_method,\n                riskCategory=getRiskCategory(vuln_type),\n                input=input_text,\n                actual_output=output,\n            )\n\n            metric = self._get_metric(vuln_type)\n            metric.measure(rt_test_case)\n\n            rt_test_case.score = metric.score\n            rt_test_case.reason = metric.reason\n\n            res[vuln_type] = metric\n            simulated_attacks[vuln_type.value] = input_text\n\n            results.setdefault(vuln_type, []).append(rt_test_case)\n\n        self.res = res\n        self.simulated_attacks = simulated_attacks\n\n        return results\n\n    async def a_assess(\n        self,\n        model_callback: CallbackType,\n        purpose: Optional[str] = None,\n    ) -> Dict[BFLAType, List[RTTestCase]]:\n\n        validate_model_callback_signature(\n            model_callback=model_callback,\n            async_mode=self.async_mode,\n        )\n\n        simulated_test_cases = await self.a_simulate_attacks(purpose)\n\n        results: Dict[BFLAType, List[RTTestCase]] = {}\n        res: Dict[BFLAType, BFLAMetric] = {}\n        simulated_attacks: Dict[str, str] = {}\n\n        async def process_attack(test_case: RTTestCase):\n            vuln_type = test_case.vulnerability_type\n            input_text = test_case.input\n\n            output = await model_callback(input_text)\n\n            rt_test_case = RTTestCase(\n                vulnerability=test_case.vulnerability,\n                vulnerability_type=vuln_type,\n            "
+  },
+  {
+    "path": "deepteam.vulnerabilities.cross_context_retrieval.cross_context_retrieval.CrossContextRetrieval",
+    "module_file": "/usr/local/lib/python3.12/site-packages/deepteam/vulnerabilities/cross_context_retrieval/cross_context_retrieval.py",
+    "signature": "(async_mode: bool = True, verbose_mode: bool = False, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', evaluation_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o', types: Optional[List[Literal['tenant', 'user', 'role']]] = ['tenant', 'user', 'role'], purpose: Optional[str] = None, evaluation_examples: Optional[List[deepteam.metrics.types.EvaluationExample]] = None, evaluation_guidelines: Optional[List[str]] = None, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None)",
+    "mro": [
+      "deepteam.vulnerabilities.cross_context_retrieval.cross_context_retrieval.CrossContextRetrieval",
+      "deepteam.vulnerabilities.base_vulnerability.BaseVulnerability",
+      "abc.ABC",
+      "builtins.object"
+    ],
+    "methods": {
+      "__init__": "(self, async_mode: bool = True, verbose_mode: bool = False, simulator_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-3.5-turbo-0125', evaluation_model: Union[str, deepeval.models.base_model.DeepEvalBaseLLM, NoneType] = 'gpt-4o', types: Optional[List[Literal['tenant', 'user', 'role']]] = ['tenant', 'user', 'role'], purpose: Optional[str] = None, evaluation_examples: Optional[List[deepteam.metrics.types.EvaluationExample]] = None, evaluation_guidelines: Optional[List[str]] = None, attack_engine: Optional[deepteam.attacks.attack_engine.attack_engine.AttackEngine] = None)",
+      "a_assess": "(self, model_callback: Callable[[str, Optional[List[deepteam.test_case.test_case.RTTurn]]], deepteam.test_case.test_case.RTTurn], purpose: Optional[str] = None) -> Dict[deepteam.vulnerabilities.cross_context_retrieval.types.CrossContextRetrievalType, List[deepteam.test_case.test_case.RTTestCase]]",
+      "a_simulate_attacks": "(self, purpose: Optional[str] = None, attacks_per_vulnerability_type: int = 1) -> List[deepteam.test_case.test_case.RTTestCase]",
+      "assess": "(self, model_callback: Callable[[str, Optional[List[deepteam.test_case.test_case.RTTurn]]], deepteam.test_case.test_case.RTTurn], purpose: Optional[str] = None) -> Dict[deepteam.vulnerabilities.cross_context_retrieval.types.CrossContextRetrievalType, List[deepteam.test_case.test_case.RTTestCase]]",
+      "get_name": "(self) -> str",
+      "get_types": "(self) -> List[enum.Enum]",
+      "get_values": "(self) -> List[str]",
+      "is_vulnerable": "(self) -> bool",
+      "simulate_attacks": "(self, purpose: Optional[str] = None, attacks_per_vulnerability_type: int = 1) -> List[deepteam.test_case.test_case.RTTestCase]"
+    },
+    "source_excerpt": "class CrossContextRetrieval(BaseVulnerability):\n    name: str = \"Cross-Context Retrieval\"\n    description = \"Unauthorized disclosure of information across boundaries, such as cross-tenant, cross-user, or cross-role data leakage in RAG or multi-tenant systems.\"\n    ALLOWED_TYPES = [type.value for type in CrossContextRetrievalType]\n    category = \"Security\"\n\n    def __init__(\n        self,\n        async_mode: bool = True,\n        verbose_mode: bool = False,\n        simulator_model: Optional[\n            Union[str, DeepEvalBaseLLM]\n        ] = \"gpt-3.5-turbo-0125\",\n        evaluation_model: Optional[Union[str, DeepEvalBaseLLM]] = \"gpt-4o\",\n        types: Optional[List[CrossContextRetrievalLiteralType]] = [\n            type.value for type in CrossContextRetrievalType\n        ],\n        purpose: Optional[str] = None,\n        evaluation_examples: Optional[List[EvaluationExample]] = None,\n        evaluation_guidelines: Optional[List[str]] = None,\n        attack_engine: Optional[AttackEngine] = None,\n    ):\n        enum_types = validate_vulnerability_types(\n            self.get_name(), types=types, allowed_type=CrossContextRetrievalType\n        )\n        self.async_mode = async_mode\n        self.verbose_mode = verbose_mode\n        self.simulator_model = simulator_model\n        self.evaluation_model = evaluation_model\n        self.purpose = purpose\n        self.evaluation_examples = evaluation_examples\n        self.evaluation_guidelines = evaluation_guidelines\n        super().__init__(types=enum_types)\n        self.attack_engine = attack_engine\n\n    def assess(\n        self,\n        model_callback: CallbackType,\n        purpose: Optional[str] = None,\n    ) -> Dict[CrossContextRetrievalType, List[RTTestCase]]:\n        # Validate model callback signature once\n        validate_model_callback_signature(\n            model_callback=model_callback,\n            async_mode=self.async_mode,\n        )\n\n        if self.async_mode:\n            loop = get_or_create_event_loop()\n            return loop.run_until_complete(\n                self.a_assess(model_callback=model_callback, purpose=purpose)\n            )\n\n        # Run simulated attacks\n        simulated_test_cases = self.simulate_attacks(purpose)\n\n        results: Dict[CrossContextRetrievalType, List[RTTestCase]] = {}\n        res: Dict[CrossContextRetrievalType, CrossContextRetrievalMetric] = {}\n        simulated_attacks: Dict[str, str] = {}\n\n        for test_case in simulated_test_cases:\n            vuln_type = test_case.vulnerability_type\n            input_text = test_case.input\n\n            output = model_callback(input_text)\n\n            rt_test_case = RTTestCase(\n                vulnerability=test_case.vulnerability,\n                vulnerability_type=vuln_type,\n                attackMethod=test_case.attack_method,\n                riskCategory=getRiskCategory(vuln_type),\n                input=input_text,\n                actual_output=output,\n            )\n\n            metric = self._get_metric(vuln_type)\n            metric.measure(rt_test_case)\n\n            rt_test_case.score = metric.score\n            rt_test_case.reason = metric.reason\n\n            res[vuln_type] = metric\n            simulated_attacks[vuln_type.value] = input_text\n\n            results.setdefault(vuln_type, []).append(rt_test_case)\n\n        # Store results in instance for later access\n        self.res = res\n        self.simulated_attacks = simulated_attacks\n\n        return results\n\n    async def a_assess(\n        self,\n        model_callback: CallbackType,\n        purpose: Optional[str] = None,\n    ) -> Dict[CrossContextRetrievalType, List[RTTestCase]]:\n        # Validate the async model callback\n        validate_model_callback_signature(\n            model_callback=model_callback,\n            async_mode=self.async_mode,\n        )\n\n        # Run simulated attack generation\n        simulated_test_cases = await self.a_simulate_attacks(purpose)\n\n        results: Dict[CrossContextRetrievalType, List[RTTestCase]] = {}\n      "
+  },
+  {
+    "path": "deepteam.test_case.test_case.RTTurn",
+    "module_file": "/usr/local/lib/python3.12/site-packages/deepteam/test_case/test_case.py",
+    "signature": "(*, role: Literal['user', 'assistant'], content: str, user_id: Optional[str] = None, retrieval_context: Optional[List[Union[str, deepeval.test_case.llm_test_case.RetrievedContextData]]] = None, tools_called: Optional[List[deepeval.test_case.llm_test_case.ToolCall]] = None, mcp_tools_called: Optional[List[deepeval.test_case.mcp.MCPToolCall]] = None, mcp_resources_called: Optional[List[deepeval.test_case.mcp.MCPResourceCall]] = None, mcp_prompts_called: Optional[List[deepeval.test_case.mcp.MCPPromptCall]] = None, metadata: Optional[Dict] = None, turn_level_attack: Optional[str] = None) -> None",
+    "mro": [
+      "deepteam.test_case.test_case.RTTurn",
+      "deepeval.test_case.conversational_test_case.Turn",
+      "pydantic.main.BaseModel",
+      "builtins.object"
+    ],
+    "methods": {
+      "__init__": "(self, /, **data: 'Any') -> 'None'",
+      "construct": "(_fields_set: 'set[str] | None' = None, **values: 'Any') -> 'Self'",
+      "copy": "(self, *, include: 'AbstractSetIntStr | MappingIntStrAny | None' = None, exclude: 'AbstractSetIntStr | MappingIntStrAny | None' = None, update: 'Dict[str, Any] | None' = None, deep: 'bool' = False) -> 'Self'",
+      "dict": "(self, *, include: 'IncEx | None' = None, exclude: 'IncEx | None' = None, by_alias: 'bool' = False, exclude_unset: 'bool' = False, exclude_defaults: 'bool' = False, exclude_none: 'bool' = False) -> 'Dict[str, Any]'",
+      "from_orm": "(obj: 'Any') -> 'Self'",
+      "json": "(self, *, include: 'IncEx | None' = None, exclude: 'IncEx | None' = None, by_alias: 'bool' = False, exclude_unset: 'bool' = False, exclude_defaults: 'bool' = False, exclude_none: 'bool' = False, encoder: 'Callable[[Any], Any] | None' = PydanticUndefined, models_as_dict: 'bool' = PydanticUndefined, **dumps_kwargs: 'Any') -> 'str'",
+      "model_construct": "(_fields_set: 'set[str] | None' = None, **values: 'Any') -> 'Self'",
+      "model_copy": "(self, *, update: 'Mapping[str, Any] | None' = None, deep: 'bool' = False) -> 'Self'",
+      "model_dump": "(self, *, mode: \"Literal['json', 'python'] | str\" = 'python', include: 'IncEx | None' = None, exclude: 'IncEx | None' = None, context: 'Any | None' = None, by_alias: 'bool | None' = None, exclude_unset: 'bool' = False, exclude_defaults: 'bool' = False, exclude_none: 'bool' = False, round_trip: 'bool' = False, warnings: \"bool | Literal['none', 'warn', 'error']\" = True, fallback: 'Callable[[Any], Any] | None' = None, serialize_as_any: 'bool' = False) -> 'dict[str, Any]'",
+      "model_dump_json": "(self, *, indent: 'int | None' = None, include: 'IncEx | None' = None, exclude: 'IncEx | None' = None, context: 'Any | None' = None, by_alias: 'bool | None' = None, exclude_unset: 'bool' = False, exclude_defaults: 'bool' = False, exclude_none: 'bool' = False, round_trip: 'bool' = False, warnings: \"bool | Literal['none', 'warn', 'error']\" = True, fallback: 'Callable[[Any], Any] | None' = None, serialize_as_any: 'bool' = False) -> 'str'",
+      "model_json_schema": "(by_alias: 'bool' = True, ref_template: 'str' = '#/$defs/{model}', schema_generator: 'type[GenerateJsonSchema]' = <class 'pydantic.json_schema.GenerateJsonSchema'>, mode: 'JsonSchemaMode' = 'validation') -> 'dict[str, Any]'",
+      "model_parametrized_name": "(params: 'tuple[type[Any], ...]') -> 'str'",
+      "model_post_init": "(self, context: 'Any', /) -> 'None'",
+      "model_rebuild": "(*, force: 'bool' = False, raise_errors: 'bool' = True, _parent_namespace_depth: 'int' = 2, _types_namespace: 'MappingNamespace | None' = None) -> 'bool | None'",
+      "model_validate": "(obj: 'Any', *, strict: 'bool | None' = None, from_attributes: 'bool | None' = None, context: 'Any | None' = None, by_alias: 'bool | None' = None, by_name: 'bool | None' = None) -> 'Self'",
+      "model_validate_json": "(json_data: 'str | bytes | bytearray', *, strict: 'bool | None' = None, context: 'Any | None' = None, by_alias: 'bool | None' = None, by_name: 'bool | None' = None) -> 'Self'",
+      "model_validate_strings": "(obj: 'Any', *, strict: 'bool | None' = None, context: 'Any | None' = None, by_alias: 'bool | None' = None, by_name: 'bool | None' = None) -> 'Self'",
+      "parse_file": "(path: 'str | Path', *, content_type: 'str | None' = None, encoding: 'str' = 'utf8', proto: 'DeprecatedParseProtocol | None' = None, allow_pickle: 'bool' = False) -> 'Self'",
+      "parse_obj": "(obj: 'Any') -> 'Self'",
+      "parse_raw": "(b: 'str | bytes', *, content_type: 'str | None' = None, encoding: 'str' = 'utf8', proto: 'DeprecatedParseProtocol | None' = None, allow_pickle: 'bool' = False) -> 'Self'",
+      "schema": "(by_alias: 'bool' = True, ref_template: 'str' = '#/$defs/{model}') -> 'Dict[str, Any]'",
+      "schema_json": "(*, by_alias: 'bool' = True, ref_template: 'str' = '#/$defs/{model}', **dumps_kwargs: 'Any') -> 'str'",
+      "update_forward_refs": "(**localns: 'Any') -> 'None'",
+      "validate": "(value: 'Any') -> 'Self'",
+      "validate_input": "(data)"
+    },
+    "source_excerpt": "class RTTurn(Turn):\n    turn_level_attack: Optional[str] = None\n\n    def __repr__(self):\n        attrs = [f\"role={self.role}\", f\"content={self.content}\"]\n        if self.turn_level_attack is not None:\n            attrs.append(f\"turn_level_attack={self.turn_level_attack}\")\n        return f\"RTTurn({', '.join(attrs)})\"\n"
+  },
+  {
+    "path": "deepteam.test_case.test_case.RTTestCase",
+    "module_file": "/usr/local/lib/python3.12/site-packages/deepteam/test_case/test_case.py",
+    "signature": "(*, input: Optional[str] = None, actual_output: Optional[str] = None, expected_output: Optional[str] = None, context: Optional[List[str]] = None, retrieval_context: Optional[List[Union[str, deepeval.test_case.llm_test_case.RetrievedContextData]]] = None, metadata: Optional[dict] = None, tools_called: Optional[List[deepeval.test_case.llm_test_case.ToolCall]] = None, comments: Optional[str] = None, expected_tools: Optional[List[deepeval.test_case.llm_test_case.ToolCall]] = None, token_cost: Optional[float] = None, completion_time: Optional[float] = None, multimodal: bool = False, name: Optional[str] = None, tags: Optional[List[str]] = None, mcp_servers: Optional[List[deepeval.test_case.mcp.MCPServer]] = None, mcp_tools_called: Optional[List[deepeval.test_case.mcp.MCPToolCall]] = None, mcp_resources_called: Optional[List[deepeval.test_case.mcp.MCPResourceCall]] = None, mcp_prompts_called: Optional[List[deepeval.test_case.mcp.MCPPromptCall]] = None, custom_column_key_values: Optional[Dict[str, str]] = None, vulnerability: str, turns: Optional[List[deepteam.test_case.test_case.RTTurn]] = None, vulnerability_type: enum.Enum = None, attack_method: Optional[str] = None, risk_category: Optional[str] = None, score: Optional[float] = None, reason: Optional[str] = None, error: Optional[str] = None, simulation_cost: Optional[float] = None, evaluation_cost: Optional[float] = None) -> None",
+    "mro": [
+      "deepteam.test_case.test_case.RTTestCase",
+      "deepeval.test_case.llm_test_case.LLMTestCase",
+      "pydantic.main.BaseModel",
+      "builtins.object"
+    ],
+    "methods": {
+      "__init__": "(self, /, **data: 'Any') -> 'None'",
+      "construct": "(_fields_set: 'set[str] | None' = None, **values: 'Any') -> 'Self'",
+      "copy": "(self, *, include: 'AbstractSetIntStr | MappingIntStrAny | None' = None, exclude: 'AbstractSetIntStr | MappingIntStrAny | None' = None, update: 'Dict[str, Any] | None' = None, deep: 'bool' = False) -> 'Self'",
+      "dict": "(self, *, include: 'IncEx | None' = None, exclude: 'IncEx | None' = None, by_alias: 'bool' = False, exclude_unset: 'bool' = False, exclude_defaults: 'bool' = False, exclude_none: 'bool' = False) -> 'Dict[str, Any]'",
+      "from_orm": "(obj: 'Any') -> 'Self'",
+      "json": "(self, *, include: 'IncEx | None' = None, exclude: 'IncEx | None' = None, by_alias: 'bool' = False, exclude_unset: 'bool' = False, exclude_defaults: 'bool' = False, exclude_none: 'bool' = False, encoder: 'Callable[[Any], Any] | None' = PydanticUndefined, models_as_dict: 'bool' = PydanticUndefined, **dumps_kwargs: 'Any') -> 'str'",
+      "model_construct": "(_fields_set: 'set[str] | None' = None, **values: 'Any') -> 'Self'",
+      "model_copy": "(self, *, update: 'Mapping[str, Any] | None' = None, deep: 'bool' = False) -> 'Self'",
+      "model_dump": "(self, *, mode: \"Literal['json', 'python'] | str\" = 'python', include: 'IncEx | None' = None, exclude: 'IncEx | None' = None, context: 'Any | None' = None, by_alias: 'bool | None' = None, exclude_unset: 'bool' = False, exclude_defaults: 'bool' = False, exclude_none: 'bool' = False, round_trip: 'bool' = False, warnings: \"bool | Literal['none', 'warn', 'error']\" = True, fallback: 'Callable[[Any], Any] | None' = None, serialize_as_any: 'bool' = False) -> 'dict[str, Any]'",
+      "model_dump_json": "(self, *, indent: 'int | None' = None, include: 'IncEx | None' = None, exclude: 'IncEx | None' = None, context: 'Any | None' = None, by_alias: 'bool | None' = None, exclude_unset: 'bool' = False, exclude_defaults: 'bool' = False, exclude_none: 'bool' = False, round_trip: 'bool' = False, warnings: \"bool | Literal['none', 'warn', 'error']\" = True, fallback: 'Callable[[Any], Any] | None' = None, serialize_as_any: 'bool' = False) -> 'str'",
+      "model_json_schema": "(by_alias: 'bool' = True, ref_template: 'str' = '#/$defs/{model}', schema_generator: 'type[GenerateJsonSchema]' = <class 'pydantic.json_schema.GenerateJsonSchema'>, mode: 'JsonSchemaMode' = 'validation') -> 'dict[str, Any]'",
+      "model_parametrized_name": "(params: 'tuple[type[Any], ...]') -> 'str'",
+      "model_post_init": "(self: 'BaseModel', context: 'Any', /) -> 'None'",
+      "model_rebuild": "(*, force: 'bool' = False, raise_errors: 'bool' = True, _parent_namespace_depth: 'int' = 2, _types_namespace: 'MappingNamespace | None' = None) -> 'bool | None'",
+      "model_validate": "(obj: 'Any', *, strict: 'bool | None' = None, from_attributes: 'bool | None' = None, context: 'Any | None' = None, by_alias: 'bool | None' = None, by_name: 'bool | None' = None) -> 'Self'",
+      "model_validate_json": "(json_data: 'str | bytes | bytearray', *, strict: 'bool | None' = None, context: 'Any | None' = None, by_alias: 'bool | None' = None, by_name: 'bool | None' = None) -> 'Self'",
+      "model_validate_strings": "(obj: 'Any', *, strict: 'bool | None' = None, context: 'Any | None' = None, by_alias: 'bool | None' = None, by_name: 'bool | None' = None) -> 'Self'",
+      "parse_file": "(path: 'str | Path', *, content_type: 'str | None' = None, encoding: 'str' = 'utf8', proto: 'DeprecatedParseProtocol | None' = None, allow_pickle: 'bool' = False) -> 'Self'",
+      "parse_obj": "(obj: 'Any') -> 'Self'",
+      "parse_raw": "(b: 'str | bytes', *, content_type: 'str | None' = None, encoding: 'str' = 'utf8', proto: 'DeprecatedParseProtocol | None' = None, allow_pickle: 'bool' = False) -> 'Self'",
+      "schema": "(by_alias: 'bool' = True, ref_template: 'str' = '#/$defs/{model}') -> 'Dict[str, Any]'",
+      "schema_json": "(*, by_alias: 'bool' = True, ref_template: 'str' = '#/$defs/{model}', **dumps_kwargs: 'Any') -> 'str'",
+      "set_is_multimodal": "(self)",
+      "update_forward_refs": "(**localns: 'Any') -> 'None'",
+      "validate": "(value: 'Any') -> 'Self'",
+      "validate_input": "(data)"
+    },
+    "source_excerpt": "class RTTestCase(LLMTestCase):\n    vulnerability: str\n    input: Optional[str] = None\n    actual_output: Optional[str] = None\n    turns: Optional[List[RTTurn]] = None\n    metadata: Optional[dict] = None\n    vulnerability_type: Enum = None\n    attack_method: Optional[str] = None\n    risk_category: Optional[str] = None\n    score: Optional[float] = None\n    reason: Optional[str] = None\n    error: Optional[str] = None\n    simulation_cost: Optional[float] = None\n    evaluation_cost: Optional[float] = None\n\n    def __repr__(self):\n        attrs = [\n            f\"vulnerability={self.vulnerability}\",\n            f\"vulnerability_type={self.vulnerability_type.value}\",\n        ]\n        if self.input is not None:\n            attrs.append(f\"input={self.input}\")\n        if self.actual_output is not None:\n            attrs.append(f\"actual_output={self.actual_output}\")\n        if self.turns is not None:\n            attrs.append(f\"turns={self.turns}\")\n        if self.metadata is not None:\n            attrs.append(f\"metadata={self.metadata}\")\n        if self.attack_method is not None:\n            attrs.append(f\"attack_method={self.attack_method}\")\n        if self.risk_category is not None:\n            attrs.append(f\"risk_category={self.risk_category}\")\n        if self.score is not None:\n            attrs.append(f\"score={self.score}\")\n        if self.reason is not None:\n            attrs.append(f\"reason={self.reason}\")\n        if self.error is not None:\n            attrs.append(f\"error={self.error}\")\n        return f\"RTTestCase({', '.join(attrs)})\"\n\n    # @model_validator(mode=\"before\")\n    # def validate_input(cls, data):\n    #     vulnerability = data.get(\"vulnerability\")\n    #     input = data.get(\"input\")\n    #     actual_output = data.get(\"actual_output\")\n    #     turns = data.get(\"turns\")\n    #     vulnerability_type = data.get(\"vulnerability_type\")\n    #     metadata = data.get(\"metadata\")\n    #     attack_method = data.get(\"attack_method\")\n    #     risk_category = data.get(\"risk_category\")\n    #     score = data.get(\"score\")\n    #     reason = data.get(\"reason\")\n    #     error = data.get(\"error\")\n\n    #     if input is not None:\n    #         if not isinstance(input, str):\n    #             raise TypeError(\"'input' must be a string\")\n\n    #     if actual_output is not None:\n    #         if not isinstance(actual_output, str):\n    #             raise TypeError(\"'actual_output' must be a string\")\n\n    #     if turns is not None:\n    #         if not isinstance(turns, list) or not all(\n    #             isinstance(turn, RTTurn) for turn in turns\n    #         ):\n    #             raise TypeError(\"'turns' must be a list of 'RTTurn'\")\n\n    #     if actual_output is not None and turns is not None:\n    #         raise ValueError(\n    #             \"An 'RTTestCase' cannot contain both 'actual_output' and 'turns' at the same time.\"\n    #         )\n\n    #     if vulnerability is not None:\n    #         if not isinstance(vulnerability, str):\n    #             raise TypeError(\"'vulnerability' must be a string\")\n\n    #     if vulnerability_type is not None:\n    #         if not isinstance(vulnerability, str):\n    #             raise TypeError(\"'vulnerability_type' must be an Enum\")\n\n    #     if metadata is not None:\n    #         if not isinstance(metadata, dict):\n    #             raise TypeError(\"'metadata' must be a dictionary\")\n\n    #     if attack_method is not None:\n    #         if not isinstance(attack_method, str):\n    #             raise TypeError(\"'attack_method' must be a string\")\n\n    #     if risk_category is not None:\n    #         if not isinstance(risk_category, str):\n    #             raise TypeError(\"'risk_category' must be a string\")\n\n    #     if score is not None:\n    #         if not isinstance(score, float):\n    #             raise TypeError(\"'score' must be a float\")\n\n    #     if reason is not None:\n    #         if not isinstance(reason, str):\n    #             raise TypeError(\"'reason' must be a string\")\n\n    #     if"
+  },
+  {
+    "path": "deepteam.attacks.base_attack.BaseAttack",
+    "module_file": "/usr/local/lib/python3.12/site-packages/deepteam/attacks/base_attack.py",
+    "signature": "()",
+    "mro": [
+      "deepteam.attacks.base_attack.BaseAttack",
+      "abc.ABC",
+      "builtins.object"
+    ],
+    "methods": {
+      "a_enhance": "(self, attack: str, *args, **kwargs) -> str",
+      "enhance": "(self, attack: str, *args, **kwargs) -> str",
+      "get_name": "(self) -> str"
+    },
+    "source_excerpt": "class BaseAttack(ABC):\n    weight: int = 1\n    multi_turn: bool = False\n    name: str\n    description: Optional[str] = None\n    exploitability: Exploitability\n\n    def enhance(self, attack: str, *args, **kwargs) -> str:\n        pass\n\n    async def a_enhance(self, attack: str, *args, **kwargs) -> str:\n        return self.enhance(attack, *args, **kwargs)\n\n    @abstractmethod\n    def get_name(self) -> str:\n        raise NotImplementedError\n"
+  },
+  {
+    "path": "deepteam.attacks.single_turn.jailbreaking.linear_jailbreaking.LinearJailbreaking",
+    "import_error": "No module named 'deepteam.attacks.single_turn.jailbreaking'"
+  },
+  {
+    "path": "deepteam.attacks.multi_turn.roleplay.roleplay.Roleplay",
+    "import_error": "No module named 'deepteam.attacks.multi_turn.roleplay'"
+  }
+]
