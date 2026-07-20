@@ -222,8 +222,9 @@ class FrameworkManager:
                 result.id, f"AISAFETY_CANARY_{result.id}_{secrets.token_hex(6).upper()}"
             ),
         }
-        if request.pyrit_attack is not None:
-            configuration["pyrit_attack"] = request.pyrit_attack
+        selected_pyrit_attack = planner_decision.get("pyrit_attack") or request.pyrit_attack
+        if selected_pyrit_attack is not None:
+            configuration["pyrit_attack"] = selected_pyrit_attack
         configuration["pyrit_max_attacker_calls"] = request.pyrit_max_attacker_calls
         if inherited_context:
             configuration["chain_context"] = inherited_context
@@ -865,6 +866,32 @@ class FrameworkManager:
                 remaining = [framework for framework in requested if framework not in completed]
                 if remaining:
                     next_framework = remaining[0]
+                    pyrit_attack = None
+                    pyrit_rationale = ""
+                    if next_framework == "pyrit":
+                        pyrit_stage = completed.count("pyrit")
+                        if pyrit_stage == 0:
+                            pyrit_attack = "prompt_sending"
+                            pyrit_rationale = "Initial PyRIT stage uses the bounded single-turn baseline."
+                        else:
+                            prior_pyrit = [
+                                item for item in result.normalized_evidence if item.get("framework") == "pyrit"
+                            ]
+                            prior_resisted = bool(prior_pyrit) and not any(
+                                item.get("confirmed") or item.get("success") for item in prior_pyrit
+                            )
+                            if prior_resisted and opportunities:
+                                pyrit_attack = "tap"
+                                pyrit_rationale = "Prior PyRIT prompts were resisted and attack opportunities warrant tree-search probing."
+                            elif prior_resisted:
+                                pyrit_attack = "red_teaming"
+                                pyrit_rationale = "Prior PyRIT prompts were resisted; escalate to adversarial red teaming."
+                            else:
+                                pyrit_attack = request.pyrit_attack or "red_teaming"
+                                pyrit_rationale = "Escalate the subsequent PyRIT stage after prior evidence review."
+                        if request.pyrit_attack and pyrit_stage == 0:
+                            pyrit_attack = request.pyrit_attack
+                            pyrit_rationale = f"Use the explicitly requested PyRIT attack: {pyrit_attack}."
                     decision = PlannerDecision(
                         next_framework=next_framework,
                         action_type="complete_pentest_stage",
@@ -891,7 +918,10 @@ class FrameworkManager:
                         continue_assessment=True,
                         policy_rule_id="complete-pentest-fixed-order",
                         safety_decision={"approved": True, "reason": "complete_pentest_mode"},
+                        pyrit_attack=pyrit_attack,
                     )
+                    if pyrit_attack:
+                        decision.rationale = f"{decision.rationale} {pyrit_rationale}"
                 else:
                     decision = PlannerDecision(
                         action_type="stop",
@@ -1044,6 +1074,7 @@ class FrameworkManager:
                     "policy_rule_id": decision.policy_rule_id,
                     "evidence_references": decision.evidence_references,
                     "expected_confirmation_condition": decision.expected_confirmation_condition,
+                    "pyrit_attack": decision.pyrit_attack,
                     "at": datetime.now(UTC).isoformat(),
                 }
             )

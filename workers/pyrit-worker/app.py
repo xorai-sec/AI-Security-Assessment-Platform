@@ -124,23 +124,6 @@ def _message_conversation_id(message: Any, default: str) -> str:
 
 def _build_pyrit_message(text: str, request_message: Any, conversation_id: str) -> Any:
     errors: list[str] = []
-    candidates: list[tuple[str, Any]] = []
-    for path in ("pyrit.models.message.Message", "pyrit.models.Message"):
-        try:
-            candidates.append((path, _load_symbol(path)))
-        except Exception as exc:
-            errors.append(f"{path}: {exc}")
-    for path, cls in candidates:
-        for kwargs in (
-            {"role": "assistant", "content": text},
-            {"role": "assistant", "content": text, "conversation_id": conversation_id},
-            {"role": "assistant", "text": text, "conversation_id": conversation_id},
-            {"content": text, "role": "assistant"},
-        ):
-            try:
-                return cls(**kwargs)
-            except Exception as exc:
-                errors.append(f"{path}{kwargs}: {exc}")
     try:
         piece_cls = _load_symbol("pyrit.models.message_piece.MessagePiece")
         piece = piece_cls(
@@ -149,19 +132,15 @@ def _build_pyrit_message(text: str, request_message: Any, conversation_id: str) 
             converted_value=text,
             conversation_id=conversation_id,
         )
-        for _, cls in candidates:
-            for method_name in ("from_message_pieces", "from_message_piece", "from_pieces"):
-                method = getattr(cls, method_name, None)
-                if callable(method):
-                    try:
-                        argument = [piece] if method_name != "from_message_piece" else piece
-                        return method(argument)
-                    except Exception as exc:
-                        errors.append(f"{cls}.{method_name}: {exc}")
-            try:
-                return cls(request_pieces=[piece])
-            except Exception as exc:
-                errors.append(f"{cls}.request_pieces: {exc}")
+        # PyRIT 0.13's public response API is MessagePiece.to_message().
+        # Constructing Message with role/content or request_pieces is not
+        # supported and causes the target call to fail before it reaches the
+        # target proxy.
+        to_message = getattr(piece, "to_message", None)
+        if callable(to_message):
+            return to_message()
+        message_cls = _load_symbol("pyrit.models.message.Message")
+        return message_cls([piece])
     except Exception as exc:
         errors.append(f"MessagePiece: {exc}")
     if hasattr(request_message, "model_copy"):
@@ -461,7 +440,10 @@ class PyRITRunner(BaseFrameworkRunner):
         return objectives[: max(1, min(request.limits.maximum_requests, len(objectives)))]
 
     async def _execute_native(self, request: FrameworkExecutionRequest, target: TargetProxyPromptTarget) -> Any:
-        requested_attack = str(request.configuration.get("pyrit_attack") or "prompt_sending")
+        configured_attack = request.configuration.get("pyrit_attack")
+        if not configured_attack and request.configuration.get("chain_context") is not None:
+            raise RuntimeError("PyRIT attack strategy must be explicitly selected for orchestrated stages")
+        requested_attack = str(configured_attack or "prompt_sending")
         PromptSendingAttack, public_export = _resolve_public_attack(requested_attack)
         scoring_config, scorer_meta = self._build_scoring_config(request, target)
         if scoring_config is None:
@@ -605,7 +587,10 @@ class PyRITRunner(BaseFrameworkRunner):
         traffic_path = artifacts.path("target-proxy-traffic.jsonl")
         native_result_path = artifacts.path("native-result.json")
         plugin_ids = [PYRIT_PROMPT_TARGET, PYRIT_ATTACK, PYRIT_EXECUTOR]
-        requested_attack = str(request.configuration.get("pyrit_attack") or "prompt_sending")
+        configured_attack = request.configuration.get("pyrit_attack")
+        if not configured_attack and request.configuration.get("chain_context") is not None:
+            raise RuntimeError("PyRIT attack strategy must be explicitly selected for orchestrated stages")
+        requested_attack = str(configured_attack or "prompt_sending")
         errors: list[str] = []
         native_result: Any = None
         memory, memory_plugins = self._set_memory(memory_path)
