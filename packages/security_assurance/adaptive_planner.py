@@ -62,6 +62,7 @@ class PlannerDecision(BaseModel):
     selected_vulnerabilities: list[str] = Field(default_factory=list)
     selected_attacks: list[str] = Field(default_factory=list)
     selected_strategies: list[str] = Field(default_factory=list)
+    pyrit_attack: str | None = None
     profile: str = "quick"
     request_budget: int = 0
     turn_budget: int = 0

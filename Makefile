@@ -1,4 +1,4 @@
-.PHONY: install install-frameworks prepare-runtime validate-artifact-permissions configure-model-roles setup-ollama-models lint typecheck test test-unit test-integration test-e2e security-check build build-frameworks up up-full up-frameworks up-gpu down migrate seed demo-up demo-seed demo-assess demo-report validate validate-targets validate-adapters validate-frameworks validate-e2e validate-gpu inspect-garak inspect-pyrit framework-health framework-self-test self-test-garak self-test-pyrit self-test-promptfoo target-health register-enterprise-assist register-ollama-target register-vllm-target register-openai-fixture register-custom-rest-fixture assess-target assess-native assess-garak assess-pyrit assess-promptfoo assess-all assess-all-quick assess-all-standard assess-all-comprehensive assess-chain assess-adaptive assess-complete-pentest validate-adaptive-planner validate-garak-native validate-pyrit-native validate-promptfoo-native assess-target-group assess-model-group hardened-retest retest-finding generate-reports generate-pdf-reports generate-evidence-package clean
+.PHONY: install install-frameworks prepare-runtime validate-artifact-permissions configure-model-roles setup-ollama-models lint typecheck test test-unit test-integration test-e2e security-check build build-frameworks up up-full up-frameworks up-gpu down migrate seed demo-up demo-seed demo-assess demo-report validate validate-targets validate-adapters validate-frameworks validate-e2e validate-gpu inspect-garak inspect-pyrit framework-health framework-self-test self-test-garak self-test-pyrit self-test-promptfoo target-health register-enterprise-assist register-ollama-target register-vllm-target register-openai-fixture register-custom-rest-fixture assess-target assess-native assess-garak assess-pyrit assess-promptfoo assess-all assess-all-quick assess-all-standard assess-all-comprehensive assess-chain assess-adaptive assess-adaptive-stable assess-hard-adaptive assess-complete-pentest assess-deep-owasp assess-deep-owasp-4h assess-deep-owasp-large validate-adaptive-planner validate-garak-native validate-pyrit-native validate-promptfoo-native assess-target-group assess-model-group hardened-retest retest-finding generate-reports generate-pdf-reports generate-evidence-package clean
 
 PYTHON ?= python
 
@@ -161,10 +161,25 @@ assess-chain:
 	FRAMEWORK_EXECUTION_MODE=chained FRAMEWORK_STRATEGY=attack-planning PROFILE=$${PROFILE:-quick} FRAMEWORK_MAX_REQUESTS=$${FRAMEWORK_MAX_REQUESTS:-24} FRAMEWORK_MAX_TURNS=$${FRAMEWORK_MAX_TURNS:-8} FRAMEWORK_MAX_DURATION_SECONDS=$${FRAMEWORK_MAX_DURATION_SECONDS:-1800} $(PYTHON) scripts/frameworks/assess_frameworks.py garak pyrit promptfoo native
 
 assess-adaptive:
-	TARGET_ID=$(TARGET_ID) FRAMEWORK_EXECUTION_MODE=chained FRAMEWORK_STRATEGY=adaptive PROFILE=$${PROFILE:-quick} FRAMEWORK_MAX_REQUESTS=$${FRAMEWORK_MAX_REQUESTS:-24} FRAMEWORK_MAX_TURNS=$${FRAMEWORK_MAX_TURNS:-8} FRAMEWORK_MAX_DURATION_SECONDS=$${FRAMEWORK_MAX_DURATION_SECONDS:-1800} $(PYTHON) scripts/frameworks/assess_frameworks.py garak pyrit promptfoo native
+	$(MAKE) assess-adaptive-stable TARGET_ID=$(TARGET_ID)
+
+assess-adaptive-stable:
+	TARGET_ID=$(TARGET_ID) FRAMEWORK_EXECUTION_MODE=chained FRAMEWORK_STRATEGY=adaptive-stable ADAPTIVE_MINIMUM_FRAMEWORKS=$${ADAPTIVE_MINIMUM_FRAMEWORKS:-3} PROFILE=$${PROFILE:-quick} FRAMEWORK_MAX_REQUESTS=$${FRAMEWORK_MAX_REQUESTS:-24} FRAMEWORK_MAX_TURNS=$${FRAMEWORK_MAX_TURNS:-8} FRAMEWORK_MAX_DURATION_SECONDS=$${FRAMEWORK_MAX_DURATION_SECONDS:-1800} $(PYTHON) scripts/frameworks/assess_frameworks.py garak pyrit promptfoo native
+
+assess-hard-adaptive:
+	TARGET_ID=$(TARGET_ID) FRAMEWORK_EXECUTION_MODE=chained FRAMEWORK_STRATEGY=hard-adaptive ADAPTIVE_MINIMUM_FRAMEWORKS=$${ADAPTIVE_MINIMUM_FRAMEWORKS:-3} PROFILE=$${PROFILE:-quick} FRAMEWORK_MAX_REQUESTS=$${FRAMEWORK_MAX_REQUESTS:-24} FRAMEWORK_MAX_TURNS=$${FRAMEWORK_MAX_TURNS:-8} FRAMEWORK_MAX_DURATION_SECONDS=$${FRAMEWORK_MAX_DURATION_SECONDS:-1800} $(PYTHON) scripts/frameworks/assess_frameworks.py garak pyrit promptfoo native
 
 assess-complete-pentest:
 	TARGET_ID=$(TARGET_ID) FRAMEWORK_EXECUTION_MODE=chained FRAMEWORK_STRATEGY=complete-pentest PROFILE=$${PROFILE:-quick} FRAMEWORK_MAX_REQUESTS=$${FRAMEWORK_MAX_REQUESTS:-40} FRAMEWORK_MAX_TURNS=$${FRAMEWORK_MAX_TURNS:-12} FRAMEWORK_MAX_DURATION_SECONDS=$${FRAMEWORK_MAX_DURATION_SECONDS:-3600} $(PYTHON) scripts/frameworks/assess_frameworks.py garak pyrit promptfoo native
+
+assess-deep-owasp:
+	TARGET_ID=$(TARGET_ID) FRAMEWORK_EXECUTION_MODE=chained FRAMEWORK_STRATEGY=deep-owasp PROFILE=deep-owasp FRAMEWORK_MAX_REQUESTS=$${FRAMEWORK_MAX_REQUESTS:-80} FRAMEWORK_MAX_TURNS=$${FRAMEWORK_MAX_TURNS:-16} FRAMEWORK_MAX_DURATION_SECONDS=$${FRAMEWORK_MAX_DURATION_SECONDS:-7200} FRAMEWORK_MAX_CONCURRENCY=$${FRAMEWORK_MAX_CONCURRENCY:-1} FRAMEWORK_MAX_TOKENS=$${FRAMEWORK_MAX_TOKENS:-4096} CONTINUE_ON_FRAMEWORK_ERROR=true $(PYTHON) scripts/frameworks/assess_frameworks.py garak pyrit promptfoo native
+
+assess-deep-owasp-4h:
+	TARGET_ID=$(TARGET_ID) FRAMEWORK_EXECUTION_MODE=chained FRAMEWORK_STRATEGY=deep-owasp-4h PROFILE=deep-owasp-4h FRAMEWORK_MAX_REQUESTS=$${FRAMEWORK_MAX_REQUESTS:-400} FRAMEWORK_MAX_TURNS=$${FRAMEWORK_MAX_TURNS:-32} FRAMEWORK_MAX_DURATION_SECONDS=$${FRAMEWORK_MAX_DURATION_SECONDS:-14400} FRAMEWORK_MAX_CONCURRENCY=1 FRAMEWORK_MAX_TOKENS=4096 CONTINUE_ON_FRAMEWORK_ERROR=true $(PYTHON) scripts/frameworks/assess_frameworks.py garak pyrit promptfoo native
+
+assess-deep-owasp-large:
+	TARGET_ID=$(TARGET_ID) FRAMEWORK_EXECUTION_MODE=chained FRAMEWORK_STRATEGY=deep-owasp-large PROFILE=deep-owasp-large FRAMEWORK_MAX_REQUESTS=$${FRAMEWORK_MAX_REQUESTS:-200000} FRAMEWORK_MAX_TURNS=$${FRAMEWORK_MAX_TURNS:-64} FRAMEWORK_MAX_DURATION_SECONDS=$${FRAMEWORK_MAX_DURATION_SECONDS:-172800} FRAMEWORK_MAX_CONCURRENCY=1 FRAMEWORK_MAX_TOKENS=4096 CONTINUE_ON_FRAMEWORK_ERROR=true $(PYTHON) scripts/frameworks/assess_frameworks.py garak pyrit promptfoo native
 
 validate-adaptive-planner:
 	TARGET_ID=$(TARGET_ID) $(PYTHON) scripts/frameworks/validate_adaptive_planner.py

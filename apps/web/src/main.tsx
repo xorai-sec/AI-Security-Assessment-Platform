@@ -133,8 +133,8 @@ const blankForm = {
 const defaultFrameworkRun = {
   profile: "quick",
   target_model: "",
-  attacker_model: "qwen3:8b",
-  judge_model: "qwen3:14b",
+  attacker_model: "red-agent:12b-q4km",
+  judge_model: "qwen3guard-judge:4b-q4km",
   allow_same_model_eval: false,
   maximum_requests: 40,
   maximum_turns: 12,

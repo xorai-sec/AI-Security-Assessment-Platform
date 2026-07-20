@@ -1,0 +1,715 @@
+{
+  "python": "3.12.13 (main, Jun 24 2026, 02:08:01) [GCC 14.2.0]",
+  "pyrit_version": "0.13.0",
+  "pyrit_file": "/usr/local/lib/python3.12/site-packages/pyrit/__init__.py",
+  "modules": [
+    "pyrit.auxiliary_attacks",
+    "pyrit.backend.mappers.attack_mappers",
+    "pyrit.backend.mappers.converter_mappers",
+    "pyrit.backend.mappers.target_mappers",
+    "pyrit.backend.models.attacks",
+    "pyrit.backend.models.converters",
+    "pyrit.backend.models.targets",
+    "pyrit.backend.routes.attacks",
+    "pyrit.backend.routes.converters",
+    "pyrit.backend.routes.targets",
+    "pyrit.backend.services.attack_service",
+    "pyrit.backend.services.converter_service",
+    "pyrit.backend.services.target_service",
+    "pyrit.common.data_url_converter",
+    "pyrit.executor.attack",
+    "pyrit.executor.attack.component",
+    "pyrit.executor.attack.component.conversation_manager",
+    "pyrit.executor.attack.component.prepended_conversation_config",
+    "pyrit.executor.attack.core",
+    "pyrit.executor.attack.core.attack_config",
+    "pyrit.executor.attack.core.attack_executor",
+    "pyrit.executor.attack.core.attack_parameters",
+    "pyrit.executor.attack.core.attack_strategy",
+    "pyrit.executor.attack.multi_turn",
+    "pyrit.executor.attack.multi_turn.chunked_request",
+    "pyrit.executor.attack.multi_turn.crescendo",
+    "pyrit.executor.attack.multi_turn.multi_prompt_sending",
+    "pyrit.executor.attack.multi_turn.multi_turn_attack_strategy",
+    "pyrit.executor.attack.multi_turn.red_teaming",
+    "pyrit.executor.attack.multi_turn.simulated_conversation",
+    "pyrit.executor.attack.multi_turn.tree_of_attacks",
+    "pyrit.executor.attack.printer",
+    "pyrit.executor.attack.printer.attack_result_printer",
+    "pyrit.executor.attack.printer.console_printer",
+    "pyrit.executor.attack.printer.markdown_printer",
+    "pyrit.executor.attack.single_turn",
+    "pyrit.executor.attack.single_turn.context_compliance",
+    "pyrit.executor.attack.single_turn.flip_attack",
+    "pyrit.executor.attack.single_turn.many_shot_jailbreak",
+    "pyrit.executor.attack.single_turn.prompt_sending",
+    "pyrit.executor.attack.single_turn.role_play",
+    "pyrit.executor.attack.single_turn.single_turn_attack_strategy",
+    "pyrit.executor.attack.single_turn.skeleton_key",
+    "pyrit.executor.promptgen.fuzzer.fuzzer_converter_base",
+    "pyrit.executor.promptgen.fuzzer.fuzzer_crossover_converter",
+    "pyrit.executor.promptgen.fuzzer.fuzzer_expand_converter",
+    "pyrit.executor.promptgen.fuzzer.fuzzer_rephrase_converter",
+    "pyrit.executor.promptgen.fuzzer.fuzzer_shorten_converter",
+    "pyrit.executor.promptgen.fuzzer.fuzzer_similar_converter",
+    "pyrit.identifiers.atomic_attack_identifier",
+    "pyrit.memory",
+    "pyrit.memory.azure_sql_memory",
+    "pyrit.memory.central_memory",
+    "pyrit.memory.memory_embedding",
+    "pyrit.memory.memory_exporter",
+    "pyrit.memory.memory_interface",
+    "pyrit.memory.memory_models",
+    "pyrit.memory.sqlite_memory",
+    "pyrit.models.attack_result",
+    "pyrit.models.score",
+    "pyrit.models.seeds.seed_attack_group",
+    "pyrit.models.seeds.seed_attack_technique_group",
+    "pyrit.prompt_converter",
+    "pyrit.prompt_converter.add_image_text_converter",
+    "pyrit.prompt_converter.add_image_to_video_converter",
+    "pyrit.prompt_converter.add_text_image_converter",
+    "pyrit.prompt_converter.ascii_art_converter",
+    "pyrit.prompt_converter.ask_to_decode_converter",
+    "pyrit.prompt_converter.atbash_converter",
+    "pyrit.prompt_converter.audio_echo_converter",
+    "pyrit.prompt_converter.audio_frequency_converter",
+    "pyrit.prompt_converter.audio_speed_converter",
+    "pyrit.prompt_converter.audio_volume_converter",
+    "pyrit.prompt_converter.audio_white_noise_converter",
+    "pyrit.prompt_converter.azure_speech_audio_to_text_converter",
+    "pyrit.prompt_converter.azure_speech_text_to_audio_converter",
+    "pyrit.prompt_converter.base2048_converter",
+    "pyrit.prompt_converter.base64_converter",
+    "pyrit.prompt_converter.bin_ascii_converter",
+    "pyrit.prompt_converter.binary_converter",
+    "pyrit.prompt_converter.braille_converter",
+    "pyrit.prompt_converter.caesar_converter",
+    "pyrit.prompt_converter.character_space_converter",
+    "pyrit.prompt_converter.charswap_attack_converter",
+    "pyrit.prompt_converter.codechameleon_converter",
+    "pyrit.prompt_converter.colloquial_wordswap_converter",
+    "pyrit.prompt_converter.denylist_converter",
+    "pyrit.prompt_converter.diacritic_converter",
+    "pyrit.prompt_converter.ecoji_converter",
+    "pyrit.prompt_converter.emoji_converter",
+    "pyrit.prompt_converter.first_letter_converter",
+    "pyrit.prompt_converter.flip_converter",
+    "pyrit.prompt_converter.image_compression_converter",
+    "pyrit.prompt_converter.insert_punctuation_converter",
+    "pyrit.prompt_converter.json_string_converter",
+    "pyrit.prompt_converter.leetspeak_converter",
+    "pyrit.prompt_converter.llm_generic_text_converter",
+    "pyrit.prompt_converter.malicious_question_generator_converter",
+    "pyrit.prompt_converter.math_obfuscation_converter",
+    "pyrit.prompt_converter.math_prompt_converter",
+    "pyrit.prompt_converter.morse_converter",
+    "pyrit.prompt_converter.nato_converter",
+    "pyrit.prompt_converter.negation_trap_converter",
+    "pyrit.prompt_converter.noise_converter",
+    "pyrit.prompt_converter.pdf_converter",
+    "pyrit.prompt_converter.persuasion_converter",
+    "pyrit.prompt_converter.prompt_converter",
+    "pyrit.prompt_converter.qr_code_converter",
+    "pyrit.prompt_converter.random_capital_letters_converter",
+    "pyrit.prompt_converter.random_translation_converter",
+    "pyrit.prompt_converter.repeat_token_converter",
+    "pyrit.prompt_converter.rot13_converter",
+    "pyrit.prompt_converter.scientific_translation_converter",
+    "pyrit.prompt_converter.search_replace_converter",
+    "pyrit.prompt_converter.selective_text_converter",
+    "pyrit.prompt_converter.string_join_converter",
+    "pyrit.prompt_converter.suffix_append_converter",
+    "pyrit.prompt_converter.superscript_converter",
+    "pyrit.prompt_converter.template_segment_converter",
+    "pyrit.prompt_converter.tense_converter",
+    "pyrit.prompt_converter.text_jailbreak_converter",
+    "pyrit.prompt_converter.text_selection_strategy",
+    "pyrit.prompt_converter.token_smuggling",
+    "pyrit.prompt_converter.token_smuggling.ascii_smuggler_converter",
+    "pyrit.prompt_converter.token_smuggling.base",
+    "pyrit.prompt_converter.token_smuggling.sneaky_bits_smuggler_converter",
+    "pyrit.prompt_converter.token_smuggling.variation_selector_smuggler_converter",
+    "pyrit.prompt_converter.tone_converter",
+    "pyrit.prompt_converter.toxic_sentence_generator_converter",
+    "pyrit.prompt_converter.translation_converter",
+    "pyrit.prompt_converter.transparency_attack_converter",
+    "pyrit.prompt_converter.unicode_confusable_converter",
+    "pyrit.prompt_converter.unicode_replacement_converter",
+    "pyrit.prompt_converter.unicode_sub_converter",
+    "pyrit.prompt_converter.url_converter",
+    "pyrit.prompt_converter.variation_converter",
+    "pyrit.prompt_converter.word_doc_converter",
+    "pyrit.prompt_converter.word_level_converter",
+    "pyrit.prompt_converter.zalgo_converter",
+    "pyrit.prompt_converter.zero_width_converter",
+    "pyrit.prompt_normalizer.prompt_converter_configuration",
+    "pyrit.prompt_target",
+    "pyrit.prompt_target.azure_blob_storage_target",
+    "pyrit.prompt_target.azure_ml_chat_target",
+    "pyrit.prompt_target.batch_helper",
+    "pyrit.prompt_target.gandalf_target",
+    "pyrit.prompt_target.playwright_copilot_target",
+    "pyrit.prompt_target.playwright_target",
+    "pyrit.prompt_target.prompt_shield_target",
+    "pyrit.prompt_target.text_target",
+    "pyrit.prompt_target.websocket_copilot_target",
+    "pyrit.registry.object_registries.attack_technique_registry",
+    "pyrit.registry.object_registries.converter_registry",
+    "pyrit.registry.object_registries.scorer_registry",
+    "pyrit.registry.object_registries.target_registry",
+    "pyrit.scenario.core.atomic_attack",
+    "pyrit.scenario.core.attack_technique",
+    "pyrit.scenario.core.attack_technique_factory",
+    "pyrit.score",
+    "pyrit.score.audio_transcript_scorer",
+    "pyrit.score.batch_scorer",
+    "pyrit.score.conversation_scorer",
+    "pyrit.score.printer",
+    "pyrit.score.printer.console_scorer_printer",
+    "pyrit.score.printer.scorer_printer",
+    "pyrit.score.score_aggregator_result",
+    "pyrit.score.score_utils",
+    "pyrit.score.scorer",
+    "pyrit.score.scorer_prompt_validator",
+    "pyrit.score.video_scorer",
+    "pyrit.setup.initializers.components.scorers",
+    "pyrit.setup.initializers.components.targets"
+  ],
+  "classes": {
+    "pyrit.backend.models.attacks": {
+      "AddMessageRequest": "(*, role: Literal['system', 'user', 'assistant', 'simulated_assistant', 'tool', 'developer'] = 'user', pieces: Annotated[list[pyrit.backend.models.attacks.MessagePieceRequest], MaxLen(max_length=50)], send: bool = True, target_registry_name: Optional[str] = None, converter_ids: Optional[list[str]] = None, target_conversation_id: str, labels: Optional[dict[str, str]] = None) -> None",
+      "AddMessageResponse": "(*, attack: pyrit.backend.models.attacks.AttackSummary, messages: pyrit.backend.models.attacks.ConversationMessagesResponse) -> None",
+      "AttackConversationsResponse": "(*, attack_result_id: str, main_conversation_id: str, conversations: list[pyrit.backend.models.attacks.ConversationSummary] = <factory>) -> None",
+      "AttackListResponse": "(*, items: list[pyrit.backend.models.attacks.AttackSummary], pagination: pyrit.backend.models.common.PaginationInfo) -> None",
+      "AttackOptionsResponse": "(*, attack_types: list[str]) -> None",
+      "AttackSummary": "(*, attack_result_id: str, conversation_id: str, attack_type: str, attack_specific_params: Optional[dict[str, Any]] = None, target: Optional[pyrit.backend.models.attacks.TargetInfo] = None, converters: list[str] = <factory>, outcome: Optional[Literal['undetermined', 'success', 'failure']] = None, last_message_preview: Optional[str] = None, message_count: int = 0, related_conversation_ids: list[str] = <factory>, labels: dict[str, str] = <factory>, created_at: datetime.datetime, updated_at: datetime.datetime) -> None",
+      "ConversationMessagesResponse": "(*, conversation_id: str, messages: list[pyrit.backend.models.attacks.Message] = <factory>) -> None",
+      "ConversationSummary": "(*, conversation_id: str, message_count: int = 0, last_message_preview: Optional[str] = None, created_at: Optional[datetime.datetime] = None) -> None",
+      "ConverterOptionsResponse": "(*, converter_types: list[str]) -> None",
+      "CreateAttackRequest": "(*, name: Optional[str] = None, target_registry_name: str, source_conversation_id: Optional[str] = None, cutoff_index: Optional[int] = None, prepended_conversation: Annotated[Optional[list[pyrit.backend.models.attacks.PrependedMessageRequest]], MaxLen(max_length=200)] = None, labels: Optional[dict[str, str]] = None) -> None",
+      "CreateAttackResponse": "(*, attack_result_id: str, conversation_id: str, created_at: datetime.datetime) -> None",
+      "CreateConversationRequest": "(*, source_conversation_id: Optional[str] = None, cutoff_index: Optional[int] = None) -> None",
+      "CreateConversationResponse": "(*, conversation_id: str, created_at: datetime.datetime) -> None",
+      "Message": "(*, turn_number: int, role: Literal['system', 'user', 'assistant', 'simulated_assistant', 'tool', 'developer'], pieces: list[pyrit.backend.models.attacks.MessagePiece], created_at: datetime.datetime) -> None",
+      "MessagePiece": "(*, piece_id: str, original_value_data_type: str = 'text', converted_value_data_type: str = 'text', original_value: Optional[str] = None, original_value_mime_type: Optional[str] = None, converted_value: str, converted_value_mime_type: Optional[str] = None, scores: list[pyrit.backend.models.attacks.Score] = <factory>, response_error: Literal['blocked', 'none', 'processing', 'empty', 'unknown'] = 'none', response_error_description: Optional[str] = None, original_filename: Optional[str] = None, converted_filename: Optional[str] = None, prompt_metadata: Optional[dict[str, Any]] = None) -> None",
+      "MessagePieceRequest": "(*, data_type: str = 'text', original_value: str, converted_value: Optional[str] = None, mime_type: Optional[str] = None, prompt_metadata: Optional[dict[str, Any]] = None, original_prompt_id: Optional[str] = None) -> None",
+      "PrependedMessageRequest": "(*, role: Literal['system', 'user', 'assistant', 'simulated_assistant', 'tool', 'developer'], pieces: Annotated[list[pyrit.backend.models.attacks.MessagePieceRequest], MaxLen(max_length=50)]) -> None",
+      "Score": "(*, score_id: str, scorer_type: str, score_type: str, score_value: str, score_category: Optional[list[str]] = None, score_rationale: Optional[str] = None, scored_at: datetime.datetime) -> None",
+      "TargetInfo": "(*, target_type: str, endpoint: Optional[str] = None, model_name: Optional[str] = None) -> None",
+      "UpdateAttackRequest": "(*, outcome: Literal['undetermined', 'success', 'failure']) -> None",
+      "UpdateMainConversationRequest": "(*, conversation_id: str) -> None",
+      "UpdateMainConversationResponse": "(*, attack_result_id: str, conversation_id: str, updated_at: datetime.datetime) -> None"
+    },
+    "pyrit.backend.models.converters": {
+      "ConverterCatalogEntry": "(*, converter_type: str, supported_input_types: list[str] = <factory>, supported_output_types: list[str] = <factory>, parameters: list[pyrit.backend.models.converters.ConverterParameterSchema] = <factory>, is_llm_based: bool = False, description: Optional[str] = None) -> None",
+      "ConverterCatalogResponse": "(*, items: list[pyrit.backend.models.converters.ConverterCatalogEntry]) -> None",
+      "ConverterInstance": "(*, converter_id: str, converter_type: str, display_name: Optional[str] = None, supported_input_types: list[str] = <factory>, supported_output_types: list[str] = <factory>, converter_specific_params: Optional[dict[str, Any]] = None, sub_converter_ids: Optional[list[str]] = None) -> None",
+      "ConverterInstanceListResponse": "(*, items: list[pyrit.backend.models.converters.ConverterInstance]) -> None",
+      "ConverterParameterSchema": "(*, name: str, type_name: str, required: bool, default_value: Optional[str] = None, choices: Optional[list[str]] = None, description: Optional[str] = None) -> None",
+      "ConverterPreviewRequest": "(*, original_value: str, original_value_data_type: Literal['text', 'image_path', 'audio_path', 'video_path', 'binary_path', 'url', 'reasoning', 'error', 'function_call', 'tool_call', 'function_call_output'] = 'text', converter_ids: list[str]) -> None",
+      "ConverterPreviewResponse": "(*, original_value: str, original_value_data_type: Literal['text', 'image_path', 'audio_path', 'video_path', 'binary_path', 'url', 'reasoning', 'error', 'function_call', 'tool_call', 'function_call_output'], converted_value: str, converted_value_data_type: Literal['text', 'image_path', 'audio_path', 'video_path', 'binary_path', 'url', 'reasoning', 'error', 'function_call', 'tool_call', 'function_call_output'], steps: list[pyrit.backend.models.converters.PreviewStep]) -> None",
+      "CreateConverterRequest": "(*, type: str, display_name: Optional[str] = None, params: dict[str, typing.Any] = <factory>) -> None",
+      "CreateConverterResponse": "(*, converter_id: str, converter_type: str, display_name: Optional[str] = None) -> None",
+      "PreviewStep": "(*, converter_id: str, converter_type: str, input_value: str, input_data_type: Literal['text', 'image_path', 'audio_path', 'video_path', 'binary_path', 'url', 'reasoning', 'error', 'function_call', 'tool_call', 'function_call_output'], output_value: str, output_data_type: Literal['text', 'image_path', 'audio_path', 'video_path', 'binary_path', 'url', 'reasoning', 'error', 'function_call', 'tool_call', 'function_call_output']) -> None"
+    },
+    "pyrit.backend.models.targets": {
+      "CreateTargetRequest": "(*, type: str, params: dict[str, typing.Any] = <factory>) -> None",
+      "TargetInstance": "(*, target_registry_name: str, target_type: str, endpoint: Optional[str] = None, model_name: Optional[str] = None, underlying_model_name: Optional[str] = None, temperature: Optional[float] = None, top_p: Optional[float] = None, max_requests_per_minute: Optional[int] = None, supports_multi_turn: bool = True, target_specific_params: Optional[dict[str, Any]] = None) -> None",
+      "TargetListResponse": "(*, items: list[pyrit.backend.models.targets.TargetInstance], pagination: pyrit.backend.models.common.PaginationInfo) -> None"
+    },
+    "pyrit.backend.services.attack_service": {
+      "AttackService": "() -> None"
+    },
+    "pyrit.backend.services.converter_service": {
+      "ConverterService": "() -> None"
+    },
+    "pyrit.backend.services.target_service": {
+      "TargetService": "() -> None"
+    },
+    "pyrit.executor.attack.component.conversation_manager": {
+      "ConversationManager": "(*, attack_identifier: pyrit.identifiers.component_identifier.ComponentIdentifier, prompt_normalizer: Optional[pyrit.prompt_normalizer.prompt_normalizer.PromptNormalizer] = None)",
+      "ConversationState": "(turn_count: int = 0, last_assistant_message_scores: list[pyrit.models.score.Score] = <factory>) -> None"
+    },
+    "pyrit.executor.attack.component.prepended_conversation_config": {
+      "PrependedConversationConfig": "(apply_converters_to_roles: 'list[ChatMessageRole]' = <factory>, message_normalizer: 'Optional[MessageStringNormalizer]' = None, non_chat_target_behavior: \"Literal['normalize_first_turn', 'raise']\" = 'normalize_first_turn') -> None"
+    },
+    "pyrit.executor.attack.core.attack_config": {
+      "AttackAdversarialConfig": "(target: pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget, system_prompt_path: Union[str, pathlib.Path, NoneType] = None, seed_prompt: Union[str, pyrit.models.seeds.seed_prompt.SeedPrompt] = 'Generate your first message to achieve: {{ objective }}') -> None",
+      "AttackConverterConfig": "(request_converters: list[pyrit.prompt_normalizer.prompt_converter_configuration.PromptConverterConfiguration] = <factory>, response_converters: list[pyrit.prompt_normalizer.prompt_converter_configuration.PromptConverterConfiguration] = <factory>) -> None",
+      "AttackScoringConfig": "(objective_scorer: Optional[pyrit.score.true_false.true_false_scorer.TrueFalseScorer] = None, refusal_scorer: Optional[pyrit.score.true_false.true_false_scorer.TrueFalseScorer] = None, auxiliary_scorers: list[pyrit.score.scorer.Scorer] = <factory>, use_score_as_feedback: bool = True) -> None"
+    },
+    "pyrit.executor.attack.core.attack_executor": {
+      "AttackExecutor": "(*, max_concurrency: int = 1)",
+      "AttackExecutorResult": "(completed_results: list[~AttackResultT], incomplete_objectives: list[tuple[str, BaseException]], input_indices: list[int] = <factory>) -> None"
+    },
+    "pyrit.executor.attack.core.attack_parameters": {
+      "AttackParameters": "(objective: 'str', next_message: 'Optional[Message]' = None, prepended_conversation: 'Optional[list[Message]]' = None, memory_labels: 'Optional[dict[str, str]]' = <factory>) -> None"
+    },
+    "pyrit.executor.attack.core.attack_strategy": {
+      "AttackContext": "(params: 'AttackParamsT', start_time: 'float' = 0.0, related_conversations: 'set[ConversationReference]' = <factory>, _next_message_override: 'Optional[Message]' = None, _prepended_conversation_override: 'Optional[list[Message]]' = None, _memory_labels_override: 'Optional[dict[str, str]]' = None) -> None",
+      "AttackStrategy": "(*, objective_target: 'PromptTarget', context_type: 'type[AttackStrategyContextT]', params_type: 'type[AttackParamsT]' = <class 'pyrit.executor.attack.core.attack_parameters.AttackParameters'>, logger: 'logging.Logger' = <Logger ai-red-team (INFO)>)",
+      "_DefaultAttackStrategyEventHandler": "(logger: 'logging.Logger' = <Logger ai-red-team (INFO)>)"
+    },
+    "pyrit.executor.attack.multi_turn.chunked_request": {
+      "ChunkedRequestAttack": "(*, objective_target: pyrit.prompt_target.common.prompt_target.PromptTarget = REQUIRED_VALUE, chunk_size: int = 50, total_length: int = 200, chunk_type: str = 'characters', request_template: str = \"Give me {chunk_type} {start}-{end} of your response to the following; do not include a prefix, just\\nrespond with th answer: '{objective}'\", attack_converter_config: Optional[pyrit.executor.attack.core.attack_config.AttackConverterConfig] = None, attack_scoring_config: Optional[pyrit.executor.attack.core.attack_config.AttackScoringConfig] = None, prompt_normalizer: Optional[pyrit.prompt_normalizer.prompt_normalizer.PromptNormalizer] = None) -> None",
+      "ChunkedRequestAttackContext": "(params: 'AttackParamsT', start_time: 'float' = 0.0, related_conversations: 'set[ConversationReference]' = <factory>, _next_message_override: 'Optional[Message]' = None, _prepended_conversation_override: 'Optional[list[Message]]' = None, _memory_labels_override: 'Optional[dict[str, str]]' = None, session: 'ConversationSession' = <factory>, executed_turns: 'int' = 0, last_response: 'Optional[Message]' = None, last_score: 'Optional[Score]' = None, chunk_responses: list[str] = <factory>) -> None"
+    },
+    "pyrit.executor.attack.multi_turn.crescendo": {
+      "CrescendoAttack": "(*, objective_target: pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget = REQUIRED_VALUE, attack_adversarial_config: pyrit.executor.attack.core.attack_config.AttackAdversarialConfig, attack_converter_config: Optional[pyrit.executor.attack.core.attack_config.AttackConverterConfig] = None, attack_scoring_config: Optional[pyrit.executor.attack.core.attack_config.AttackScoringConfig] = None, prompt_normalizer: Optional[pyrit.prompt_normalizer.prompt_normalizer.PromptNormalizer] = None, max_backtracks: int = 10, max_turns: int = 10, prepended_conversation_config: Optional[pyrit.executor.attack.component.prepended_conversation_config.PrependedConversationConfig] = None) -> None",
+      "CrescendoAttackContext": "(params: 'AttackParamsT', start_time: 'float' = 0.0, related_conversations: 'set[ConversationReference]' = <factory>, _next_message_override: 'Optional[Message]' = None, _prepended_conversation_override: 'Optional[list[Message]]' = None, _memory_labels_override: 'Optional[dict[str, str]]' = None, session: 'ConversationSession' = <factory>, executed_turns: 'int' = 0, last_response: 'Optional[Message]' = None, last_score: 'Optional[Score]' = None, refused_text: Optional[str] = None, backtrack_count: int = 0) -> None",
+      "CrescendoAttackResult": "(conversation_id: 'str', objective: 'str', attack_result_id: 'str' = <factory>, atomic_attack_identifier: 'Optional[ComponentIdentifier]' = None, last_response: 'Optional[MessagePiece]' = None, last_score: 'Optional[Score]' = None, executed_turns: 'int' = 0, execution_time_ms: 'int' = 0, outcome: 'AttackOutcome' = <AttackOutcome.UNDETERMINED: 'undetermined'>, outcome_reason: 'Optional[str]' = None, related_conversations: 'set[ConversationReference]' = <factory>, metadata: 'dict[str, Any]' = <factory>) -> None"
+    },
+    "pyrit.executor.attack.multi_turn.multi_prompt_sending": {
+      "MultiPromptSendingAttack": "(*, objective_target: pyrit.prompt_target.common.prompt_target.PromptTarget = REQUIRED_VALUE, attack_converter_config: Optional[pyrit.executor.attack.core.attack_config.AttackConverterConfig] = None, attack_scoring_config: Optional[pyrit.executor.attack.core.attack_config.AttackScoringConfig] = None, prompt_normalizer: Optional[pyrit.prompt_normalizer.prompt_normalizer.PromptNormalizer] = None) -> None",
+      "MultiPromptSendingAttackParameters": "(objective: 'str', next_message: 'Optional[Message]' = None, prepended_conversation: 'Optional[list[Message]]' = None, memory_labels: 'Optional[dict[str, str]]' = <factory>, user_messages: Optional[list[pyrit.models.message.Message]] = None) -> None"
+    },
+    "pyrit.executor.attack.multi_turn.multi_turn_attack_strategy": {
+      "ConversationSession": "(conversation_id: 'str' = <factory>, adversarial_chat_conversation_id: 'str' = <factory>) -> None",
+      "MultiTurnAttackContext": "(params: 'AttackParamsT', start_time: 'float' = 0.0, related_conversations: 'set[ConversationReference]' = <factory>, _next_message_override: 'Optional[Message]' = None, _prepended_conversation_override: 'Optional[list[Message]]' = None, _memory_labels_override: 'Optional[dict[str, str]]' = None, session: 'ConversationSession' = <factory>, executed_turns: 'int' = 0, last_response: 'Optional[Message]' = None, last_score: 'Optional[Score]' = None) -> None",
+      "MultiTurnAttackStrategy": "(*, objective_target: 'PromptTarget', context_type: 'type[MultiTurnAttackStrategyContextT]', params_type: 'type[AttackParamsT]' = <class 'pyrit.executor.attack.core.attack_parameters.AttackParameters'>, logger: 'logging.Logger' = <Logger ai-red-team (INFO)>)"
+    },
+    "pyrit.executor.attack.multi_turn.red_teaming": {
+      "RTASystemPromptPaths": "(*values)",
+      "RedTeamingAttack": "(*, objective_target: 'PromptTarget' = REQUIRED_VALUE, attack_adversarial_config: 'AttackAdversarialConfig', attack_converter_config: 'Optional[AttackConverterConfig]' = None, attack_scoring_config: 'Optional[AttackScoringConfig]' = None, prompt_normalizer: 'Optional[PromptNormalizer]' = None, max_turns: 'int' = 10, score_last_turn_only: 'bool' = False)"
+    },
+    "pyrit.executor.attack.multi_turn.tree_of_attacks": {
+      "TAPAttack": "(*, objective_target: pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget = REQUIRED_VALUE, attack_adversarial_config: pyrit.executor.attack.core.attack_config.AttackAdversarialConfig, attack_converter_config: Optional[pyrit.executor.attack.core.attack_config.AttackConverterConfig] = None, attack_scoring_config: Optional[pyrit.executor.attack.core.attack_config.AttackScoringConfig] = None, prompt_normalizer: Optional[pyrit.prompt_normalizer.prompt_normalizer.PromptNormalizer] = None, tree_width: int = 3, tree_depth: int = 5, branching_factor: int = 2, on_topic_checking_enabled: bool = True, desired_response_prefix: str = 'Sure, here is', batch_size: int = 10, prepended_conversation_config: Optional[pyrit.executor.attack.component.prepended_conversation_config.PrependedConversationConfig] = None)",
+      "TAPAttackContext": "(params: 'AttackParamsT', start_time: 'float' = 0.0, related_conversations: 'set[ConversationReference]' = <factory>, _next_message_override: 'Optional[Message]' = None, _prepended_conversation_override: 'Optional[list[Message]]' = None, _memory_labels_override: 'Optional[dict[str, str]]' = None, session: 'ConversationSession' = <factory>, executed_turns: 'int' = 0, last_response: 'Optional[Message]' = None, last_score: 'Optional[Score]' = None, tree_visualization: treelib.tree.Tree = <factory>, nodes: list['_TreeOfAttacksNode'] = <factory>, best_conversation_id: Optional[str] = None, best_objective_score: Optional[pyrit.models.score.Score] = None, best_adversarial_conversation_id: Optional[str] = None) -> None",
+      "TAPAttackResult": "(conversation_id: 'str', objective: 'str', attack_result_id: 'str' = <factory>, atomic_attack_identifier: 'Optional[ComponentIdentifier]' = None, last_response: 'Optional[MessagePiece]' = None, last_score: 'Optional[Score]' = None, executed_turns: 'int' = 0, execution_time_ms: 'int' = 0, outcome: 'AttackOutcome' = <AttackOutcome.UNDETERMINED: 'undetermined'>, outcome_reason: 'Optional[str]' = None, related_conversations: 'set[ConversationReference]' = <factory>, metadata: 'dict[str, Any]' = <factory>) -> None",
+      "TAPAttackScoringConfig": "(*, objective_scorer: pyrit.score.true_false.float_scale_threshold_scorer.FloatScaleThresholdScorer, refusal_scorer: Optional[pyrit.score.true_false.true_false_scorer.TrueFalseScorer] = None, auxiliary_scorers: Optional[list[pyrit.score.scorer.Scorer]] = None, use_score_as_feedback: bool = True) -> None",
+      "TreeOfAttacksWithPruningAttack": "(*, objective_target: pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget = REQUIRED_VALUE, attack_adversarial_config: pyrit.executor.attack.core.attack_config.AttackAdversarialConfig, attack_converter_config: Optional[pyrit.executor.attack.core.attack_config.AttackConverterConfig] = None, attack_scoring_config: Optional[pyrit.executor.attack.core.attack_config.AttackScoringConfig] = None, prompt_normalizer: Optional[pyrit.prompt_normalizer.prompt_normalizer.PromptNormalizer] = None, tree_width: int = 3, tree_depth: int = 5, branching_factor: int = 2, on_topic_checking_enabled: bool = True, desired_response_prefix: str = 'Sure, here is', batch_size: int = 10, prepended_conversation_config: Optional[pyrit.executor.attack.component.prepended_conversation_config.PrependedConversationConfig] = None)",
+      "_TreeOfAttacksNode": "(*, objective_target: pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget, adversarial_chat: pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget, adversarial_chat_seed_prompt: pyrit.models.seeds.seed_prompt.SeedPrompt, adversarial_chat_prompt_template: pyrit.models.seeds.seed_prompt.SeedPrompt, adversarial_chat_system_seed_prompt: pyrit.models.seeds.seed_prompt.SeedPrompt, desired_response_prefix: str, objective_scorer: pyrit.score.scorer.Scorer, on_topic_scorer: Optional[pyrit.score.scorer.Scorer], request_converters: list[pyrit.prompt_normalizer.prompt_converter_configuration.PromptConverterConfiguration], response_converters: list[pyrit.prompt_normalizer.prompt_converter_configuration.PromptConverterConfiguration], auxiliary_scorers: Optional[list[pyrit.score.scorer.Scorer]], attack_id: pyrit.identifiers.component_identifier.ComponentIdentifier, attack_strategy_name: str, memory_labels: Optional[dict[str, str]] = None, parent_id: Optional[str] = None, prompt_normalizer: Optional[pyrit.prompt_normalizer.prompt_normalizer.PromptNormalizer] = None, initial_prompt: Optional[pyrit.models.message.Message] = None) -> None"
+    },
+    "pyrit.executor.attack.printer.attack_result_printer": {
+      "AttackResultPrinter": "()"
+    },
+    "pyrit.executor.attack.printer.console_printer": {
+      "ConsoleAttackResultPrinter": "(*, width: int = 100, indent_size: int = 2, enable_colors: bool = True)"
+    },
+    "pyrit.executor.attack.printer.markdown_printer": {
+      "MarkdownAttackResultPrinter": "(*, display_inline: bool = True)"
+    },
+    "pyrit.executor.attack.single_turn.context_compliance": {
+      "ContextComplianceAttack": "(*, objective_target: pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget = REQUIRED_VALUE, attack_adversarial_config: pyrit.executor.attack.core.attack_config.AttackAdversarialConfig, attack_converter_config: Optional[pyrit.executor.attack.core.attack_config.AttackConverterConfig] = None, attack_scoring_config: Optional[pyrit.executor.attack.core.attack_config.AttackScoringConfig] = None, prompt_normalizer: Optional[pyrit.prompt_normalizer.prompt_normalizer.PromptNormalizer] = None, max_attempts_on_failure: int = 0, context_description_instructions_path: Optional[pathlib.Path] = None, affirmative_response: Optional[str] = None) -> None"
+    },
+    "pyrit.executor.attack.single_turn.flip_attack": {
+      "FlipAttack": "(*, objective_target: pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget = REQUIRED_VALUE, attack_converter_config: Optional[pyrit.executor.attack.core.attack_config.AttackConverterConfig] = None, attack_scoring_config: Optional[pyrit.executor.attack.core.attack_config.AttackScoringConfig] = None, prompt_normalizer: Optional[pyrit.prompt_normalizer.prompt_normalizer.PromptNormalizer] = None, max_attempts_on_failure: int = 0) -> None"
+    },
+    "pyrit.executor.attack.single_turn.many_shot_jailbreak": {
+      "ManyShotJailbreakAttack": "(*, objective_target: pyrit.prompt_target.common.prompt_target.PromptTarget = REQUIRED_VALUE, attack_converter_config: Optional[pyrit.executor.attack.core.attack_config.AttackConverterConfig] = None, attack_scoring_config: Optional[pyrit.executor.attack.core.attack_config.AttackScoringConfig] = None, prompt_normalizer: Optional[pyrit.prompt_normalizer.prompt_normalizer.PromptNormalizer] = None, max_attempts_on_failure: int = 0, example_count: int = 100, many_shot_examples: Optional[list[dict[str, str]]] = None) -> None"
+    },
+    "pyrit.executor.attack.single_turn.prompt_sending": {
+      "PromptSendingAttack": "(*, objective_target: pyrit.prompt_target.common.prompt_target.PromptTarget = REQUIRED_VALUE, attack_converter_config: Optional[pyrit.executor.attack.core.attack_config.AttackConverterConfig] = None, attack_scoring_config: Optional[pyrit.executor.attack.core.attack_config.AttackScoringConfig] = None, prompt_normalizer: Optional[pyrit.prompt_normalizer.prompt_normalizer.PromptNormalizer] = None, max_attempts_on_failure: int = 0, params_type: type[~AttackParamsT] = <class 'pyrit.executor.attack.core.attack_parameters.AttackParameters'>, prepended_conversation_config: Optional[pyrit.executor.attack.component.prepended_conversation_config.PrependedConversationConfig] = None) -> None"
+    },
+    "pyrit.executor.attack.single_turn.role_play": {
+      "RolePlayAttack": "(*, objective_target: pyrit.prompt_target.common.prompt_target.PromptTarget = REQUIRED_VALUE, attack_adversarial_config: pyrit.executor.attack.core.attack_config.AttackAdversarialConfig, role_play_definition_path: pathlib.Path, attack_converter_config: Optional[pyrit.executor.attack.core.attack_config.AttackConverterConfig] = None, attack_scoring_config: Optional[pyrit.executor.attack.core.attack_config.AttackScoringConfig] = None, prompt_normalizer: Optional[pyrit.prompt_normalizer.prompt_normalizer.PromptNormalizer] = None, max_attempts_on_failure: int = 0) -> None",
+      "RolePlayPaths": "(*values)"
+    },
+    "pyrit.executor.attack.single_turn.single_turn_attack_strategy": {
+      "SingleTurnAttackContext": "(params: 'AttackParamsT', start_time: 'float' = 0.0, related_conversations: 'set[ConversationReference]' = <factory>, _next_message_override: 'Optional[Message]' = None, _prepended_conversation_override: 'Optional[list[Message]]' = None, _memory_labels_override: 'Optional[dict[str, str]]' = None, conversation_id: 'str' = <factory>, system_prompt: 'Optional[str]' = None, metadata: 'Optional[dict[str, Union[str, int]]]' = None) -> None",
+      "SingleTurnAttackStrategy": "(*, objective_target: 'PromptTarget', context_type: 'type[SingleTurnAttackContext[Any]]' = <class 'pyrit.executor.attack.single_turn.single_turn_attack_strategy.SingleTurnAttackContext'>, params_type: 'type[AttackParamsT]' = <class 'pyrit.executor.attack.core.attack_parameters.AttackParameters'>, logger: 'logging.Logger' = <Logger ai-red-team (INFO)>)"
+    },
+    "pyrit.executor.attack.single_turn.skeleton_key": {
+      "SkeletonKeyAttack": "(*, objective_target: pyrit.prompt_target.common.prompt_target.PromptTarget = REQUIRED_VALUE, attack_converter_config: Optional[pyrit.executor.attack.core.attack_config.AttackConverterConfig] = None, attack_scoring_config: Optional[pyrit.executor.attack.core.attack_config.AttackScoringConfig] = None, prompt_normalizer: Optional[pyrit.prompt_normalizer.prompt_normalizer.PromptNormalizer] = None, skeleton_key_prompt: Optional[str] = None, max_attempts_on_failure: int = 0) -> None"
+    },
+    "pyrit.executor.promptgen.fuzzer.fuzzer_converter_base": {
+      "FuzzerConverter": "(*, converter_target: pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget = REQUIRED_VALUE, prompt_template: pyrit.models.seeds.seed_prompt.SeedPrompt)"
+    },
+    "pyrit.executor.promptgen.fuzzer.fuzzer_crossover_converter": {
+      "FuzzerCrossOverConverter": "(*, converter_target: Optional[pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget] = None, prompt_template: Optional[pyrit.models.seeds.seed_prompt.SeedPrompt] = None, prompt_templates: Optional[list[str]] = None)"
+    },
+    "pyrit.executor.promptgen.fuzzer.fuzzer_expand_converter": {
+      "FuzzerExpandConverter": "(*, converter_target: Optional[pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget] = None, prompt_template: Optional[pyrit.models.seeds.seed_prompt.SeedPrompt] = None)"
+    },
+    "pyrit.executor.promptgen.fuzzer.fuzzer_rephrase_converter": {
+      "FuzzerRephraseConverter": "(*, converter_target: Optional[pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget] = None, prompt_template: Optional[pyrit.models.seeds.seed_prompt.SeedPrompt] = None)"
+    },
+    "pyrit.executor.promptgen.fuzzer.fuzzer_shorten_converter": {
+      "FuzzerShortenConverter": "(*, converter_target: Optional[pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget] = None, prompt_template: Optional[pyrit.models.seeds.seed_prompt.SeedPrompt] = None)"
+    },
+    "pyrit.executor.promptgen.fuzzer.fuzzer_similar_converter": {
+      "FuzzerSimilarConverter": "(*, converter_target: Optional[pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget] = None, prompt_template: Optional[pyrit.models.seeds.seed_prompt.SeedPrompt] = None)"
+    },
+    "pyrit.memory.azure_sql_memory": {
+      "AzureSQLMemory": "(*args: object, **kwargs: object) -> object"
+    },
+    "pyrit.memory.central_memory": {
+      "CentralMemory": "()"
+    },
+    "pyrit.memory.memory_embedding": {
+      "MemoryEmbedding": "(*, embedding_model: Optional[pyrit.models.embeddings.EmbeddingSupport] = None)"
+    },
+    "pyrit.memory.memory_exporter": {
+      "MemoryExporter": "() -> None"
+    },
+    "pyrit.memory.memory_interface": {
+      "MemoryInterface": "(embedding_model: Optional[Any] = None) -> None"
+    },
+    "pyrit.memory.memory_models": {
+      "AttackResultEntry": "(*, entry)",
+      "Base": "(**kwargs: 'Any') -> 'None'",
+      "ConversationMessageWithSimilarity": "(*, role: str, content: str, metric: str, score: float = 0.0) -> None",
+      "CustomUUID": "(*args: 'Any', **kwargs: 'Any')",
+      "EmbeddingDataEntry": "(**kwargs)",
+      "EmbeddingMessageWithSimilarity": "(*, uuid: uuid.UUID, metric: str, score: float = 0.0) -> None",
+      "PromptMemoryEntry": "(*, entry)",
+      "ScenarioResultEntry": "(*, entry)",
+      "ScoreEntry": "(*, entry)",
+      "SeedEntry": "(*, entry)"
+    },
+    "pyrit.memory.sqlite_memory": {
+      "SQLiteMemory": "(*args: object, **kwargs: object) -> object",
+      "_ExportableConversationPiece": "(data: dict[str, typing.Any]) -> None"
+    },
+    "pyrit.models.attack_result": {
+      "AttackOutcome": "(*values)",
+      "AttackResult": "(conversation_id: 'str', objective: 'str', attack_result_id: 'str' = <factory>, atomic_attack_identifier: 'Optional[ComponentIdentifier]' = None, last_response: 'Optional[MessagePiece]' = None, last_score: 'Optional[Score]' = None, executed_turns: 'int' = 0, execution_time_ms: 'int' = 0, outcome: 'AttackOutcome' = <AttackOutcome.UNDETERMINED: 'undetermined'>, outcome_reason: 'Optional[str]' = None, related_conversations: 'set[ConversationReference]' = <factory>, metadata: 'dict[str, Any]' = <factory>) -> None"
+    },
+    "pyrit.models.score": {
+      "Score": "(*, score_value: 'str', score_value_description: 'str', score_type: 'ScoreType', score_rationale: 'str', message_piece_id: 'str | uuid.UUID', id: 'Optional[uuid.UUID | str]' = None, score_category: 'Optional[list[str]]' = None, score_metadata: 'Optional[dict[str, Union[str, int, float]]]' = None, scorer_class_identifier: 'Union[ComponentIdentifier, dict[str, Any]]', timestamp: 'Optional[datetime]' = None, objective: 'Optional[str]' = None)",
+      "UnvalidatedScore": "(raw_score_value: 'str', score_value_description: 'str', score_category: 'Optional[list[str]]', score_rationale: 'str', score_metadata: 'Optional[dict[str, Union[str, int, float]]]', scorer_class_identifier: 'ComponentIdentifier', message_piece_id: 'uuid.UUID | str', objective: 'Optional[str]', id: 'Optional[uuid.UUID | str]' = None, timestamp: 'Optional[datetime]' = None) -> None"
+    },
+    "pyrit.models.seeds.seed_attack_group": {
+      "SeedAttackGroup": "(*, seeds: 'Sequence[Union[Seed, dict[str, Any]]]')"
+    },
+    "pyrit.models.seeds.seed_attack_technique_group": {
+      "SeedAttackTechniqueGroup": "(*, seeds: 'Sequence[Union[Seed, dict[str, Any]]]', insertion_index: 'int | None' = None)"
+    },
+    "pyrit.prompt_converter.add_image_text_converter": {
+      "AddImageTextConverter": "(img_to_add: str, font_name: str = 'helvetica.ttf', color: tuple[int, int, int] = (0, 0, 0), font_size: int = 15, x_pos: int = 10, y_pos: int = 10)"
+    },
+    "pyrit.prompt_converter.add_image_to_video_converter": {
+      "AddImageVideoConverter": "(video_path: str, output_path: Optional[str] = None, img_position: tuple[int, int] = (10, 10), img_resize_size: tuple[int, int] = (500, 500))"
+    },
+    "pyrit.prompt_converter.add_text_image_converter": {
+      "AddTextImageConverter": "(text_to_add: str, font_name: str = 'helvetica.ttf', color: tuple[int, int, int] = (0, 0, 0), font_size: int = 15, x_pos: int = 10, y_pos: int = 10)"
+    },
+    "pyrit.prompt_converter.ascii_art_converter": {
+      "AsciiArtConverter": "(font: str = 'rand') -> None"
+    },
+    "pyrit.prompt_converter.ask_to_decode_converter": {
+      "AskToDecodeConverter": "(template: Optional[str] = None, encoding_name: str = 'cipher') -> None"
+    },
+    "pyrit.prompt_converter.atbash_converter": {
+      "AtbashConverter": "(*, append_description: bool = False) -> None"
+    },
+    "pyrit.prompt_converter.audio_echo_converter": {
+      "AudioEchoConverter": "(*, output_format: Literal['wav'] = 'wav', delay: float = 0.3, decay: float = 0.5) -> None"
+    },
+    "pyrit.prompt_converter.audio_frequency_converter": {
+      "AudioFrequencyConverter": "(*, output_format: Literal['wav'] = 'wav', shift_value: int = 20000) -> None"
+    },
+    "pyrit.prompt_converter.audio_speed_converter": {
+      "AudioSpeedConverter": "(*, output_format: Literal['wav'] = 'wav', speed_factor: float = 1.5) -> None"
+    },
+    "pyrit.prompt_converter.audio_volume_converter": {
+      "AudioVolumeConverter": "(*, output_format: Literal['wav'] = 'wav', volume_factor: float = 1.5) -> None"
+    },
+    "pyrit.prompt_converter.audio_white_noise_converter": {
+      "AudioWhiteNoiseConverter": "(*, output_format: Literal['wav'] = 'wav', noise_scale: float = 0.02) -> None"
+    },
+    "pyrit.prompt_converter.azure_speech_audio_to_text_converter": {
+      "AzureSpeechAudioToTextConverter": "(azure_speech_region: Optional[str] = None, azure_speech_key: Optional[str] = None, azure_speech_resource_id: Optional[str] = None, use_entra_auth: bool = False, recognition_language: str = 'en-US') -> None"
+    },
+    "pyrit.prompt_converter.azure_speech_text_to_audio_converter": {
+      "AzureSpeechTextToAudioConverter": "(azure_speech_region: Optional[str] = None, azure_speech_key: Optional[str] = None, azure_speech_resource_id: Optional[str] = None, use_entra_auth: bool = False, synthesis_language: str = 'en_US', synthesis_voice_name: str = 'en-US-AvaNeural', output_format: Literal['wav', 'mp3'] = 'wav') -> None"
+    },
+    "pyrit.prompt_converter.base2048_converter": {
+      "Base2048Converter": "() -> None"
+    },
+    "pyrit.prompt_converter.base64_converter": {
+      "Base64Converter": "(*, encoding_func: Literal['b64encode', 'urlsafe_b64encode', 'standard_b64encode', 'b2a_base64', 'b16encode', 'b32encode', 'a85encode', 'b85encode'] = 'b64encode') -> None"
+    },
+    "pyrit.prompt_converter.bin_ascii_converter": {
+      "BinAsciiConverter": "(*, encoding_func: Literal['hex', 'quoted-printable', 'UUencode'] = 'hex', word_selection_strategy: Optional[pyrit.prompt_converter.text_selection_strategy.WordSelectionStrategy] = None, word_split_separator: Optional[str] = ' ') -> None"
+    },
+    "pyrit.prompt_converter.binary_converter": {
+      "BinaryConverter": "(*, bits_per_char: 'BinaryConverter.BitsPerChar' = <BitsPerChar.BITS_16: 16>, word_selection_strategy: 'Optional[WordSelectionStrategy]' = None)"
+    },
+    "pyrit.prompt_converter.braille_converter": {
+      "BrailleConverter": "() -> None"
+    },
+    "pyrit.prompt_converter.caesar_converter": {
+      "CaesarConverter": "(*, caesar_offset: int, append_description: bool = False) -> None"
+    },
+    "pyrit.prompt_converter.character_space_converter": {
+      "CharacterSpaceConverter": "() -> None"
+    },
+    "pyrit.prompt_converter.charswap_attack_converter": {
+      "CharSwapConverter": "(*, max_iterations: int = 10, word_selection_strategy: Optional[pyrit.prompt_converter.text_selection_strategy.WordSelectionStrategy] = None)"
+    },
+    "pyrit.prompt_converter.codechameleon_converter": {
+      "CodeChameleonConverter": "(*, encrypt_type: str, encrypt_function: Optional[collections.abc.Callable[..., Any]] = None, decrypt_function: Union[collections.abc.Callable[..., Any], list[collections.abc.Callable[..., Any] | str], NoneType] = None) -> None"
+    },
+    "pyrit.prompt_converter.colloquial_wordswap_converter": {
+      "ColloquialWordswapConverter": "(*, deterministic: bool = False, custom_substitutions: Optional[dict[str, list[str]]] = None, wordswap_path: Optional[str] = None) -> None"
+    },
+    "pyrit.prompt_converter.denylist_converter": {
+      "DenylistConverter": "(*, converter_target: pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget = REQUIRED_VALUE, system_prompt_template: Optional[pyrit.models.seeds.seed_prompt.SeedPrompt] = None, denylist: list[str] = None)"
+    },
+    "pyrit.prompt_converter.diacritic_converter": {
+      "DiacriticConverter": "(target_chars: str = 'aeiou', accent: str = 'acute')"
+    },
+    "pyrit.prompt_converter.ecoji_converter": {
+      "EcojiConverter": "() -> None"
+    },
+    "pyrit.prompt_converter.emoji_converter": {
+      "EmojiConverter": "(*, word_selection_strategy: Optional[pyrit.prompt_converter.text_selection_strategy.WordSelectionStrategy] = None, word_split_separator: Optional[str] = ' ')"
+    },
+    "pyrit.prompt_converter.first_letter_converter": {
+      "FirstLetterConverter": "(*, letter_separator: str = ' ', word_selection_strategy: Optional[pyrit.prompt_converter.text_selection_strategy.WordSelectionStrategy] = None) -> None"
+    },
+    "pyrit.prompt_converter.flip_converter": {
+      "FlipConverter": "() -> None"
+    },
+    "pyrit.prompt_converter.image_compression_converter": {
+      "ImageCompressionConverter": "(*, output_format: Optional[Literal['JPEG', 'PNG', 'WEBP']] = None, quality: Optional[int] = None, optimize: Optional[bool] = None, progressive: Optional[bool] = None, compress_level: Optional[int] = None, lossless: Optional[bool] = None, method: Optional[int] = None, background_color: tuple[int, int, int] = (0, 0, 0), min_compression_threshold: int = 1024, fallback_to_original: bool = True)"
+    },
+    "pyrit.prompt_converter.insert_punctuation_converter": {
+      "InsertPunctuationConverter": "(word_swap_ratio: float = 0.2, between_words: bool = True) -> None"
+    },
+    "pyrit.prompt_converter.json_string_converter": {
+      "JsonStringConverter": "() -> None"
+    },
+    "pyrit.prompt_converter.leetspeak_converter": {
+      "LeetspeakConverter": "(*, deterministic: bool = True, custom_substitutions: Optional[dict[str, list[str]]] = None, word_selection_strategy: Optional[pyrit.prompt_converter.text_selection_strategy.WordSelectionStrategy] = None)"
+    },
+    "pyrit.prompt_converter.llm_generic_text_converter": {
+      "LLMGenericTextConverter": "(*, converter_target: pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget = REQUIRED_VALUE, system_prompt_template: Optional[pyrit.models.seeds.seed_prompt.SeedPrompt] = None, user_prompt_template_with_objective: Optional[pyrit.models.seeds.seed_prompt.SeedPrompt] = None, **kwargs: Any) -> None"
+    },
+    "pyrit.prompt_converter.malicious_question_generator_converter": {
+      "MaliciousQuestionGeneratorConverter": "(*, converter_target: pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget = REQUIRED_VALUE, prompt_template: Optional[pyrit.models.seeds.seed_prompt.SeedPrompt] = None)"
+    },
+    "pyrit.prompt_converter.math_obfuscation_converter": {
+      "MathObfuscationConverter": "(*, min_n: int = 2, max_n: int = 9, hint: Optional[str] = None, suffix: Optional[str] = None, rng: Optional[random.Random] = None) -> None"
+    },
+    "pyrit.prompt_converter.math_prompt_converter": {
+      "MathPromptConverter": "(*, converter_target: pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget = REQUIRED_VALUE, prompt_template: Optional[pyrit.models.seeds.seed_prompt.SeedPrompt] = None)"
+    },
+    "pyrit.prompt_converter.morse_converter": {
+      "MorseConverter": "(*, append_description: bool = False) -> None"
+    },
+    "pyrit.prompt_converter.nato_converter": {
+      "NatoConverter": "() -> None"
+    },
+    "pyrit.prompt_converter.negation_trap_converter": {
+      "NegationTrapConverter": "(*, wrong_value: str = 'incorrect_guess', trap_template: str | None = None)"
+    },
+    "pyrit.prompt_converter.noise_converter": {
+      "NoiseConverter": "(*, converter_target: pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget = REQUIRED_VALUE, noise: Optional[str] = None, number_errors: int = 5, prompt_template: Optional[pyrit.models.seeds.seed_prompt.SeedPrompt] = None)"
+    },
+    "pyrit.prompt_converter.pdf_converter": {
+      "PDFConverter": "(prompt_template: Optional[pyrit.models.seeds.seed_prompt.SeedPrompt] = None, font_type: str = 'Helvetica', font_size: int = 12, font_color: tuple[int, int, int] = (255, 255, 255), page_width: int = 210, page_height: int = 297, column_width: int = 0, row_height: int = 10, existing_pdf: Optional[pathlib.Path] = None, injection_items: Optional[list[dict[str, Any]]] = None) -> None"
+    },
+    "pyrit.prompt_converter.persuasion_converter": {
+      "PersuasionConverter": "(*, converter_target: pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget = REQUIRED_VALUE, persuasion_technique: str)"
+    },
+    "pyrit.prompt_converter.prompt_converter": {
+      "ConverterResult": "(output_text: str, output_type: Literal['text', 'image_path', 'audio_path', 'video_path', 'binary_path', 'url', 'reasoning', 'error', 'function_call', 'tool_call', 'function_call_output']) -> None",
+      "PromptConverter": "() -> None"
+    },
+    "pyrit.prompt_converter.qr_code_converter": {
+      "QRCodeConverter": "(scale: int = 3, border: int = 4, dark_color: tuple[int, int, int] = (0, 0, 0), light_color: tuple[int, int, int] = (255, 255, 255), data_dark_color: Optional[tuple[int, int, int]] = None, data_light_color: Optional[tuple[int, int, int]] = None, finder_dark_color: Optional[tuple[int, int, int]] = None, finder_light_color: Optional[tuple[int, int, int]] = None, border_color: Optional[tuple[int, int, int]] = None)"
+    },
+    "pyrit.prompt_converter.random_capital_letters_converter": {
+      "RandomCapitalLettersConverter": "(percentage: float = 100.0) -> None"
+    },
+    "pyrit.prompt_converter.random_translation_converter": {
+      "RandomTranslationConverter": "(*, converter_target: pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget = REQUIRED_VALUE, system_prompt_template: Optional[pyrit.models.seeds.seed_prompt.SeedPrompt] = None, languages: Optional[list[str]] = None, word_selection_strategy: Optional[pyrit.prompt_converter.text_selection_strategy.WordSelectionStrategy] = None)"
+    },
+    "pyrit.prompt_converter.repeat_token_converter": {
+      "RepeatTokenConverter": "(*, token_to_repeat: str, times_to_repeat: int, token_insert_mode: Optional[Literal['split', 'prepend', 'append', 'repeat']] = None) -> None"
+    },
+    "pyrit.prompt_converter.rot13_converter": {
+      "ROT13Converter": "(*, word_selection_strategy: Optional[pyrit.prompt_converter.text_selection_strategy.WordSelectionStrategy] = None, word_split_separator: Optional[str] = ' ')"
+    },
+    "pyrit.prompt_converter.scientific_translation_converter": {
+      "ScientificTranslationConverter": "(*, converter_target: pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget = REQUIRED_VALUE, mode: str = 'combined', prompt_template: Optional[pyrit.models.seeds.seed_prompt.SeedPrompt] = None) -> None"
+    },
+    "pyrit.prompt_converter.search_replace_converter": {
+      "SearchReplaceConverter": "(pattern: str, replace: str | list[str], regex_flags: int = 0) -> None"
+    },
+    "pyrit.prompt_converter.selective_text_converter": {
+      "SelectiveTextConverter": "(*, converter: pyrit.prompt_converter.prompt_converter.PromptConverter, selection_strategy: pyrit.prompt_converter.text_selection_strategy.TextSelectionStrategy, preserve_tokens: bool = False, start_token: str = '\u27ea', end_token: str = '\u27eb', word_separator: str = ' ') -> None"
+    },
+    "pyrit.prompt_converter.string_join_converter": {
+      "StringJoinConverter": "(*, join_value: str = '-', word_selection_strategy: Optional[pyrit.prompt_converter.text_selection_strategy.WordSelectionStrategy] = None) -> None"
+    },
+    "pyrit.prompt_converter.suffix_append_converter": {
+      "SuffixAppendConverter": "(*, suffix: str)"
+    },
+    "pyrit.prompt_converter.superscript_converter": {
+      "SuperscriptConverter": "(*, word_selection_strategy: Optional[pyrit.prompt_converter.text_selection_strategy.WordSelectionStrategy] = None, word_split_separator: Optional[str] = ' ')"
+    },
+    "pyrit.prompt_converter.template_segment_converter": {
+      "TemplateSegmentConverter": "(*, prompt_template: Optional[pyrit.models.seeds.seed_prompt.SeedPrompt] = None)"
+    },
+    "pyrit.prompt_converter.tense_converter": {
+      "TenseConverter": "(*, converter_target: pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget = REQUIRED_VALUE, tense: str, prompt_template: Optional[pyrit.models.seeds.seed_prompt.SeedPrompt] = None)"
+    },
+    "pyrit.prompt_converter.text_jailbreak_converter": {
+      "TextJailbreakConverter": "(*, jailbreak_template: pyrit.datasets.jailbreak.text_jailbreak.TextJailBreak)"
+    },
+    "pyrit.prompt_converter.text_selection_strategy": {
+      "AllWordsSelectionStrategy": "()",
+      "IndexSelectionStrategy": "(*, start: int = 0, end: Optional[int] = None) -> None",
+      "KeywordSelectionStrategy": "(*, keyword: str, context_before: int = 0, context_after: int = 0, case_sensitive: bool = True) -> None",
+      "PositionSelectionStrategy": "(*, start_proportion: float, end_proportion: float) -> None",
+      "ProportionSelectionStrategy": "(*, proportion: float, anchor: str = 'start', seed: Optional[int] = None) -> None",
+      "RangeSelectionStrategy": "(*, start_proportion: float = 0.0, end_proportion: float = 1.0) -> None",
+      "RegexSelectionStrategy": "(*, pattern: Union[str, re.Pattern[str]]) -> None",
+      "TextSelectionStrategy": "()",
+      "TokenSelectionStrategy": "()",
+      "WordIndexSelectionStrategy": "(*, indices: list[int]) -> None",
+      "WordKeywordSelectionStrategy": "(*, keywords: list[str], case_sensitive: bool = True) -> None",
+      "WordPositionSelectionStrategy": "(*, start_proportion: float, end_proportion: float) -> None",
+      "WordProportionSelectionStrategy": "(*, proportion: float, seed: Optional[int] = None) -> None",
+      "WordRegexSelectionStrategy": "(*, pattern: Union[str, re.Pattern[str]]) -> None",
+      "WordSelectionStrategy": "()"
+    },
+    "pyrit.prompt_converter.token_smuggling.ascii_smuggler_converter": {
+      "AsciiSmugglerConverter": "(action: Literal['encode', 'decode'] = 'encode', unicode_tags: bool = False)"
+    },
+    "pyrit.prompt_converter.token_smuggling.base": {
+      "SmugglerConverter": "(action: Literal['encode', 'decode'] = 'encode') -> None"
+    },
+    "pyrit.prompt_converter.token_smuggling.sneaky_bits_smuggler_converter": {
+      "SneakyBitsSmugglerConverter": "(action: Literal['encode', 'decode'] = 'encode', zero_char: Optional[str] = None, one_char: Optional[str] = None)"
+    },
+    "pyrit.prompt_converter.token_smuggling.variation_selector_smuggler_converter": {
+      "VariationSelectorSmugglerConverter": "(action: Literal['encode', 'decode'] = 'encode', base_char_utf8: Optional[str] = None, embed_in_base: bool = True)"
+    },
+    "pyrit.prompt_converter.tone_converter": {
+      "ToneConverter": "(*, converter_target: pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget = REQUIRED_VALUE, tone: str, prompt_template: Optional[pyrit.models.seeds.seed_prompt.SeedPrompt] = None)"
+    },
+    "pyrit.prompt_converter.toxic_sentence_generator_converter": {
+      "ToxicSentenceGeneratorConverter": "(*, converter_target: pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget = REQUIRED_VALUE, prompt_template: Optional[pyrit.models.seeds.seed_prompt.SeedPrompt] = None)"
+    },
+    "pyrit.prompt_converter.translation_converter": {
+      "TranslationConverter": "(*, converter_target: pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget = REQUIRED_VALUE, language: str, prompt_template: Optional[pyrit.models.seeds.seed_prompt.SeedPrompt] = None, max_retries: int = 3, max_wait_time_in_seconds: int = 60) -> None"
+    },
+    "pyrit.prompt_converter.transparency_attack_converter": {
+      "TransparencyAttackConverter": "(*, benign_image_path: pathlib.Path, size: tuple[int, int] = (150, 150), steps: int = 1500, learning_rate: float = 0.001, convergence_threshold: float = 1e-06, convergence_patience: int = 10)",
+      "_AdamOptimizer": "(*, learning_rate: float = 0.001, beta_1: float = 0.9, beta_2: float = 0.999, epsilon: float = 1e-08)"
+    },
+    "pyrit.prompt_converter.unicode_confusable_converter": {
+      "UnicodeConfusableConverter": "(*, source_package: Literal['confusable_homoglyphs', 'confusables'] = 'confusable_homoglyphs', deterministic: bool = False)"
+    },
+    "pyrit.prompt_converter.unicode_replacement_converter": {
+      "UnicodeReplacementConverter": "(*, encode_spaces: bool = False, word_selection_strategy: Optional[pyrit.prompt_converter.text_selection_strategy.WordSelectionStrategy] = None)"
+    },
+    "pyrit.prompt_converter.unicode_sub_converter": {
+      "UnicodeSubstitutionConverter": "(*, start_value: int = 917504) -> None"
+    },
+    "pyrit.prompt_converter.url_converter": {
+      "UrlConverter": "() -> None"
+    },
+    "pyrit.prompt_converter.variation_converter": {
+      "VariationConverter": "(*, converter_target: pyrit.prompt_target.common.prompt_chat_target.PromptChatTarget = REQUIRED_VALUE, prompt_template: Optional[pyrit.models.seeds.seed_prompt.SeedPrompt] = None)"
+    },
+    "pyrit.prompt_converter.word_doc_converter": {
+      "WordDocConverter": "(*, prompt_template: 'Optional[SeedPrompt]' = None, existing_docx: 'Optional[Path]' = None, placeholder: 'str' = '{{INJECTION_PLACEHOLDER}}') -> 'None'",
+      "_WordDocInjectionConfig": "(existing_docx: 'Optional[Path]', placeholder: 'str') -> None"
+    },
+    "pyrit.prompt_converter.word_level_converter": {
+      "WordLevelConverter": "(*, word_selection_strategy: Optional[pyrit.prompt_converter.text_selection_strategy.WordSelectionStrategy] = None, word_split_separator: Optional[str] = ' ')"
+    },
+    "pyrit.prompt_converter.zalgo_converter": {
+      "ZalgoConverter": "(*, intensity: int = 10, seed: Optional[int] = None, word_selection_strategy: Optional[pyrit.prompt_converter.text_selection_strategy.WordSelectionStrategy] = None)"
+    },
+    "pyrit.prompt_converter.zero_width_converter": {
+      "ZeroWidthConverter": "() -> None"
+    },
+    "pyrit.prompt_normalizer.prompt_converter_configuration": {
+      "PromptConverterConfiguration": "(converters: list[pyrit.prompt_converter.prompt_converter.PromptConverter], indexes_to_apply: Optional[list[int]] = None, prompt_data_types_to_apply: Optional[list[Literal['text', 'image_path', 'audio_path', 'video_path', 'binary_path', 'url', 'reasoning', 'error', 'function_call', 'tool_call', 'function_call_output']]] = None) -> None"
+    },
+    "pyrit.prompt_target.azure_blob_storage_target": {
+      "AzureBlobStorageTarget": "(*, container_url: Optional[str] = None, sas_token: Optional[str] = None, blob_content_type: pyrit.prompt_target.azure_blob_storage_target.SupportedContentType = <SupportedContentType.PLAIN_TEXT: 'text/plain'>, max_requests_per_minute: Optional[int] = None, custom_configuration: Optional[pyrit.prompt_target.common.target_configuration.TargetConfiguration] = None, custom_capabilities: Optional[pyrit.prompt_target.common.target_capabilities.TargetCapabilities] = None) -> None",
+      "SupportedContentType": "(*values)"
+    },
+    "pyrit.prompt_target.azure_ml_chat_target": {
+      "AzureMLChatTarget": "(*, endpoint: Optional[str] = None, api_key: Optional[str] = None, model_name: str = '', message_normalizer: Optional[pyrit.message_normalizer.message_normalizer.MessageListNormalizer[Any]] = None, max_new_tokens: int = 400, temperature: float = 1.0, top_p: float = 1.0, repetition_penalty: float = 1.0, max_requests_per_minute: Optional[int] = None, custom_configuration: Optional[pyrit.prompt_target.common.target_configuration.TargetConfiguration] = None, custom_capabilities: Optional[pyrit.prompt_target.common.target_capabilities.TargetCapabilities] = None, **param_kwargs: Any) -> None"
+    },
+    "pyrit.prompt_target.gandalf_target": {
+      "GandalfLevel": "(*values)",
+      "GandalfTarget": "(*, level: pyrit.prompt_target.gandalf_target.GandalfLevel, max_requests_per_minute: Optional[int] = None, custom_configuration: Optional[pyrit.prompt_target.common.target_configuration.TargetConfiguration] = None, custom_capabilities: Optional[pyrit.prompt_target.common.target_capabilities.TargetCapabilities] = None) -> None"
+    },
+    "pyrit.prompt_target.playwright_copilot_target": {
+      "CopilotSelectors": "(input_selector: str, send_button_selector: str, ai_messages_selector: str, ai_messages_group_selector: str, text_content_selector: str, plus_button_dropdown_selector: str, file_picker_selector: str) -> None",
+      "CopilotType": "(*values)",
+      "PlaywrightCopilotTarget": "(*, page: 'Page', copilot_type: pyrit.prompt_target.playwright_copilot_target.CopilotType = <CopilotType.CONSUMER: 'consumer'>, custom_configuration: Optional[pyrit.prompt_target.common.target_configuration.TargetConfiguration] = None, custom_capabilities: Optional[pyrit.prompt_target.common.target_capabilities.TargetCapabilities] = None) -> None"
+    },
+    "pyrit.prompt_target.playwright_target": {
+      "InteractionFunction": "(*args, **kwargs)",
+      "PlaywrightTarget": "(*, interaction_func: pyrit.prompt_target.playwright_target.InteractionFunction, page: 'Page', max_requests_per_minute: Optional[int] = None, custom_configuration: Optional[pyrit.prompt_target.common.target_configuration.TargetConfiguration] = None, custom_capabilities: Optional[pyrit.prompt_target.common.target_capabilities.TargetCapabilities] = None) -> None"
+    },
+    "pyrit.prompt_target.prompt_shield_target": {
+      "PromptShieldTarget": "(endpoint: Optional[str] = None, api_key: Union[str, collections.abc.Callable[[], str], NoneType] = None, api_version: Optional[str] = '2024-09-01', field: Optional[Literal[None, 'userPrompt', 'documents']] = None, max_requests_per_minute: Optional[int] = None, custom_configuration: Optional[pyrit.prompt_target.common.target_configuration.TargetConfiguration] = None, custom_capabilities: Optional[pyrit.prompt_target.common.target_capabilities.TargetCapabilities] = None) -> None"
+    },
+    "pyrit.prompt_target.text_target": {
+      "TextTarget": "(*, text_stream: IO[str] = <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>, custom_configuration: Optional[pyrit.prompt_target.common.target_configuration.TargetConfiguration] = None, custom_capabilities: Optional[pyrit.prompt_target.common.target_capabilities.TargetCapabilities] = None) -> None"
+    },
+    "pyrit.prompt_target.websocket_copilot_target": {
+      "CopilotMessageType": "(*values)",
+      "WebSocketCopilotTarget": "(*, websocket_base_url: str = 'wss://substrate.office.com/m365Copilot/Chathub', max_requests_per_minute: Optional[int] = None, model_name: str = 'copilot', response_timeout_seconds: int = 60, authenticator: Union[pyrit.auth.copilot_authenticator.CopilotAuthenticator, pyrit.auth.manual_copilot_authenticator.ManualCopilotAuthenticator, NoneType] = None, custom_configuration: Optional[pyrit.prompt_target.common.target_configuration.TargetConfiguration] = None, custom_capabilities: Optional[pyrit.prompt_target.common.target_capabilities.TargetCapabilities] = None) -> None"
+    },
+    "pyrit.registry.object_registries.attack_technique_registry": {
+      "AttackTechniqueRegistry": "() -> 'None'"
+    },
+    "pyrit.registry.object_registries.converter_registry": {
+      "ConverterRegistry": "() -> 'None'"
+    },
+    "pyrit.registry.object_registries.scorer_registry": {
+      "ScorerRegistry": "() -> 'None'"
+    },
+    "pyrit.registry.object_registries.target_registry": {
+      "TargetRegistry": "() -> 'None'"
+    },
+    "pyrit.scenario.core.atomic_attack": {
+      "AtomicAttack": "(*, atomic_attack_name: str, attack_technique: pyrit.scenario.core.attack_technique.AttackTechnique | None = None, attack: Optional[pyrit.executor.attack.core.attack_strategy.AttackStrategy[Any, Any]] = None, seed_groups: list[pyrit.models.seeds.seed_attack_group.SeedAttackGroup], adversarial_chat: Optional[ForwardRef('PromptChatTarget')] = None, objective_scorer: Optional[ForwardRef('TrueFalseScorer')] = None, memory_labels: Optional[dict[str, str]] = None, **attack_execute_params: Any) -> None"
+    },
+    "pyrit.scenario.core.attack_technique": {
+      "AttackTechnique": "(*, attack: 'AttackStrategy[Any, Any]', seed_technique: 'SeedAttackTechniqueGroup | None' = None) -> 'None'"
+    },
+    "pyrit.scenario.core.attack_technique_factory": {
+      "AttackTechniqueFactory": "(*, attack_class: 'type[AttackStrategy[Any, Any]]', attack_kwargs: 'dict[str, Any] | None' = None, seed_technique: 'SeedAttackTechniqueGroup | None' = None) -> 'None'"
+    },
+    "pyrit.score.audio_transcript_scorer": {
+      "AudioTranscriptHelper": "(*, text_capable_scorer: pyrit.score.scorer.Scorer, use_entra_auth: Optional[bool] = None) -> None"
+    },
+    "pyrit.score.batch_scorer": {
+      "BatchScorer": "(*, batch_size: int = 10) -> None"
+    },
+    "pyrit.score.conversation_scorer": {
+      "ConversationScorer": "(*, validator: 'ScorerPromptValidator')"
+    },
+    "pyrit.score.printer.console_scorer_printer": {
+      "ConsoleScorerPrinter": "(*, indent_size: int = 2, enable_colors: bool = True)"
+    },
+    "pyrit.score.printer.scorer_printer": {
+      "ScorerPrinter": "()"
+    },
+    "pyrit.score.score_aggregator_result": {
+      "ScoreAggregatorResult": "(value: Union[bool, float], description: str, rationale: str, category: list[str], metadata: dict[str, typing.Union[str, int, float]]) -> None"
+    },
+    "pyrit.score.scorer": {
+      "Scorer": "(*, validator: 'ScorerPromptValidator')"
+    },
+    "pyrit.score.scorer_prompt_validator": {
+      "ScorerPromptValidator": "(*, supported_data_types: Optional[collections.abc.Sequence[Literal['text', 'image_path', 'audio_path', 'video_path', 'binary_path', 'url', 'reasoning', 'error', 'function_call', 'tool_call', 'function_call_output']]] = None, required_metadata: Optional[collections.abc.Sequence[str]] = None, supported_roles: Optional[collections.abc.Sequence[Literal['system', 'user', 'assistant', 'simulated_assistant', 'tool', 'developer']]] = None, max_pieces_in_response: Optional[int] = None, max_text_length: Optional[int] = None, enforce_all_pieces_valid: Optional[bool] = False, raise_on_no_valid_pieces: Optional[bool] = False, is_objective_required: bool = False) -> None"
+    },
+    "pyrit.score.video_scorer": {
+      "VideoHelper": "(*, image_capable_scorer: pyrit.score.scorer.Scorer, num_sampled_frames: Optional[int] = None, image_objective_template: Optional[str] = 'The objective is: {objective}\\n\\nThis request includes an image from the resultant video.', audio_objective_template: Optional[str] = None) -> None"
+    },
+    "pyrit.setup.initializers.components.scorers": {
+      "ScorerInitializer": "() -> None",
+      "ScorerInitializerTags": "(*values)"
+    },
+    "pyrit.setup.initializers.components.targets": {
+      "TargetConfig": "(registry_name: str, target_class: type[pyrit.prompt_target.common.prompt_target.PromptTarget], endpoint_var: str, key_var: str = '', model_var: Optional[str] = None, underlying_model_var: Optional[str] = None, temperature: Optional[float] = None, extra_kwargs: dict[str, typing.Any] = <factory>, tags: list[pyrit.setup.initializers.components.targets.TargetInitializerTags] = <factory>, default_objective_target: bool = False) -> None",
+      "TargetInitializer": "() -> None",
+      "TargetInitializerTags": "(*values)"
+    }
+  }
+}

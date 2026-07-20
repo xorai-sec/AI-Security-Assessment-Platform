@@ -124,23 +124,6 @@ def _message_conversation_id(message: Any, default: str) -> str:
 
 def _build_pyrit_message(text: str, request_message: Any, conversation_id: str) -> Any:
     errors: list[str] = []
-    candidates: list[tuple[str, Any]] = []
-    for path in ("pyrit.models.message.Message", "pyrit.models.Message"):
-        try:
-            candidates.append((path, _load_symbol(path)))
-        except Exception as exc:
-            errors.append(f"{path}: {exc}")
-    for path, cls in candidates:
-        for kwargs in (
-            {"role": "assistant", "content": text},
-            {"role": "assistant", "content": text, "conversation_id": conversation_id},
-            {"role": "assistant", "text": text, "conversation_id": conversation_id},
-            {"content": text, "role": "assistant"},
-        ):
-            try:
-                return cls(**kwargs)
-            except Exception as exc:
-                errors.append(f"{path}{kwargs}: {exc}")
     try:
         piece_cls = _load_symbol("pyrit.models.message_piece.MessagePiece")
         piece = piece_cls(
@@ -149,11 +132,15 @@ def _build_pyrit_message(text: str, request_message: Any, conversation_id: str) 
             converted_value=text,
             conversation_id=conversation_id,
         )
-        for _, cls in candidates:
-            try:
-                return cls(request_pieces=[piece])
-            except Exception as exc:
-                errors.append(f"{cls}.request_pieces: {exc}")
+        # PyRIT 0.13's public response API is MessagePiece.to_message().
+        # Constructing Message with role/content or request_pieces is not
+        # supported and causes the target call to fail before it reaches the
+        # target proxy.
+        to_message = getattr(piece, "to_message", None)
+        if callable(to_message):
+            return to_message()
+        message_cls = _load_symbol("pyrit.models.message.Message")
+        return message_cls([piece])
     except Exception as exc:
         errors.append(f"MessagePiece: {exc}")
     if hasattr(request_message, "model_copy"):
@@ -243,13 +230,17 @@ def _build_gateway_scorer(*, gateway: ModelRoleGateway, category: str) -> Any:
     version-owned contracts; no guessed fields are persisted.
     """
     base = _load_symbol("pyrit.score.true_false.true_false_scorer.TrueFalseScorer")
-    component = _load_symbol("pyrit.models.ComponentIdentifier")
+    component = _load_symbol("pyrit.identifiers.component_identifier.ComponentIdentifier")
     score_cls = _load_symbol("pyrit.models.Score")
 
     class GatewayTrueFalseScorer(base):  # type: ignore[misc,valid-type]
         def _build_identifier(self) -> Any:
             sig = inspect.signature(component)
-            values = {"component_type": "scorer", "component_name": "gateway-judge", "component_version": "1"}
+            values = {
+                "class_name": "GatewayTrueFalseScorer",
+                "class_module": __name__,
+                "params": {"category": category},
+            }
             return component(**{k: v for k, v in values.items() if k in sig.parameters})
 
         async def _score_piece_async(self, message_piece: Any, *, objective: str | None = None) -> list[Any]:
@@ -259,7 +250,11 @@ def _build_gateway_scorer(*, gateway: ModelRoleGateway, category: str) -> Any:
             sig = inspect.signature(score_cls)
             values: dict[str, Any] = {
                 "score_value": "true" if value else "false",
-                "score_category": category,
+                "score_value_description": "Judge classified the response as crossing the safety boundary."
+                if value
+                else "Judge classified the response as not crossing the safety boundary.",
+                "score_type": "true_false",
+                "score_category": [category],
                 "score_rationale": str(text)[:2000],
                 "scorer_class_identifier": self._build_identifier(),
                 "message_piece_id": getattr(message_piece, "id", None),
@@ -271,10 +266,24 @@ def _build_gateway_scorer(*, gateway: ModelRoleGateway, category: str) -> Any:
         def get_scorer_metrics(self) -> Any:
             return None
 
+    # PyRIT 0.13 requires a validator keyword on the abstract base even
+    # though this gateway scorer performs its own response normalization.
+    base_sig = inspect.signature(base)
+    scorer_kwargs: dict[str, Any] = {}
+    if "validator" in base_sig.parameters:
+        validator_cls = _load_symbol("pyrit.score.scorer_prompt_validator.ScorerPromptValidator")
+        validator_sig = inspect.signature(validator_cls)
+        scorer_kwargs["validator"] = validator_cls(
+            **{
+                key: value
+                for key, value in {"prompt_target": None}.items()
+                if key in validator_sig.parameters
+            }
+        )
     GatewayTrueFalseScorer.__name__ = "GatewayTrueFalseScorer"
     # Expose the concrete runtime class for health/inspection and evidence.
     globals()["GatewayTrueFalseScorer"] = GatewayTrueFalseScorer
-    return GatewayTrueFalseScorer()
+    return GatewayTrueFalseScorer(**scorer_kwargs)
 
 
 class PyRITRunner(BaseFrameworkRunner):
@@ -445,9 +454,14 @@ class PyRITRunner(BaseFrameworkRunner):
         return objectives[: max(1, min(request.limits.maximum_requests, len(objectives)))]
 
     async def _execute_native(self, request: FrameworkExecutionRequest, target: TargetProxyPromptTarget) -> Any:
-        requested_attack = str(request.configuration.get("pyrit_attack") or "prompt_sending")
+        configured_attack = request.configuration.get("pyrit_attack")
+        if not configured_attack and request.configuration.get("chain_context") is not None:
+            raise RuntimeError("PyRIT attack strategy must be explicitly selected for orchestrated stages")
+        requested_attack = str(configured_attack or "prompt_sending")
         PromptSendingAttack, public_export = _resolve_public_attack(requested_attack)
         scoring_config, scorer_meta = self._build_scoring_config(request, target)
+        if scoring_config is None:
+            raise RuntimeError(f"PyRIT objective scorer unavailable: {scorer_meta.get('scorer_error')}")
         attack_kwargs: dict[str, Any] = {"objective_target": target}
         if requested_attack != "prompt_sending":
             attack_base = _load_symbol("pyrit.executor.attack.AttackAdversarialConfig")
@@ -501,6 +515,12 @@ class PyRITRunner(BaseFrameworkRunner):
             return config, meta
         except Exception as exc:
             meta["scorer_error"] = f"gateway scorer unavailable: {exc}"
+            # Do not fall back to SelfAskTrueFalseScorer here. Its parser
+            # requires strict JSON, while deployed judge models commonly emit
+            # labelled safety text (for example, ``Safety: Controversial``).
+            # GatewayTrueFalseScorer deliberately normalizes those responses
+            # and records the raw judge rationale in the Score.
+            return None, meta
         try:
             config_cls = _load_symbol(PYRIT_SCORING_CONFIG)
         except Exception as exc:
@@ -561,7 +581,10 @@ class PyRITRunner(BaseFrameworkRunner):
         traffic_path = artifacts.path("target-proxy-traffic.jsonl")
         native_result_path = artifacts.path("native-result.json")
         plugin_ids = [PYRIT_PROMPT_TARGET, PYRIT_ATTACK, PYRIT_EXECUTOR]
-        requested_attack = str(request.configuration.get("pyrit_attack") or "prompt_sending")
+        configured_attack = request.configuration.get("pyrit_attack")
+        if not configured_attack and request.configuration.get("chain_context") is not None:
+            raise RuntimeError("PyRIT attack strategy must be explicitly selected for orchestrated stages")
+        requested_attack = str(configured_attack or "prompt_sending")
         errors: list[str] = []
         native_result: Any = None
         memory, memory_plugins = self._set_memory(memory_path)
