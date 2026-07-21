@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 WORKER = Path("workers/promptfoo-worker/server.js").read_text()
 
 
