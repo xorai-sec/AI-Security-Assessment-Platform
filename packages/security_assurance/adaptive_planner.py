@@ -77,6 +77,7 @@ class PlannerDecision(BaseModel):
     native_engine_required: bool = True
     llm_recommendation: dict[str, Any] | None = None
     safety_decision: dict[str, Any] = Field(default_factory=dict)
+    decision_source: str = "rule"
 
 
 class AdaptiveAttackPlanner:
@@ -202,9 +203,32 @@ class AdaptiveAttackPlanner:
             if not self._matches(rule.get("when", {}), context):
                 continue
             decision = self._decision_from_rule(rule, context, llm_recommendation)
+            decision.decision_source = f"rule:{rule.get('id') or rule.get('policy_rule_id') or 'unnamed'}"
             decision = self._validate_and_filter(decision, context)
             if decision.continue_assessment:
                 return decision
+        if llm_recommendation and not llm_recommendation.get("error"):
+            try:
+                candidate = PlannerDecision(
+                    next_framework=llm_recommendation.get("next_framework"),
+                    action_type=llm_recommendation.get("action_type", "adaptive_stage"),
+                    objective=llm_recommendation.get("objective", request.objective),
+                    selected_plugins=llm_recommendation.get("selected_plugins", []),
+                    selected_probes=llm_recommendation.get("selected_probes", []),
+                    selected_converters=llm_recommendation.get("selected_converters", []),
+                    selected_vulnerabilities=llm_recommendation.get("selected_vulnerabilities", []),
+                    request_budget=int(llm_recommendation.get("request_budget", 1)),
+                    turn_budget=int(llm_recommendation.get("turn_budget", 1)),
+                    rationale=llm_recommendation.get("rationale", "LLM recommendation based on accumulated evidence."),
+                    continue_assessment=bool(llm_recommendation.get("next_framework")),
+                    policy_rule_id="llm-recommendation",
+                    decision_source="llm_recommendation",
+                )
+                candidate = self._validate_and_filter(candidate, context)
+                if candidate.continue_assessment:
+                    return candidate
+            except Exception:
+                pass
         return self._stop(
             context,
             "no_useful_next_action",

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from copy import deepcopy
 from datetime import datetime, timezone
 
@@ -14,7 +15,12 @@ from pydantic import BaseModel, Field, model_validator
 STABLE_FRAMEWORKS = ("garak", "pyrit", "promptfoo", "native")
 HANDOFF_SCHEMA_VERSION = "2.0"
 HANDOFF_STATES = ("created", "accepted", "consumed", "rejected", "completed")
-MAX_HANDOFF_BYTES = 128 * 1024
+# Handoffs contain bounded prompt/response excerpts plus provenance.  Deep
+# Garak campaigns need more room than the original 128 KiB limit, while the
+# orchestrator still caps the number of embedded rows and keeps full evidence
+# in the source artifact.  Allow operators to raise this explicitly for
+# unusually large local campaigns.
+MAX_HANDOFF_BYTES = int(os.getenv("MAX_HANDOFF_BYTES", str(1024 * 1024)))
 
 
 class HandoffValidationError(ValueError):

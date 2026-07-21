@@ -68,6 +68,31 @@ class GarakRunner(BaseFrameworkRunner):
             "version": self.detected_version(),
         }
 
+    def _catalog_probes(self) -> list[str]:
+        """Return concrete probes reported by the installed Garak CLI."""
+        output = self._garak_discovery()["probes"]
+        text = f"{output.get('stdout', '')}\n{output.get('stderr', '')}"
+        # Garak 0.13's --list_probes output is human-oriented and, depending
+        # on the invocation, may contain only the project URL rather than the
+        # importable probe names.  Prefer dotted class names when present,
+        # then fall back to the installed ``garak.probes`` package catalog.
+        candidates = sorted(
+            item for item in set(re.findall(r"\b[a-zA-Z][\w-]*\.[A-Za-z][\w-]*\b", text))
+            if item.lower() not in {"github.com", "garak.probes"}
+        )
+        if candidates:
+            return candidates
+        discovered = command_capture(
+            [
+                "python",
+                "-c",
+                "import garak.probes, pkgutil; print('\\n'.join(m.name for m in pkgutil.iter_modules(garak.probes.__path__)))",
+            ],
+            timeout=45,
+        )
+        modules = [line.strip() for line in discovered.get("stdout", "").splitlines() if re.fullmatch(r"[A-Za-z][\w-]*", line.strip())]
+        return sorted(set(modules))
+
     async def health(self) -> WorkerHealth:
         base = await super().health()
         if base.status != "healthy":
@@ -109,8 +134,19 @@ class GarakRunner(BaseFrameworkRunner):
     def _probe_spec(self, request: FrameworkExecutionRequest) -> str:
         configured = request.configuration.get("probe_families") or []
         capabilities = request.configuration.get("target_capabilities") or {}
-        phase = str(request.configuration.get("discovery_phase") or "reconnaissance")
+        # Deep profiles are full-catalog campaigns.  An inherited planner
+        # phase must not silently downgrade them to the two-probe
+        # reconnaissance selection.
+        deep_profile = request.profile in {"comprehensive", "deep-owasp", "deep-owasp-4h", "deep-owasp-large"}
+        phase = "deep" if deep_profile else str(request.configuration.get("discovery_phase") or "reconnaissance")
         probes = list(configured) if configured else capability_probe_selection(capabilities, phase)
+        if request.profile in {"comprehensive", "deep-owasp", "deep-owasp-4h", "deep-owasp-large"}:
+            catalog = self._catalog_probes()
+            if catalog:
+                # Deep profiles use the complete live installed catalog instead
+                # of the historical shortlist. The assessment duration and
+                # concurrency limits remain the execution safety boundaries.
+                probes = catalog
         if configured and phase == "reconnaissance":
             probes = probes[:2]
         # The API accepts high-level probe-family labels (for example
@@ -156,6 +192,8 @@ class GarakRunner(BaseFrameworkRunner):
         # generation per probe. Keep concurrency bounded, but spend the deep
         # profile budget on independent generations for reproducibility.
         generations = max(1, min(8, request.limits.maximum_requests // probe_count))
+        if request.profile in {"comprehensive", "deep-owasp", "deep-owasp-4h", "deep-owasp-large"}:
+            generations = 1
         command = [
             "python",
             "-m",
@@ -411,7 +449,9 @@ class GarakRunner(BaseFrameworkRunner):
             fallback_used=False,
             fallback_reason=None,
             metrics={
-                "phase": request.configuration.get("discovery_phase", "reconnaissance"),
+                "phase": "deep"
+                if request.profile in {"comprehensive", "deep-owasp", "deep-owasp-4h", "deep-owasp-large"}
+                else request.configuration.get("discovery_phase", "reconnaissance"),
                 "attempted_probes": attempted,
                 "successful_probes": successful,
                 "unique_signals": len(fingerprints),

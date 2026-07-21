@@ -62,7 +62,7 @@ class FrameworkAssessmentResult(BaseModel):
     evidence_signals: list[dict[str, Any]] = Field(default_factory=list)
     attack_opportunities: list[dict[str, Any]] = Field(default_factory=list)
     handoff_plans: list[dict[str, Any]] = Field(default_factory=list)
-    adaptive_artifacts: dict[str, str] = Field(default_factory=dict)
+    adaptive_artifacts: dict[str, Any] = Field(default_factory=dict)
     correlated_findings: list[dict[str, Any]] = Field(default_factory=list)
     errors: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)

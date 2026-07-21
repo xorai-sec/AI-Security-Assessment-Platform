@@ -17,6 +17,7 @@ data/target-health/*
 data/framework-results/*
 data/framework-artifacts/*
 data/planner-artifacts/**
+data/adaptive-artifacts/**
 data/evidence-packages/*
 !data/evidence/.gitkeep
 !data/reports/.gitkeep

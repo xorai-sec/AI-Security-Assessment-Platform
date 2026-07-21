@@ -30,17 +30,8 @@ framework_plugin_allowlist:
       - objective
   promptfoo:
     plugins:
-      - prompt-injection
-      - jailbreak
-      - harmful
-      - pii
-      - hallucination
+      - prompt-extraction
       - excessive-agency
-      - rbac
-      - bfla
-      - bola
-      - indirect-prompt-injection
-      - cross-session-leak
     strategies:
       - basic
       - jailbreak
